@@ -1907,45 +1907,44 @@ with tab2:
                 lb = lb.sort_values(by='LTDD', ascending=True)  # Lower is better
             
             # Build complete table HTML as single string
-            table_html = """
-            <style>
-            .rank-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .rank-table-header {
-                background: rgba(45,55,72,0.4);
-                color: white;
-                font-weight: 700;
-                padding: 12px;
-                text-align: left;
-                border-bottom: 2px solid rgba(96,165,250,0.3);
-            }
-            .rank-table-row {
-                background: rgba(45,55,72,0.2);
-                border-bottom: 1px solid rgba(255,255,255,0.05);
-                transition: all 0.3s ease;
-            }
-            .rank-table-row:hover {
-                background: rgba(45,55,72,0.35);
-                transform: translateX(5px);
-            }
-            .rank-table-cell {
-                padding: 12px;
-                color: white;
-            }
-            </style>
-            <table class='rank-table'>
-                <tr>
-                    <th class='rank-table-header' style='width:60px;'>Rank</th>
-                    <th class='rank-table-header'>Team</th>
-                    <th class='rank-table-header' style='width:80px;'>DPI</th>
-                    <th class='rank-table-header' style='width:70px;'>RF</th>
-                    <th class='rank-table-header' style='width:80px;'>LTDD</th>
-                    <th class='rank-table-header' style='width:100px;'>Tier</th>
-                    <th class='rank-table-header' style='width:80px;'>Δ Rank</th>
-                </tr>
-            """
+            table_html = """<style>
+.rank-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.rank-table-header {
+    background: rgba(45,55,72,0.4);
+    color: white;
+    font-weight: 700;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid rgba(96,165,250,0.3);
+}
+.rank-table-row {
+    background: rgba(45,55,72,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.3s ease;
+}
+.rank-table-row:hover {
+    background: rgba(45,55,72,0.35);
+    transform: translateX(5px);
+}
+.rank-table-cell {
+    padding: 12px;
+    color: white;
+}
+</style>
+<table class='rank-table'>
+    <tr>
+        <th class='rank-table-header' style='width:60px;'>Rank</th>
+        <th class='rank-table-header'>Team</th>
+        <th class='rank-table-header' style='width:80px;'>DPI</th>
+        <th class='rank-table-header' style='width:70px;'>RF</th>
+        <th class='rank-table-header' style='width:80px;'>LTDD</th>
+        <th class='rank-table-header' style='width:100px;'>Tier</th>
+        <th class='rank-table-header' style='width:80px;'>Δ Rank</th>
+    </tr>
+"""
             
             # Build table rows
             for _, row in lb.iterrows():
@@ -1953,17 +1952,16 @@ with tab2:
                 rank_indicator = f"<span style='color:#10b981;'>↑ {rank_change}</span>" if rank_change > 0 else f"<span style='color:#ef4444;'>↓ {abs(rank_change)}</span>" if rank_change < 0 else "<span style='color:#6b7280;'>—</span>"
                 tier_color = COLOR_MAP.get(row['Tier'], '#6b7280')
                 
-                table_html += f"""
-                <tr class='rank-table-row'>
-                    <td class='rank-table-cell' style='font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
-                    <td class='rank-table-cell' style='font-weight:700;'>{row['Team']}</td>
-                    <td class='rank-table-cell' style='font-weight:700; color:#fbbf24;'>{row['DPI']:.1f}</td>
-                    <td class='rank-table-cell'>{row['RF']:.0f}</td>
-                    <td class='rank-table-cell'>{row['LTDD']:.1f}</td>
-                    <td class='rank-table-cell'><span style='background:{tier_color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;'>{row['Tier']}</span></td>
-                    <td class='rank-table-cell'>{rank_indicator}</td>
-                </tr>
-                """
+                table_html += f"""    <tr class='rank-table-row'>
+        <td class='rank-table-cell' style='font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
+        <td class='rank-table-cell' style='font-weight:700;'>{row['Team']}</td>
+        <td class='rank-table-cell' style='font-weight:700; color:#fbbf24;'>{row['DPI']:.1f}</td>
+        <td class='rank-table-cell'>{row['RF']:.0f}</td>
+        <td class='rank-table-cell'>{row['LTDD']:.1f}</td>
+        <td class='rank-table-cell'><span style='background:{tier_color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;'>{row['Tier']}</span></td>
+        <td class='rank-table-cell'>{rank_indicator}</td>
+    </tr>
+"""
             
             table_html += "</table>"
             
