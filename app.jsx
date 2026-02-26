@@ -1471,19 +1471,9 @@ latest_df['Badges'] = latest_df.apply(compute_badges, axis=1)
 
  
 
-# Business Unit selector affects top metrics
+# Use all data for metrics (Business Unit filter removed)
 
-all_bus = sorted(history_df['Business Unit'].unique())
-
-bu_choice = st.sidebar.selectbox('Business Unit (for top metrics)', options=['All'] + all_bus, index=0)
-
-if bu_choice == 'All':
-
-    metric_base = history_df
-
-else:
-
-    metric_base = history_df[history_df['Business Unit'] == bu_choice]
+metric_base = history_df
 
  
 
@@ -1572,15 +1562,9 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(['🏁 Overview','🏆 Leaderboard','🎖
 
  
 
-# compute display datasets based on BU selection so BU filter is applied globally
+# compute display datasets (Business Unit filter removed)
 
-if bu_choice == 'All':
-
-    display_history = history_df.copy()
-
-else:
-
-    display_history = history_df[history_df['Business Unit'] == bu_choice].copy()
+display_history = history_df.copy()
 
  
 
@@ -1922,8 +1906,8 @@ with tab2:
             elif sort_by == 'LTDD':
                 lb = lb.sort_values(by='LTDD', ascending=True)  # Lower is better
             
-            # Display as animated table
-            st.markdown("""
+            # Build complete table HTML as single string
+            table_html = """
             <style>
             .rank-table {
                 width: 100%;
@@ -1951,10 +1935,6 @@ with tab2:
                 color: white;
             }
             </style>
-            """, unsafe_allow_html=True)
-            
-            # Table header
-            st.markdown("""
             <table class='rank-table'>
                 <tr>
                     <th class='rank-table-header' style='width:60px;'>Rank</th>
@@ -1965,15 +1945,15 @@ with tab2:
                     <th class='rank-table-header' style='width:100px;'>Tier</th>
                     <th class='rank-table-header' style='width:80px;'>Δ Rank</th>
                 </tr>
-            """, unsafe_allow_html=True)
+            """
             
-            # Table rows
+            # Build table rows
             for _, row in lb.iterrows():
                 rank_change = row['Δ Rank']
                 rank_indicator = f"<span style='color:#10b981;'>↑ {rank_change}</span>" if rank_change > 0 else f"<span style='color:#ef4444;'>↓ {abs(rank_change)}</span>" if rank_change < 0 else "<span style='color:#6b7280;'>—</span>"
                 tier_color = COLOR_MAP.get(row['Tier'], '#6b7280')
                 
-                st.markdown(f"""
+                table_html += f"""
                 <tr class='rank-table-row'>
                     <td class='rank-table-cell' style='font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
                     <td class='rank-table-cell' style='font-weight:700;'>{row['Team']}</td>
@@ -1983,9 +1963,12 @@ with tab2:
                     <td class='rank-table-cell'><span style='background:{tier_color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;'>{row['Tier']}</span></td>
                     <td class='rank-table-cell'>{rank_indicator}</td>
                 </tr>
-                """, unsafe_allow_html=True)
+                """
             
-            st.markdown("</table>", unsafe_allow_html=True)
+            table_html += "</table>"
+            
+            # Render complete table
+            st.markdown(table_html, unsafe_allow_html=True)
     
     with leaderboard_subtab2:
         # Overall statistics FIRST (moved to top)
