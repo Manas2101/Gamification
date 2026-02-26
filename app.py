@@ -26,21 +26,21 @@ st.markdown("""
 }
 
 .main {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1a202c;
     background-attachment: fixed;
 }
 
 .stApp {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    background: #1a202c;
 }
 
 /* Sidebar Styling */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+    background: #1a202c;
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+    background: #1a202c;
 }
 
 [data-testid="stSidebar"] .stMarkdown {
@@ -185,12 +185,13 @@ canvas {
 
 /* Animated Header */
 .hero-header {
-    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    background: rgba(45,55,72,0.3);
     padding: 40px;
     border-radius: 20px;
     text-align: center;
     margin-bottom: 30px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.05);
     animation: slideDown 0.8s ease-out;
     position: relative;
     overflow: hidden;
@@ -419,32 +420,32 @@ canvas {
 
 .podium-rank-1 .podium-base {
     height: 200px;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: rgba(96,165,250,0.25);
     box-shadow: 
-        0 25px 50px rgba(240,147,251,0.5),
-        0 10px 30px rgba(0,0,0,0.4),
-        inset 0 -3px 15px rgba(0,0,0,0.2),
-        inset 0 3px 15px rgba(255,255,255,0.15);
+        0 15px 30px rgba(0,0,0,0.3),
+        inset 0 -3px 10px rgba(0,0,0,0.2),
+        inset 0 3px 10px rgba(255,255,255,0.08);
+    border: 1px solid rgba(96,165,250,0.3);
 }
 
 .podium-rank-2 .podium-base {
     height: 150px;
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: rgba(74,85,104,0.25);
     box-shadow: 
-        0 20px 45px rgba(79,172,254,0.5),
-        0 10px 25px rgba(0,0,0,0.4),
-        inset 0 -3px 12px rgba(0,0,0,0.2),
-        inset 0 3px 12px rgba(255,255,255,0.1);
+        0 15px 30px rgba(0,0,0,0.3),
+        inset 0 -3px 10px rgba(0,0,0,0.2),
+        inset 0 3px 10px rgba(255,255,255,0.08);
+    border: 1px solid rgba(148,163,184,0.2);
 }
 
 .podium-rank-3 .podium-base {
     height: 120px;
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    background: rgba(74,85,104,0.2);
     box-shadow: 
-        0 20px 40px rgba(67,233,123,0.5),
-        0 10px 25px rgba(0,0,0,0.4),
+        0 15px 30px rgba(0,0,0,0.3),
         inset 0 -3px 10px rgba(0,0,0,0.2),
-        inset 0 3px 10px rgba(255,255,255,0.1);
+        inset 0 3px 10px rgba(255,255,255,0.08);
+    border: 1px solid rgba(148,163,184,0.15);
 }
 
 .podium-team-name {
@@ -486,13 +487,13 @@ canvas {
 
 /* Metric Cards */
 .metric-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    background: rgba(45,55,72,0.2);
     backdrop-filter: blur(10px);
-    border-radius: 20px;
+    border-radius: 15px;
     padding: 25px;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.08);
     transition: all 0.3s ease;
     animation: fadeIn 0.6s ease-out;
 }
@@ -510,7 +511,7 @@ canvas {
 .metric-value {
     font-size: 48px;
     font-weight: 800;
-    color: #60a5fa;
+    color: #93c5fd;
 }
 
 .metric-label {
@@ -536,21 +537,21 @@ canvas {
 
 /* Team Card */
 .team-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    background: rgba(45,55,72,0.2);
     backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 25px;
-    margin: 15px 0;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 10px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.08);
     transition: all 0.3s ease;
     animation: slideIn 0.5s ease-out;
 }
 
 .team-card:hover {
-    transform: translateX(10px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-    border-color: rgba(255,255,255,0.4);
+    transform: translateX(5px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    border-color: rgba(255,255,255,0.15);
 }
 
 @keyframes slideIn {
@@ -618,19 +619,22 @@ canvas {
 }
 
 .badge-gold {
-    background: linear-gradient(135deg, #ffd700, #ffed4e);
-    box-shadow: 0 4px 15px rgba(255,215,0,0.5);
+    background: rgba(255,215,0,0.15);
+    border: 1px solid rgba(255,215,0,0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .badge-silver {
-    background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
-    color: #333;
-    box-shadow: 0 4px 15px rgba(192,192,192,0.5);
+    background: rgba(192,192,192,0.15);
+    color: white;
+    border: 1px solid rgba(192,192,192,0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .badge-bronze {
-    background: linear-gradient(135deg, #cd7f32, #e8a87c);
-    box-shadow: 0 4px 15px rgba(205,127,50,0.5);
+    background: rgba(205,127,50,0.15);
+    border: 1px solid rgba(205,127,50,0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 /* Tier Badge */
@@ -641,14 +645,10 @@ canvas {
     color: white;
     font-weight: 700;
     font-size: 18px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    animation: tierGlow 2s ease-in-out infinite alternate;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
-@keyframes tierGlow {
-    from { box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-    to { box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-}
 
 /* Score Card */
 .score-card {
@@ -690,19 +690,20 @@ canvas {
 
 /* Leaderboard Table */
 .leaderboard-row {
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    background: rgba(45,55,72,0.2);
     backdrop-filter: blur(10px);
-    border-radius: 15px;
+    border-radius: 12px;
     padding: 15px;
     margin: 10px 0;
-    border: 1px solid rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.08);
     transition: all 0.3s ease;
 }
 
 .leaderboard-row:hover {
-    transform: translateX(10px);
-    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    transform: translateX(5px);
+    background: rgba(45,55,72,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border-color: rgba(255,255,255,0.12);
 }
 
 /* Rank Change Indicator */
@@ -742,13 +743,13 @@ canvas {
 
 /* Achievement Card */
 .achievement-card {
-    background: linear-gradient(135deg, rgba(74,85,104,0.3), rgba(45,55,72,0.3));
-    border-radius: 20px;
+    background: rgba(45,55,72,0.2);
+    border-radius: 15px;
     padding: 25px;
     color: white;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     margin: 15px 0;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.06);
     animation: achievementPop 0.6s ease-out;
 }
 
@@ -810,24 +811,26 @@ canvas {
 }
 
 .stTabs [aria-selected="true"] {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    background: rgba(96,165,250,0.2);
+    border: 1px solid rgba(96,165,250,0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .stButton > button {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: rgba(96,165,250,0.2);
     color: white;
-    border: none;
+    border: 1px solid rgba(96,165,250,0.3);
     border-radius: 25px;
     padding: 12px 30px;
     font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .stButton > button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102,126,234,0.6);
+    background: rgba(96,165,250,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .stDataFrame {
