@@ -1369,69 +1369,7 @@ history_df = load_history()
 
  
 
-# --- Upload handling ---
-
-st.sidebar.header("Data Input and Publish")
-
-uploaded_file = st.sidebar.file_uploader("Upload your team data (CSV with Week column)", type=["csv"])
-
- 
-
-new_rows = None
-
-if uploaded_file is not None:
-
-    try:
-
-        df_uploaded = pd.read_csv(uploaded_file)
-
-        df_valid, errs = validate_and_normalize(df_uploaded)
-
-        if errs:
-
-            st.sidebar.error('Upload validation failed: ' + '; '.join(errs))
-
-        else:
-
-            st.sidebar.success('Upload validated. Preview below. Click Publish to append to history (will replace same Team+Week).')
-
-            st.sidebar.dataframe(df_valid.head())
-
-            if st.sidebar.button('Publish uploaded rows to history'):
-
-                # remove duplicates (same Team+Week_Start)
-
-                # ensure Week_Start col exists in history
-
-                if 'Week_Start' not in history_df.columns:
-
-                    history_df['Week_Start'] = pd.to_datetime(history_df['Week']).dt.to_period('W').apply(lambda r: r.start_time)
-
-                df_valid['Week_Start'] = pd.to_datetime(df_valid['Week']).dt.to_period('W').apply(lambda r: r.start_time)
-
-                # drop existing rows with same Team+Week_Start
-
-                mask = ~(history_df['Team'].isin(df_valid['Team']) & history_df['Week_Start'].isin(df_valid['Week_Start']))
-
-                history_df = history_df[mask]
-
-                history_df = pd.concat([history_df, df_valid], ignore_index=True)
-
-                # keep only last 5 weeks
-
-                latest_weeks = sorted(history_df['Week_Start'].unique())[-5:]
-
-                history_df = history_df[history_df['Week_Start'].isin(latest_weeks)].copy()
-
-                history_df.to_csv(HISTORY_FILE, index=False)
-
-                st.sidebar.success('Published to history. History rows now: ' + str(len(history_df)))
-
-    except Exception as e:
-
-        st.sidebar.error(f'Failed to process upload: {e}')
-
-# Data quality status will be added to sidebar after it's computed
+# Data upload section removed - using history file only
 
  
 
@@ -1728,32 +1666,7 @@ else:
 
     quality_status = ('green', ['All critical data present'])
 
-# --- Data Quality Indicator in Sidebar (after quality_status is computed) ---
-st.sidebar.markdown("---")
-
-status_color_sidebar, status_reasons_sidebar = quality_status
-
-quality_icon_sidebar = '✅' if status_color_sidebar == 'green' else '⚠️' if status_color_sidebar == 'yellow' else '❌'
-quality_text_sidebar = 'Good' if status_color_sidebar == 'green' else 'Issues Detected' if status_color_sidebar == 'yellow' else 'Critical'
-quality_class_sidebar = status_color_sidebar
-
-reasons_list = ''.join([f"<li>{r}</li>" for r in status_reasons_sidebar])
-
-st.sidebar.markdown(f"""
-<div class='sidebar-quality-badge'>
-    <div class='quality-indicator {quality_class_sidebar}'>
-        <div class='quality-header'>
-            <span style='font-size:20px;'>{quality_icon_sidebar}</span>
-            <span>Data Quality: {quality_text_sidebar}</span>
-        </div>
-        <div class='quality-details'>
-            <ul>
-                {reasons_list}
-            </ul>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# Data quality indicator removed from sidebar
 
  
 
@@ -1952,99 +1865,133 @@ with tab1:
  
 
 with tab2:
-
-    # Podium for Top 3 Teams
-    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:20px;'>🏆 Leaderboard Champions</h2>", unsafe_allow_html=True)
-    
-    if len(display_latest_df) >= 3:
-        top3 = display_latest_df.head(3)
-        
-        st.markdown("""
-        <div class='podium-container'>
-        """, unsafe_allow_html=True)
-        
-        for idx, (_, row) in enumerate(top3.iterrows()):
-            rank = idx + 1
-            rank_class = f"podium-rank-{rank}"
-            medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉"
-            
-            st.markdown(f"""
-            <div class='podium-place {rank_class}'>
-                <div class='podium-avatar'>{medal}</div>
-                <div class='podium-base'>
-                    <div class='podium-team-name'>{row['Team']}</div>
-                    <div class='podium-score'>{row['DPI']:.1f}</div>
-                    <div style='font-size:14px; margin-top:5px; opacity:0.9;'>Rank #{rank}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:20px;'>🏆 Leaderboard</h2>", unsafe_allow_html=True)
     
     # Create sub-tabs for better organization
-    st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
-    
     leaderboard_subtab1, leaderboard_subtab2 = st.tabs(['📋 Team Rankings', '📊 Performance Graphs'])
     
     with leaderboard_subtab1:
-        # header + export button in top-right
-        c_head, c_tool = st.columns([8,2])
-
-        with c_head:
-            st.markdown("<h3 style='color:white; margin-top:20px;'>📊 Full Team Rankings</h3>", unsafe_allow_html=True)
-
-        with c_tool:
-            st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-            st.download_button('⬇️ Export', data=display_latest_df.to_csv(index=False), file_name='leaderboard_latest.csv')
-
-        # show filter controls
-        f1, f2 = st.columns([3,1])
-
-        with f1:
-            stacks = st.multiselect('Stack', options=display_history['Stack'].unique(), default=display_history['Stack'].unique(), key='lb_stack')
-
-        with f2:
-            tiers = st.multiselect('Tier', options=display_latest_df['Tier'].unique(), default=display_latest_df['Tier'].unique(), key='lb_tier')
-
-        lb = display_latest_df[display_latest_df['Stack'].isin(stacks) & display_latest_df['Tier'].isin(tiers)].copy()
-
-        lb['Badges_Display'] = lb['Badges'].apply(lambda b: ', '.join(b) if b else '')
-
-        # Display leaderboard with custom cards
-        for _, row in lb.iterrows():
-            rank_change = row['Δ Rank']
-            rank_indicator = f"<span class='rank-up'>↑ {rank_change}</span>" if rank_change > 0 else f"<span class='rank-down'>↓ {abs(rank_change)}</span>" if rank_change < 0 else "<span style='color:#6b7280;'>—</span>"
+        # Layout: Compact podium on left, sortable table on right
+        podium_col, table_col = st.columns([1, 3])
+        
+        with podium_col:
+            st.markdown("<h4 style='color:white; text-align:center; margin-bottom:15px;'>🏆 Top 3</h4>", unsafe_allow_html=True)
             
-            tier_color = COLOR_MAP.get(row['Tier'], '#6b7280')
+            if len(display_latest_df) >= 3:
+                top3 = display_latest_df.head(3)
+                for idx, (_, row) in enumerate(top3.iterrows()):
+                    rank = idx + 1
+                    medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉"
+                    medal_color = "rgba(255,215,0,0.2)" if rank == 1 else "rgba(192,192,192,0.15)" if rank == 2 else "rgba(205,127,50,0.15)"
+                    
+                    st.markdown(f"""
+                    <div class='team-card' style='background:{medal_color}; padding:15px; margin-bottom:10px; text-align:center;'>
+                        <div style='font-size:32px; margin-bottom:5px;'>{medal}</div>
+                        <div style='font-size:14px; font-weight:700; color:white; margin-bottom:3px;'>{row['Team']}</div>
+                        <div style='font-size:18px; font-weight:800; color:#93c5fd;'>{row['DPI']:.1f}</div>
+                        <div style='font-size:11px; color:rgba(255,255,255,0.6); margin-top:3px;'>Rank #{rank}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+        
+        with table_col:
+            # Header with sort controls
+            st.markdown("<h3 style='color:white; margin-bottom:15px;'>📊 Team Rankings</h3>", unsafe_allow_html=True)
             
-            st.markdown(f"""
-            <div class='leaderboard-row'>
-                <div style='display:flex; justify-content:space-between; align-items:center;'>
-                    <div style='display:flex; align-items:center; gap:20px;'>
-                        <div class='team-rank'>#{row['Rank']}</div>
-                        <div>
-                            <div class='team-name' style='font-size:20px;'>{row['Team']}</div>
-                            <div class='team-stats'>
-                                <span class='stat-pill'>DPI: {row['DPI']:.1f}</span>
-                                <span class='stat-pill'>RF: {row['RF']:.0f}</span>
-                                <span class='stat-pill'>LTDD: {row['LTDD']:.1f}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div style='text-align:right;'>
-                        <div class='tier-badge' style='background:{tier_color}; margin-bottom:10px;'>{row['Tier']}</div>
-                        <div style='font-size:14px; color:rgba(255,255,255,0.7);'>Change: {rank_indicator}</div>
-                    </div>
-                </div>
-            </div>
+            # Filters and sorting
+            filter_row1, filter_row2 = st.columns([3, 1])
+            with filter_row1:
+                sort_by = st.selectbox('Sort by', options=['DPI', 'RF', 'LTDD'], index=0, key='sort_metric')
+            with filter_row2:
+                st.download_button('⬇️ Export', data=display_latest_df.to_csv(index=False), file_name='leaderboard_latest.csv')
+            
+            # Filter controls
+            f1, f2 = st.columns([3, 1])
+            with f1:
+                stacks = st.multiselect('Stack', options=display_history['Stack'].unique(), default=display_history['Stack'].unique(), key='lb_stack')
+            with f2:
+                tiers = st.multiselect('Tier', options=display_latest_df['Tier'].unique(), default=display_latest_df['Tier'].unique(), key='lb_tier')
+            
+            # Apply filters and sorting
+            lb = display_latest_df[display_latest_df['Stack'].isin(stacks) & display_latest_df['Tier'].isin(tiers)].copy()
+            
+            # Sort based on selection
+            if sort_by == 'DPI':
+                lb = lb.sort_values(by='DPI', ascending=False)
+            elif sort_by == 'RF':
+                lb = lb.sort_values(by='RF', ascending=False)
+            elif sort_by == 'LTDD':
+                lb = lb.sort_values(by='LTDD', ascending=True)  # Lower is better
+            
+            # Display as animated table
+            st.markdown("""
+            <style>
+            .rank-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .rank-table-header {
+                background: rgba(45,55,72,0.4);
+                color: white;
+                font-weight: 700;
+                padding: 12px;
+                text-align: left;
+                border-bottom: 2px solid rgba(96,165,250,0.3);
+            }
+            .rank-table-row {
+                background: rgba(45,55,72,0.2);
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                transition: all 0.3s ease;
+            }
+            .rank-table-row:hover {
+                background: rgba(45,55,72,0.35);
+                transform: translateX(5px);
+            }
+            .rank-table-cell {
+                padding: 12px;
+                color: white;
+            }
+            </style>
             """, unsafe_allow_html=True)
+            
+            # Table header
+            st.markdown("""
+            <table class='rank-table'>
+                <tr>
+                    <th class='rank-table-header' style='width:60px;'>Rank</th>
+                    <th class='rank-table-header'>Team</th>
+                    <th class='rank-table-header' style='width:80px;'>DPI</th>
+                    <th class='rank-table-header' style='width:70px;'>RF</th>
+                    <th class='rank-table-header' style='width:80px;'>LTDD</th>
+                    <th class='rank-table-header' style='width:100px;'>Tier</th>
+                    <th class='rank-table-header' style='width:80px;'>Δ Rank</th>
+                </tr>
+            """, unsafe_allow_html=True)
+            
+            # Table rows
+            for _, row in lb.iterrows():
+                rank_change = row['Δ Rank']
+                rank_indicator = f"<span style='color:#10b981;'>↑ {rank_change}</span>" if rank_change > 0 else f"<span style='color:#ef4444;'>↓ {abs(rank_change)}</span>" if rank_change < 0 else "<span style='color:#6b7280;'>—</span>"
+                tier_color = COLOR_MAP.get(row['Tier'], '#6b7280')
+                
+                st.markdown(f"""
+                <tr class='rank-table-row'>
+                    <td class='rank-table-cell' style='font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
+                    <td class='rank-table-cell' style='font-weight:700;'>{row['Team']}</td>
+                    <td class='rank-table-cell' style='font-weight:700; color:#fbbf24;'>{row['DPI']:.1f}</td>
+                    <td class='rank-table-cell'>{row['RF']:.0f}</td>
+                    <td class='rank-table-cell'>{row['LTDD']:.1f}</td>
+                    <td class='rank-table-cell'><span style='background:{tier_color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;'>{row['Tier']}</span></td>
+                    <td class='rank-table-cell'>{rank_indicator}</td>
+                </tr>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</table>", unsafe_allow_html=True)
     
     with leaderboard_subtab2:
-        st.markdown("<h3 style='color:white; margin-top:20px;'>📈 Performance Metrics Comparison</h3>", unsafe_allow_html=True)
+        # Overall statistics FIRST (moved to top)
+        st.markdown("<h3 style='color:white; margin-top:20px;'>📊 Overall Statistics</h3>", unsafe_allow_html=True)
         
-        st.markdown("<p style='color:rgba(255,255,255,0.8); margin-bottom:20px;'>Compare Release Frequency and Lead Time across all teams</p>", unsafe_allow_html=True)
-        
-        # Use same filtered data from Team Rankings tab
+        # Use same filtered data
         f1_graph, f2_graph = st.columns([3,1])
         
         with f1_graph:
@@ -2054,20 +2001,6 @@ with tab2:
             tiers_graph = st.multiselect('Tier', options=display_latest_df['Tier'].unique(), default=display_latest_df['Tier'].unique(), key='graph_tier')
         
         lb_graph = display_latest_df[display_latest_df['Stack'].isin(stacks_graph) & display_latest_df['Tier'].isin(tiers_graph)].copy()
-
-        c1,c2 = st.columns(2)
-
-        with c1:
-            st.markdown("<p style='color:rgba(255,255,255,0.8); text-align:center; font-weight:600; font-size:16px;'>⚡ Release Frequency (RF)</p>", unsafe_allow_html=True)
-            st.bar_chart(lb_graph.set_index('Team')['RF'], color='#06b6d4')
-
-        with c2:
-            st.markdown("<p style='color:rgba(255,255,255,0.8); text-align:center; font-weight:600; font-size:16px;'>⏱️ Lead Time (LTDD)</p>", unsafe_allow_html=True)
-            st.bar_chart(lb_graph.set_index('Team')['LTDD'], color='#f59e0b')
-        
-        # Add overall statistics
-        st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 style='color:white;'>📊 Overall Statistics</h3>", unsafe_allow_html=True)
         
         stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
         
@@ -2098,120 +2031,140 @@ with tab2:
         with stat_col4:
             st.markdown(f"""
             <div class='metric-card'>
-                <div class='metric-value'>{lb_graph['LTDD'].min():.1f}</div>
-                <div class='metric-label'>Min LTDD</div>
+                <div class='metric-value'>{len(lb_graph)}</div>
+                <div class='metric-label'>Teams</div>
             </div>
             """, unsafe_allow_html=True)
+        
+        # Performance graphs BELOW statistics
+        st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:white;'>📈 Performance Metrics Comparison</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color:rgba(255,255,255,0.8); margin-bottom:20px;'>Compare Release Frequency and Lead Time across all teams</p>", unsafe_allow_html=True)
+        
+        c1,c2 = st.columns(2)
+
+        with c1:
+            st.markdown("<p style='color:rgba(255,255,255,0.8); text-align:center; font-weight:600; font-size:16px;'>⚡ Release Frequency (RF)</p>", unsafe_allow_html=True)
+            st.bar_chart(lb_graph.set_index('Team')['RF'], color='#06b6d4')
+
+        with c2:
+            st.markdown("<p style='color:rgba(255,255,255,0.8); text-align:center; font-weight:600; font-size:16px;'>⏱️ Lead Time (LTDD)</p>", unsafe_allow_html=True)
+            st.bar_chart(lb_graph.set_index('Team')['LTDD'], color='#f59e0b')
 
  
 
 with tab3:
-
     st.markdown("<h2 style='color:white; text-align:center; margin-bottom:30px;'>🎖️ Achievements & Badges</h2>", unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class='achievement-card' style='background: linear-gradient(135deg, #667eea, #764ba2);'>
-        <div style='text-align:center; font-size:18px; font-weight:700; margin-bottom:20px;'>Badge Criteria</div>
-        <div style='font-size:14px; line-height:1.8;'>
-            <div style='margin-bottom:10px;'><strong>🏆 Release Champion:</strong> RF ≥ 250 — Exceptional delivery cadence</div>
-            <div style='margin-bottom:10px;'><strong>⚡ High Velocity:</strong> RF ≥ 180 — High release frequency</div>
-            <div style='margin-bottom:10px;'><strong>💨 Flow Master:</strong> LTDD < 2 days — Excellent flow efficiency</div>
-            <div style='margin-bottom:10px;'><strong>🛡️ Stability Shield:</strong> CFR < 5% — Very stable releases</div>
-            <div style='margin-bottom:10px;'><strong>🤖 Automation Pro:</strong> Automation Score = 20 — Full automation coverage</div>
+    
+    # Layout: Compact criteria on left, main content on right
+    criteria_col, content_col = st.columns([1, 3])
+    
+    with criteria_col:
+        st.markdown("""
+        <div class='achievement-card' style='background: rgba(96,165,250,0.15); padding:15px;'>
+            <div style='font-size:14px; font-weight:700; margin-bottom:12px; color:white;'>📋 Badge Criteria</div>
+            <div style='font-size:11px; line-height:1.6; color:rgba(255,255,255,0.9);'>
+                <div style='margin-bottom:8px;'><strong>🏆 Release Champion</strong><br/>RF ≥ 250</div>
+                <div style='margin-bottom:8px;'><strong>⚡ High Velocity</strong><br/>RF ≥ 180</div>
+                <div style='margin-bottom:8px;'><strong>💨 Flow Master</strong><br/>LTDD < 2 days</div>
+                <div style='margin-bottom:8px;'><strong>🛡️ Stability Shield</strong><br/>CFR < 5%</div>
+                <div style='margin-bottom:8px;'><strong>🤖 Automation Pro</strong><br/>Auto Score = 20</div>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Group teams by badges they've earned
-    badge_groups = {
-        'Release Champion': [],
-        'High Velocity': [],
-        'Flow Master': [],
-        'Stability Shield': [],
-        'Automation Pro': []
-    }
+        """, unsafe_allow_html=True)
     
-    for _, row in display_latest_df.iterrows():
-        for badge in row['Badges']:
-            if badge in badge_groups:
-                badge_groups[badge].append({
-                    'Team': row['Team'],
-                    'DPI': row['DPI'],
-                    'Rank': row['Rank'],
-                    'RF': row['RF'],
-                    'LTDD': row['LTDD'],
-                    'CFR': row['CFR'],
-                    'Automation_Score': row.get('Automation_Score', 0)
-                })
-    
-    # Display each badge category in collapsible expanders
-    st.markdown("<h3 style='color:white; margin-top:40px;'>🏆 Badge Winners</h3>", unsafe_allow_html=True)
-    
-    badge_configs = [
-        ('Release Champion', '🏆', 'rgba(255,215,0,0.15)', 'RF'),
-        ('High Velocity', '⚡', 'rgba(6,182,212,0.15)', 'RF'),
-        ('Flow Master', '💨', 'rgba(96,165,250,0.15)', 'LTDD'),
-        ('Stability Shield', '🛡️', 'rgba(249,115,22,0.15)', 'CFR'),
-        ('Automation Pro', '🤖', 'rgba(16,185,129,0.15)', 'Automation_Score')
-    ]
-    
-    for badge_name, icon, bg_color, metric_key in badge_configs:
-        teams = badge_groups[badge_name]
+    with content_col:
+        # Group teams by badges they've earned
+        badge_groups = {
+            'Release Champion': [],
+            'High Velocity': [],
+            'Flow Master': [],
+            'Stability Shield': [],
+            'Automation Pro': []
+        }
         
-        if teams:
-            # Sort teams by the relevant metric
-            if metric_key == 'LTDD':
-                teams_sorted = sorted(teams, key=lambda x: x[metric_key])  # Lower is better
-            else:
-                teams_sorted = sorted(teams, key=lambda x: x[metric_key], reverse=True)  # Higher is better
-            
-            with st.expander(f"{icon} {badge_name} ({len(teams)} teams)", expanded=False):
-                # Display in a grid
-                cols = st.columns(3)
-                for idx, team_data in enumerate(teams_sorted):
-                    with cols[idx % 3]:
-                        metric_display = ''
-                        if metric_key == 'RF':
-                            metric_display = f"RF: {team_data['RF']:.0f}"
-                        elif metric_key == 'LTDD':
-                            metric_display = f"LTDD: {team_data['LTDD']:.1f} days"
-                        elif metric_key == 'CFR':
-                            metric_display = f"CFR: {team_data['CFR']*100:.1f}%"
-                        elif metric_key == 'Automation_Score':
-                            metric_display = f"Auto Score: {team_data['Automation_Score']:.0f}/20"
-                        
-                        st.markdown(f"""
-                        <div class='team-card' style='background:{bg_color}; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.1);'>
-                            <div style='text-align:center;'>
-                                <div style='font-size:28px; margin-bottom:8px;'>{icon}</div>
-                                <div style='font-size:16px; font-weight:700; margin-bottom:5px; color:white;'>{team_data['Team']}</div>
-                                <div style='font-size:14px; color:rgba(255,255,255,0.8);'>{metric_display}</div>
-                                <div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {team_data['DPI']:.1f} | Rank #{team_data['Rank']}</div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-        else:
-            with st.expander(f"{icon} {badge_name} (0 teams)", expanded=False):
+        for _, row in display_latest_df.iterrows():
+            for badge in row['Badges']:
+                if badge in badge_groups:
+                    badge_groups[badge].append({
+                        'Team': row['Team'],
+                        'DPI': row['DPI'],
+                        'Rank': row['Rank'],
+                        'RF': row['RF'],
+                        'LTDD': row['LTDD'],
+                        'CFR': row['CFR'],
+                        'Automation_Score': row.get('Automation_Score', 0)
+                    })
+        
+        # Badge Statistics FIRST
+        st.markdown("<h3 style='color:white; margin-bottom:20px;'>📊 Badge Statistics</h3>", unsafe_allow_html=True)
+        
+        badge_configs = [
+            ('Release Champion', '🏆', 'rgba(255,215,0,0.15)', 'RF'),
+            ('High Velocity', '⚡', 'rgba(6,182,212,0.15)', 'RF'),
+            ('Flow Master', '💨', 'rgba(96,165,250,0.15)', 'LTDD'),
+            ('Stability Shield', '🛡️', 'rgba(249,115,22,0.15)', 'CFR'),
+            ('Automation Pro', '🤖', 'rgba(16,185,129,0.15)', 'Automation_Score')
+        ]
+        
+        # Display badge statistics first
+        stat_cols = st.columns(5)
+        for idx, (badge_name, icon, _, _) in enumerate(badge_configs):
+            count = len(badge_groups[badge_name])
+            with stat_cols[idx]:
                 st.markdown(f"""
-                <div style='text-align:center; color:rgba(255,255,255,0.6); padding:20px;'>
-                    {icon} No teams earned this badge yet
+                <div class='metric-card'>
+                    <div style='font-size:36px; margin-bottom:10px;'>{icon}</div>
+                    <div class='metric-value' style='font-size:32px;'>{count}</div>
+                    <div class='metric-label' style='font-size:11px;'>{badge_name}</div>
                 </div>
                 """, unsafe_allow_html=True)
-    
-    # Overall badge statistics
-    st.markdown("<h3 style='color:white; margin-top:50px;'>📊 Badge Statistics</h3>", unsafe_allow_html=True)
-    
-    stat_cols = st.columns(5)
-    for idx, (badge_name, icon, _, _) in enumerate(badge_configs):
-        count = len(badge_groups[badge_name])
-        with stat_cols[idx]:
-            st.markdown(f"""
-            <div class='metric-card'>
-                <div style='font-size:36px; margin-bottom:10px;'>{icon}</div>
-                <div class='metric-value' style='font-size:32px;'>{count}</div>
-                <div class='metric-label' style='font-size:11px;'>{badge_name}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        
+        # Badge Winners BELOW statistics
+        st.markdown("<h3 style='color:white; margin-top:40px;'>🏆 Badge Winners</h3>", unsafe_allow_html=True)
+        
+        for badge_name, icon, bg_color, metric_key in badge_configs:
+            teams = badge_groups[badge_name]
+            
+            if teams:
+                # Sort teams by the relevant metric
+                if metric_key == 'LTDD':
+                    teams_sorted = sorted(teams, key=lambda x: x[metric_key])  # Lower is better
+                else:
+                    teams_sorted = sorted(teams, key=lambda x: x[metric_key], reverse=True)  # Higher is better
+                
+                with st.expander(f"{icon} {badge_name} ({len(teams)} teams)", expanded=False):
+                    # Display in a grid
+                    cols = st.columns(3)
+                    for idx, team_data in enumerate(teams_sorted):
+                        with cols[idx % 3]:
+                            metric_display = ''
+                            if metric_key == 'RF':
+                                metric_display = f"RF: {team_data['RF']:.0f}"
+                            elif metric_key == 'LTDD':
+                                metric_display = f"LTDD: {team_data['LTDD']:.1f} days"
+                            elif metric_key == 'CFR':
+                                metric_display = f"CFR: {team_data['CFR']*100:.1f}%"
+                            elif metric_key == 'Automation_Score':
+                                metric_display = f"Auto Score: {team_data['Automation_Score']:.0f}/20"
+                            
+                            st.markdown(f"""
+                            <div class='team-card' style='background:{bg_color}; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.1);'>
+                                <div style='text-align:center;'>
+                                    <div style='font-size:28px; margin-bottom:8px;'>{icon}</div>
+                                    <div style='font-size:16px; font-weight:700; margin-bottom:5px; color:white;'>{team_data['Team']}</div>
+                                    <div style='font-size:14px; color:rgba(255,255,255,0.8);'>{metric_display}</div>
+                                    <div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {team_data['DPI']:.1f} | Rank #{team_data['Rank']}</div>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+            else:
+                with st.expander(f"{icon} {badge_name} (0 teams)", expanded=False):
+                    st.markdown(f"""
+                    <div style='text-align:center; color:rgba(255,255,255,0.6); padding:20px;'>
+                        {icon} No teams earned this badge yet
+                    </div>
+                    """, unsafe_allow_html=True)
 
  
 
