@@ -2106,75 +2106,113 @@ with tab2:
 
 with tab3:
 
-    # Badges tab header with export buttons
+    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:30px;'>🎖️ Achievements & Badges</h2>", unsafe_allow_html=True)
 
-    c1,c2 = st.columns([8,2])
-
-    with c1:
-
-        st.markdown("<h2 style='color:white; text-align:center; margin-bottom:30px;'>🎖️ Achievements & Badges</h2>", unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class='achievement-card' style='background: linear-gradient(135deg, #667eea, #764ba2);'>
-            <div style='text-align:center; font-size:18px; font-weight:700; margin-bottom:20px;'>Available Badges</div>
-            <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;">
-        """ + ' '.join([f"<div class='badge badge-gold'>{BADGE_ICONS[k]} {k}</div>" for k in BADGE_ICONS.keys()]) + """
-            </div>
-            <div style='text-align:center; margin-top:15px; font-size:14px; opacity:0.9;'>Earn badges by achieving excellence in specific metrics!</div>
+    st.markdown("""
+    <div class='achievement-card' style='background: linear-gradient(135deg, #667eea, #764ba2);'>
+        <div style='text-align:center; font-size:18px; font-weight:700; margin-bottom:20px;'>Badge Criteria</div>
+        <div style='font-size:14px; line-height:1.8;'>
+            <div style='margin-bottom:10px;'><strong>🏆 Release Champion:</strong> RF ≥ 250 — Exceptional delivery cadence</div>
+            <div style='margin-bottom:10px;'><strong>⚡ High Velocity:</strong> RF ≥ 180 — High release frequency</div>
+            <div style='margin-bottom:10px;'><strong>💨 Flow Master:</strong> LTDD < 2 days — Excellent flow efficiency</div>
+            <div style='margin-bottom:10px;'><strong>🛡️ Stability Shield:</strong> CFR < 5% — Very stable releases</div>
+            <div style='margin-bottom:10px;'><strong>🤖 Automation Pro:</strong> Automation Score = 20 — Full automation coverage</div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
-    with c2:
-
-        st.download_button('⬇️ Export Top/Bottom', data=monthly_sorted.to_csv(index=False), file_name='badges_top_bottom.csv')
-
- 
-
-    st.markdown("<h3 style='color:white; margin-top:40px;'>🏅 Top 5 Teams (Monthly Average)</h3>", unsafe_allow_html=True)
-
-    top5 = monthly_sorted.head(5).merge(display_latest_df[['Team','DPI','Rank']], on='Team', how='left')
-
-    top5_display = top5[['Team','Monthly_Avg_DPI','Rank']].rename(columns={'Monthly_Avg_DPI':'Monthly Avg DPI','Rank':'Latest Rank'})
-
-    # render top5 as cards with improved style
-
-    for idx, (_, r) in enumerate(top5_display.iterrows()):
-        medal = "🥇" if idx == 0 else "🥈" if idx == 1 else "🥉" if idx == 2 else "🏅"
-        gradient = "linear-gradient(135deg, #ffd700, #ffed4e)" if idx == 0 else "linear-gradient(135deg, #c0c0c0, #e8e8e8)" if idx == 1 else "linear-gradient(135deg, #cd7f32, #e8a87c)" if idx == 2 else "linear-gradient(135deg, #667eea, #764ba2)"
+    # Group teams by badges they've earned
+    badge_groups = {
+        'Release Champion': [],
+        'High Velocity': [],
+        'Flow Master': [],
+        'Stability Shield': [],
+        'Automation Pro': []
+    }
+    
+    for _, row in display_latest_df.iterrows():
+        for badge in row['Badges']:
+            if badge in badge_groups:
+                badge_groups[badge].append({
+                    'Team': row['Team'],
+                    'DPI': row['DPI'],
+                    'Rank': row['Rank'],
+                    'RF': row['RF'],
+                    'LTDD': row['LTDD'],
+                    'CFR': row['CFR'],
+                    'Automation_Score': row.get('Automation_Score', 0)
+                })
+    
+    # Display each badge category
+    st.markdown("<h3 style='color:white; margin-top:40px;'>🏆 Badge Winners</h3>", unsafe_allow_html=True)
+    
+    badge_configs = [
+        ('Release Champion', '🏆', 'linear-gradient(135deg, #ffd700, #ffed4e)', 'RF'),
+        ('High Velocity', '⚡', 'linear-gradient(135deg, #06b6d4, #0891b2)', 'RF'),
+        ('Flow Master', '💨', 'linear-gradient(135deg, #60a5fa, #3b82f6)', 'LTDD'),
+        ('Stability Shield', '🛡️', 'linear-gradient(135deg, #f97316, #ea580c)', 'CFR'),
+        ('Automation Pro', '🤖', 'linear-gradient(135deg, #10b981, #059669)', 'Automation_Score')
+    ]
+    
+    for badge_name, icon, gradient, metric_key in badge_configs:
+        teams = badge_groups[badge_name]
         
-        st.markdown(f"""
-        <div class='achievement-card' style='background:{gradient};'>
-            <div style='display:flex;justify-content:space-between;align-items:center;'>
-                <div>
-                    <div style='font-size:24px; font-weight:800;'>{r['Team']}</div>
-                    <div style='font-size:16px; margin-top:5px;'>Monthly Avg DPI: <span style='font-weight:700;'>{r['Monthly Avg DPI']:.1f}</span></div>
+        if teams:
+            st.markdown(f"<h4 style='color:white; margin-top:30px;'>{icon} {badge_name} ({len(teams)} teams)</h4>", unsafe_allow_html=True)
+            
+            # Sort teams by the relevant metric
+            if metric_key == 'LTDD':
+                teams_sorted = sorted(teams, key=lambda x: x[metric_key])  # Lower is better
+            else:
+                teams_sorted = sorted(teams, key=lambda x: x[metric_key], reverse=True)  # Higher is better
+            
+            # Display in a grid
+            cols = st.columns(3)
+            for idx, team_data in enumerate(teams_sorted):
+                with cols[idx % 3]:
+                    metric_display = ''
+                    if metric_key == 'RF':
+                        metric_display = f"RF: {team_data['RF']:.0f}"
+                    elif metric_key == 'LTDD':
+                        metric_display = f"LTDD: {team_data['LTDD']:.1f} days"
+                    elif metric_key == 'CFR':
+                        metric_display = f"CFR: {team_data['CFR']*100:.1f}%"
+                    elif metric_key == 'Automation_Score':
+                        metric_display = f"Auto Score: {team_data['Automation_Score']:.0f}/20"
+                    
+                    st.markdown(f"""
+                    <div class='achievement-card' style='background:{gradient}; margin-bottom:15px;'>
+                        <div style='text-align:center;'>
+                            <div style='font-size:36px; margin-bottom:10px;'>{icon}</div>
+                            <div style='font-size:18px; font-weight:800; margin-bottom:5px;'>{team_data['Team']}</div>
+                            <div style='font-size:14px; opacity:0.9;'>{metric_display}</div>
+                            <div style='font-size:12px; margin-top:5px; opacity:0.8;'>DPI: {team_data['DPI']:.1f} | Rank #{team_data['Rank']}</div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class='team-card' style='background: linear-gradient(135deg, rgba(107,114,128,0.2), rgba(75,85,99,0.1)); margin-top:20px;'>
+                <div style='text-align:center; color:rgba(255,255,255,0.7);'>
+                    {icon} <strong>{badge_name}</strong> — No teams earned this badge yet
                 </div>
-                <div style='font-size:48px;'>{medal}</div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-
- 
-
-    st.markdown("<h3 style='color:white; margin-top:40px;'>📊 Teams Needing Support</h3>", unsafe_allow_html=True)
-
-    bottom5 = monthly_sorted.tail(5).merge(display_latest_df[['Team','DPI','Rank']], on='Team', how='left')
-
-    bottom5_display = bottom5[['Team','Monthly_Avg_DPI','Rank']].rename(columns={'Monthly_Avg_DPI':'Monthly Avg DPI','Rank':'Latest Rank'})
-
-    for _, r in bottom5_display.iterrows():
-
-        st.markdown(f"""
-        <div class='team-card' style='background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.1));'>
-            <div style='display:flex;justify-content:space-between;align-items:center;'>
-                <div>
-                    <div style='font-size:20px; font-weight:700; color:white;'>{r['Team']}</div>
-                    <div style='font-size:14px; margin-top:5px; color:rgba(255,255,255,0.8);'>Monthly Avg DPI: <span style='font-weight:600;'>{r['Monthly Avg DPI']:.1f}</span></div>
-                </div>
-                <div style='font-size:32px;'>💪</div>
+            """, unsafe_allow_html=True)
+    
+    # Overall badge statistics
+    st.markdown("<h3 style='color:white; margin-top:50px;'>📊 Badge Statistics</h3>", unsafe_allow_html=True)
+    
+    stat_cols = st.columns(5)
+    for idx, (badge_name, icon, _, _) in enumerate(badge_configs):
+        count = len(badge_groups[badge_name])
+        with stat_cols[idx]:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div style='font-size:36px; margin-bottom:10px;'>{icon}</div>
+                <div class='metric-value' style='font-size:32px;'>{count}</div>
+                <div class='metric-label' style='font-size:11px;'>{badge_name}</div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
  
 
