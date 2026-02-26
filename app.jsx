@@ -31,16 +31,16 @@ st.markdown("""
 }
 
 .stApp {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
 }
 
 /* Sidebar Styling */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+    background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+    background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
 }
 
 [data-testid="stSidebar"] .stMarkdown {
@@ -185,7 +185,7 @@ canvas {
 
 /* Animated Header */
 .hero-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
     padding: 40px;
     border-radius: 20px;
     text-align: center;
@@ -510,10 +510,7 @@ canvas {
 .metric-value {
     font-size: 48px;
     font-weight: 800;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #60a5fa;
 }
 
 .metric-label {
@@ -597,14 +594,14 @@ canvas {
 /* Badge Enhancements */
 .badge {
     display: inline-block;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: rgba(96,165,250,0.2);
     color: white;
     padding: 8px 16px;
     border-radius: 20px;
     margin: 4px;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    border: 1px solid rgba(96,165,250,0.4);
     transition: all 0.3s ease;
     animation: badgePop 0.5s ease-out;
 }
@@ -655,7 +652,7 @@ canvas {
 
 /* Score Card */
 .score-card {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, rgba(74,85,104,0.4), rgba(45,55,72,0.4));
     color: white;
     padding: 30px;
     border-radius: 20px;
@@ -745,12 +742,13 @@ canvas {
 
 /* Achievement Card */
 .achievement-card {
-    background: linear-gradient(135deg, #f093fb, #f5576c);
+    background: linear-gradient(135deg, rgba(74,85,104,0.3), rgba(45,55,72,0.3));
     border-radius: 20px;
     padding: 25px;
     color: white;
-    box-shadow: 0 10px 40px rgba(240,147,251,0.4);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     margin: 15px 0;
+    border: 1px solid rgba(255,255,255,0.1);
     animation: achievementPop 0.6s ease-out;
 }
 
@@ -2143,61 +2141,59 @@ with tab3:
                     'Automation_Score': row.get('Automation_Score', 0)
                 })
     
-    # Display each badge category
+    # Display each badge category in collapsible expanders
     st.markdown("<h3 style='color:white; margin-top:40px;'>🏆 Badge Winners</h3>", unsafe_allow_html=True)
     
     badge_configs = [
-        ('Release Champion', '🏆', 'linear-gradient(135deg, #ffd700, #ffed4e)', 'RF'),
-        ('High Velocity', '⚡', 'linear-gradient(135deg, #06b6d4, #0891b2)', 'RF'),
-        ('Flow Master', '💨', 'linear-gradient(135deg, #60a5fa, #3b82f6)', 'LTDD'),
-        ('Stability Shield', '🛡️', 'linear-gradient(135deg, #f97316, #ea580c)', 'CFR'),
-        ('Automation Pro', '🤖', 'linear-gradient(135deg, #10b981, #059669)', 'Automation_Score')
+        ('Release Champion', '🏆', 'rgba(255,215,0,0.15)', 'RF'),
+        ('High Velocity', '⚡', 'rgba(6,182,212,0.15)', 'RF'),
+        ('Flow Master', '💨', 'rgba(96,165,250,0.15)', 'LTDD'),
+        ('Stability Shield', '🛡️', 'rgba(249,115,22,0.15)', 'CFR'),
+        ('Automation Pro', '🤖', 'rgba(16,185,129,0.15)', 'Automation_Score')
     ]
     
-    for badge_name, icon, gradient, metric_key in badge_configs:
+    for badge_name, icon, bg_color, metric_key in badge_configs:
         teams = badge_groups[badge_name]
         
         if teams:
-            st.markdown(f"<h4 style='color:white; margin-top:30px;'>{icon} {badge_name} ({len(teams)} teams)</h4>", unsafe_allow_html=True)
-            
             # Sort teams by the relevant metric
             if metric_key == 'LTDD':
                 teams_sorted = sorted(teams, key=lambda x: x[metric_key])  # Lower is better
             else:
                 teams_sorted = sorted(teams, key=lambda x: x[metric_key], reverse=True)  # Higher is better
             
-            # Display in a grid
-            cols = st.columns(3)
-            for idx, team_data in enumerate(teams_sorted):
-                with cols[idx % 3]:
-                    metric_display = ''
-                    if metric_key == 'RF':
-                        metric_display = f"RF: {team_data['RF']:.0f}"
-                    elif metric_key == 'LTDD':
-                        metric_display = f"LTDD: {team_data['LTDD']:.1f} days"
-                    elif metric_key == 'CFR':
-                        metric_display = f"CFR: {team_data['CFR']*100:.1f}%"
-                    elif metric_key == 'Automation_Score':
-                        metric_display = f"Auto Score: {team_data['Automation_Score']:.0f}/20"
-                    
-                    st.markdown(f"""
-                    <div class='achievement-card' style='background:{gradient}; margin-bottom:15px;'>
-                        <div style='text-align:center;'>
-                            <div style='font-size:36px; margin-bottom:10px;'>{icon}</div>
-                            <div style='font-size:18px; font-weight:800; margin-bottom:5px;'>{team_data['Team']}</div>
-                            <div style='font-size:14px; opacity:0.9;'>{metric_display}</div>
-                            <div style='font-size:12px; margin-top:5px; opacity:0.8;'>DPI: {team_data['DPI']:.1f} | Rank #{team_data['Rank']}</div>
+            with st.expander(f"{icon} {badge_name} ({len(teams)} teams)", expanded=False):
+                # Display in a grid
+                cols = st.columns(3)
+                for idx, team_data in enumerate(teams_sorted):
+                    with cols[idx % 3]:
+                        metric_display = ''
+                        if metric_key == 'RF':
+                            metric_display = f"RF: {team_data['RF']:.0f}"
+                        elif metric_key == 'LTDD':
+                            metric_display = f"LTDD: {team_data['LTDD']:.1f} days"
+                        elif metric_key == 'CFR':
+                            metric_display = f"CFR: {team_data['CFR']*100:.1f}%"
+                        elif metric_key == 'Automation_Score':
+                            metric_display = f"Auto Score: {team_data['Automation_Score']:.0f}/20"
+                        
+                        st.markdown(f"""
+                        <div class='team-card' style='background:{bg_color}; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.1);'>
+                            <div style='text-align:center;'>
+                                <div style='font-size:28px; margin-bottom:8px;'>{icon}</div>
+                                <div style='font-size:16px; font-weight:700; margin-bottom:5px; color:white;'>{team_data['Team']}</div>
+                                <div style='font-size:14px; color:rgba(255,255,255,0.8);'>{metric_display}</div>
+                                <div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {team_data['DPI']:.1f} | Rank #{team_data['Rank']}</div>
+                            </div>
                         </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
         else:
-            st.markdown(f"""
-            <div class='team-card' style='background: linear-gradient(135deg, rgba(107,114,128,0.2), rgba(75,85,99,0.1)); margin-top:20px;'>
-                <div style='text-align:center; color:rgba(255,255,255,0.7);'>
-                    {icon} <strong>{badge_name}</strong> — No teams earned this badge yet
+            with st.expander(f"{icon} {badge_name} (0 teams)", expanded=False):
+                st.markdown(f"""
+                <div style='text-align:center; color:rgba(255,255,255,0.6); padding:20px;'>
+                    {icon} No teams earned this badge yet
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
     
     # Overall badge statistics
     st.markdown("<h3 style='color:white; margin-top:50px;'>📊 Badge Statistics</h3>", unsafe_allow_html=True)
