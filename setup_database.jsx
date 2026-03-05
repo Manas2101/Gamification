@@ -1,151 +1,151 @@
 """
-Interactive setup script for initializing the database
-Helps with first-time setup and data population
+Automated database setup script for deployment
+Initializes database and optionally fetches initial data
+No interactive prompts - uses environment variables from .env
 """
 
 import sys
+import logging
 from datetime import datetime
 from database import MetricsDatabase
 from data_fetcher import DataFetcher
 import config
 
-
-def print_header(text):
-    """Print formatted header"""
-    print("\n" + "=" * 60)
-    print(f"  {text}")
-    print("=" * 60 + "\n")
-
-
-def get_bearer_token():
-    """Get bearer token from user"""
-    print("Enter your Bearer Token for API authentication:")
-    print("(This will be used to fetch data from TeamBook and DataSight)")
-    token = input("Bearer Token: ").strip()
-    
-    if not token:
-        print("❌ Bearer token is required!")
-        sys.exit(1)
-    
-    return token
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 def initialize_database():
     """Initialize the database"""
-    print_header("Database Initialization")
+    logger.info("=" * 60)
+    logger.info("Database Initialization")
+    logger.info("=" * 60)
     
-    print("Creating database schema...")
+    logger.info("Creating database schema...")
     db = MetricsDatabase(config.DB_PATH)
-    print("✅ Database initialized successfully!")
+    logger.info("✅ Database initialized successfully!")
     
     return db
 
 
-def fetch_initial_data(bearer_token):
-    """Fetch initial data from APIs"""
-    print_header("Data Fetching")
+def fetch_initial_data(fetch_data=True, backfill_months=0):
+    """
+    Fetch initial data from APIs
     
-    print("Do you want to fetch data now? (y/n): ", end="")
-    choice = input().strip().lower()
-    
-    if choice != 'y':
-        print("⏭️  Skipping data fetch. You can fetch data later from the dashboard.")
+    Args:
+        fetch_data: Whether to fetch current week data (default: True)
+        backfill_months: Number of months to backfill (default: 0)
+    """
+    if not fetch_data:
+        logger.info("Skipping data fetch (fetch_data=False)")
         return
     
-    print("\nInitializing data fetcher...")
-    fetcher = DataFetcher(bearer_token, config.DB_PATH)
+    # Check if tokens are configured
+    if not config.TEAMBOOK_BEARER_TOKEN or not config.DATASIGHT_BEARER_TOKEN:
+        logger.warning("⚠️ Bearer tokens not configured in .env file")
+        logger.warning("Skipping data fetch. Configure tokens and run weekly_refresh.py")
+        return
     
-    print("\n📊 Fetching current week data...")
+    logger.info("=" * 60)
+    logger.info("Data Fetching")
+    logger.info("=" * 60)
+    
+    logger.info("Initializing data fetcher...")
+    fetcher = DataFetcher(
+        config.TEAMBOOK_BEARER_TOKEN,
+        config.DATASIGHT_BEARER_TOKEN,
+        config.DB_PATH
+    )
+    
+    logger.info("📊 Fetching current week data...")
     try:
         fetcher.refresh_current_week()
-        print("✅ Current week data fetched successfully!")
+        logger.info("✅ Current week data fetched successfully!")
     except Exception as e:
-        print(f"❌ Error fetching data: {e}")
-        print("You can try again later from the dashboard.")
+        logger.error(f"❌ Error fetching data: {e}")
+        logger.info("You can fetch data later using weekly_refresh.py")
         return
     
-    print("\nDo you want to backfill historical data? (y/n): ", end="")
-    choice = input().strip().lower()
-    
-    if choice == 'y':
-        print("How many months of historical data? (1-12): ", end="")
+    # Backfill historical data if requested
+    if backfill_months > 0:
+        logger.info(f"📈 Backfilling {backfill_months} months of historical data...")
         try:
-            months = int(input().strip())
-            months = max(1, min(12, months))
-            
-            print(f"\n📈 Backfilling {months} months of historical data...")
-            print("This may take a few minutes...")
-            
-            fetcher.backfill_historical_data(months=months)
-            print("✅ Historical data backfilled successfully!")
-            
-        except ValueError:
-            print("❌ Invalid input. Skipping backfill.")
+            fetcher.backfill_historical_data(months=backfill_months)
+            logger.info("✅ Historical data backfilled successfully!")
         except Exception as e:
-            print(f"❌ Error backfilling data: {e}")
+            logger.error(f"❌ Error backfilling data: {e}")
+    
+    # Cleanup old data
+    logger.info(f"🧹 Cleaning up old data (keeping last {config.MAX_WEEKS_TO_KEEP} weeks)...")
+    fetcher.cleanup_old_data(max_weeks=config.MAX_WEEKS_TO_KEEP)
 
 
 def verify_data(db):
     """Verify data was loaded correctly"""
-    print_header("Data Verification")
+    logger.info("=" * 60)
+    logger.info("Data Verification")
+    logger.info("=" * 60)
     
     pods = db.get_all_pods()
-    print(f"📦 Total pods in database: {len(pods)}")
+    logger.info(f"📦 Total pods in database: {len(pods)}")
     
     if len(pods) > 0:
-        print("\nSample pods:")
+        logger.info("\nSample pods:")
         for _, pod in pods.head(5).iterrows():
-            print(f"  - {pod['pod_name']} (ID: {pod['pod_id']})")
+            logger.info(f"  - {pod['pod_name']} (ID: {pod['pod_id']})")
     
     latest = db.get_latest_metrics()
-    print(f"\n📊 Latest metrics records: {len(latest)}")
+    logger.info(f"\n📊 Latest metrics records: {len(latest)}")
     
     if len(latest) > 0:
-        print(f"\nTop 3 teams by DPI:")
+        logger.info(f"\nTop 3 teams by DPI:")
         top_teams = latest.nlargest(3, 'DPI')
         for _, team in top_teams.iterrows():
-            print(f"  🏆 {team['Team']}: DPI = {team['DPI']} ({team['Tier']})")
+            logger.info(f"  🏆 {team['Team']}: DPI = {team['DPI']} ({team['Tier']})")
 
 
 def main():
-    """Main setup workflow"""
-    print_header("DevOps Gamification Dashboard - Database Setup")
+    """
+    Main setup workflow - fully automated
     
-    print("This script will help you set up the database and fetch initial data.")
-    print("\nPress Enter to continue or Ctrl+C to cancel...")
-    input()
+    Environment variables (from .env):
+        TEAMBOOK_BEARER_TOKEN - TeamBook API token
+        DATASIGHT_BEARER_TOKEN - DataSight API token
+        DB_PATH - Database file path (default: metrics.db)
+        MAX_WEEKS_TO_KEEP - Data retention period (default: 5)
+    """
+    logger.info("=" * 60)
+    logger.info("DevOps Gamification Dashboard - Database Setup")
+    logger.info("=" * 60)
     
     # Step 1: Initialize database
     db = initialize_database()
     
-    # Step 2: Get bearer token
-    print_header("API Configuration")
-    bearer_token = get_bearer_token()
+    # Step 2: Fetch data (if tokens configured)
+    fetch_initial_data(fetch_data=True, backfill_months=0)
     
-    # Step 3: Fetch data
-    fetch_initial_data(bearer_token)
-    
-    # Step 4: Verify
+    # Step 3: Verify
     verify_data(db)
     
     # Final message
-    print_header("Setup Complete!")
-    print("✅ Database is ready to use!")
-    print("\nNext steps:")
-    print("  1. Run the dashboard: streamlit run app.py")
-    print("  2. Enter your bearer token in the sidebar")
-    print("  3. Click 'Refresh Data' to update metrics")
-    print("\n💡 Tip: Set up a weekly cron job to automatically refresh data")
-    print("   See README_API_INTEGRATION.md for details")
-    print()
+    logger.info("=" * 60)
+    logger.info("Setup Complete!")
+    logger.info("=" * 60)
+    logger.info("✅ Database is ready to use!")
+    logger.info("\nNext steps:")
+    logger.info("  1. Configure tokens in .env file (if not done)")
+    logger.info("  2. Run: streamlit run app.py")
+    logger.info("  3. Set up weekly cron: python weekly_refresh.py")
+    logger.info("\n💡 See SECURE_SETUP.md for deployment details")
 
 
 if __name__ == "__main__":
     try:
         main()
-    except KeyboardInterrupt:
-        print("\n\n❌ Setup cancelled by user")
-        sys.exit(0)
     except Exception as e:
-        print(f"\n\n❌ Setup failed: {e}")
+        logger.error(f"❌ Setup failed: {e}", exc_info=True)
         sys.exit(1)

@@ -1,30 +1,41 @@
 """
 Example usage of the API integration
 Demonstrates how to fetch and display data
+Uses tokens from .env file - no prompts
 """
 
 from datetime import datetime
 from data_fetcher import DataFetcher
 from database import MetricsDatabase
 import config
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def example_fetch_data():
-    """Example: Fetch data from APIs"""
-    print("=" * 60)
-    print("Example 1: Fetching Data from APIs")
-    print("=" * 60)
+    """Example: Fetch data from APIs using tokens from .env"""
+    logger.info("=" * 60)
+    logger.info("Example 1: Fetching Data from APIs")
+    logger.info("=" * 60)
     
-    # Replace with your actual bearer token
-    BEARER_TOKEN = "your_bearer_token_here"
+    # Check if tokens are configured
+    if not config.TEAMBOOK_BEARER_TOKEN or not config.DATASIGHT_BEARER_TOKEN:
+        logger.error("❌ Bearer tokens not configured in .env file")
+        return
     
-    # Initialize fetcher
-    fetcher = DataFetcher(BEARER_TOKEN)
+    # Initialize fetcher with separate tokens
+    fetcher = DataFetcher(
+        config.TEAMBOOK_BEARER_TOKEN,
+        config.DATASIGHT_BEARER_TOKEN,
+        config.DB_PATH
+    )
     
     # Fetch current week data
-    print("\n📊 Fetching current week data...")
+    logger.info("\n📊 Fetching current week data...")
     fetcher.refresh_current_week()
-    print("✅ Data fetched successfully!")
+    logger.info("✅ Data fetched successfully!")
 
 
 def example_query_database():
@@ -106,30 +117,33 @@ def example_calculate_scores():
 
 
 def example_api_calls():
-    """Example: Direct API calls"""
-    print("\n" + "=" * 60)
-    print("Example 4: Direct API Calls")
-    print("=" * 60)
+    """Example: Direct API calls using tokens from .env"""
+    logger.info("\n" + "=" * 60)
+    logger.info("Example 4: Direct API Calls")
+    logger.info("=" * 60)
     
     from api_integration import TeamBookAPI, DataSightAPI
     from datetime import datetime
     
-    BEARER_TOKEN = "your_bearer_token_here"
+    # Check if tokens are configured
+    if not config.TEAMBOOK_BEARER_TOKEN or not config.DATASIGHT_BEARER_TOKEN:
+        logger.error("❌ Bearer tokens not configured in .env file")
+        return
     
     # TeamBook API
-    print("\n📦 Fetching pods from TeamBook...")
-    teambook = TeamBookAPI(BEARER_TOKEN)
+    logger.info("\n📦 Fetching pods from TeamBook...")
+    teambook = TeamBookAPI(config.TEAMBOOK_BEARER_TOKEN)
     try:
         pods = teambook.get_pods()
-        print(f"✅ Found {len(pods)} pods")
+        logger.info(f"✅ Found {len(pods)} pods")
         if len(pods) > 0:
-            print(f"Sample: {pods[0]}")
+            logger.info(f"Sample: {pods[0]}")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        logger.error(f"❌ Error: {e}")
     
     # DataSight API
-    print("\n📊 Fetching metrics from DataSight...")
-    datasight = DataSightAPI(BEARER_TOKEN)
+    logger.info("\n📊 Fetching metrics from DataSight...")
+    datasight = DataSightAPI(config.DATASIGHT_BEARER_TOKEN)
     
     # Example: Get metrics for pod ID 1251
     pod_id = 1251
@@ -137,23 +151,23 @@ def example_api_calls():
     
     try:
         metrics = datasight.get_all_metrics(pod_id, week_date, week_date)
-        print(f"✅ Metrics for pod {pod_id}:")
-        print(f"  MTTR: {metrics.get('mttr')}")
-        print(f"  LTTD: {metrics.get('lttd')}")
-        print(f"  RF: {metrics.get('rf')}")
-        print(f"  CFR: {metrics.get('cfr')}")
+        logger.info(f"✅ Metrics for pod {pod_id}:")
+        logger.info(f"  MTTR: {metrics.get('mttr')}")
+        logger.info(f"  LTTD: {metrics.get('lttd')}")
+        logger.info(f"  RF: {metrics.get('rf')}")
+        logger.info(f"  CFR: {metrics.get('cfr')}")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        logger.error(f"❌ Error: {e}")
 
 
 def main():
-    """Run all examples"""
-    print("\n" + "=" * 60)
-    print("DevOps Gamification - API Integration Examples")
-    print("=" * 60)
+    """Run all examples - uses tokens from .env file"""
+    logger.info("\n" + "=" * 60)
+    logger.info("DevOps Gamification - API Integration Examples")
+    logger.info("=" * 60)
     
-    print("\nNote: Replace 'your_bearer_token_here' with your actual token")
-    print("      in the code before running these examples.\n")
+    logger.info("\nNote: Configure tokens in .env file before running")
+    logger.info("      See .env.example for template\n")
     
     # Uncomment the examples you want to run:
     
