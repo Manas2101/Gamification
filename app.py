@@ -1446,23 +1446,31 @@ def compute_badges(df_row):
 
     badges = []
 
-    if df_row['RF'] >= 250:
+    # Check RF with None safety
+    rf = df_row.get('RF')
+    if rf is not None and rf >= 250:
 
         badges.append('Release Champion')
 
-    elif df_row['RF'] >= 180:
+    elif rf is not None and rf >= 180:
 
         badges.append('High Velocity')
 
-    if df_row['LTDD'] < 2:
+    # Check LTDD with None safety
+    ltdd = df_row.get('LTDD')
+    if ltdd is not None and ltdd < 2:
 
         badges.append('Flow Master')
 
-    if df_row['CFR'] < 0.05:
+    # Check CFR with None safety
+    cfr = df_row.get('CFR')
+    if cfr is not None and cfr < 0.05:
 
         badges.append('Stability Shield')
 
-    if df_row.get('Automation_Score', 0) >= 20:
+    # Check Automation Score with None safety
+    automation_score = df_row.get('Automation_Score', 0)
+    if automation_score is not None and automation_score >= 20:
 
         badges.append('Automation Pro')
 
@@ -1693,25 +1701,28 @@ with tab1:
     pct = (display_history[display_history['Tier'].isin(['Elite','Advanced'])]['Team'].nunique() / display_history['Team'].nunique()) * 100
 
     with col1:
+        avg_dpi_display = f"{avg_dpi:.1f}" if avg_dpi is not None and not pd.isna(avg_dpi) else "N/A"
         st.markdown(f"""
         <div class='metric-card'>
-            <div class='metric-value'>{avg_dpi:.1f}</div>
+            <div class='metric-value'>{avg_dpi_display}</div>
             <div class='metric-label'>🎯 Avg DPI</div>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
+        avg_rf_display = f"{avg_rf:.0f}" if avg_rf is not None and not pd.isna(avg_rf) else "N/A"
         st.markdown(f"""
         <div class='metric-card'>
-            <div class='metric-value'>{avg_rf:.0f}</div>
+            <div class='metric-value'>{avg_rf_display}</div>
             <div class='metric-label'>⚡ Avg RF</div>
         </div>
         """, unsafe_allow_html=True)
 
     with col3:
+        avg_ltdd_display = f"{avg_ltdd:.1f}" if avg_ltdd is not None and not pd.isna(avg_ltdd) else "N/A"
         st.markdown(f"""
         <div class='metric-card'>
-            <div class='metric-value'>{avg_ltdd:.1f}</div>
+            <div class='metric-value'>{avg_ltdd_display}</div>
             <div class='metric-label'>⏱ Avg LTDD</div>
         </div>
         """, unsafe_allow_html=True)
@@ -1955,12 +1966,17 @@ with tab2:
                 rank_indicator = f"<span style='color:#10b981;'>↑ {rank_change}</span>" if rank_change > 0 else f"<span style='color:#ef4444;'>↓ {abs(rank_change)}</span>" if rank_change < 0 else "<span style='color:#6b7280;'>—</span>"
                 tier_color = COLOR_MAP.get(row['Tier'], '#6b7280')
                 
+                # Format values with None checks
+                rf_display = f"{row['RF']:.0f}" if row['RF'] is not None else "N/A"
+                ltdd_display = f"{row['LTDD']:.1f}" if row['LTDD'] is not None else "N/A"
+                dpi_display = f"{row['DPI']:.1f}" if row['DPI'] is not None else "N/A"
+                
                 table_html += f"""    <tr class='rank-table-row'>
         <td class='rank-table-cell' style='font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
         <td class='rank-table-cell' style='font-weight:700;'>{row['Team']}</td>
-        <td class='rank-table-cell' style='font-weight:700; color:#fbbf24;'>{row['DPI']:.1f}</td>
-        <td class='rank-table-cell'>{row['RF']:.0f}</td>
-        <td class='rank-table-cell'>{row['LTDD']:.1f}</td>
+        <td class='rank-table-cell' style='font-weight:700; color:#fbbf24;'>{dpi_display}</td>
+        <td class='rank-table-cell'>{rf_display}</td>
+        <td class='rank-table-cell'>{ltdd_display}</td>
         <td class='rank-table-cell'><span style='background:{tier_color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;'>{row['Tier']}</span></td>
         <td class='rank-table-cell'>{rank_indicator}</td>
     </tr>
@@ -1989,25 +2005,31 @@ with tab2:
         stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
         
         with stat_col1:
+            rf_mean = lb_graph['RF'].mean()
+            rf_mean_display = f"{rf_mean:.0f}" if rf_mean is not None and not pd.isna(rf_mean) else "N/A"
             st.markdown(f"""
             <div class='metric-card'>
-                <div class='metric-value'>{lb_graph['RF'].mean():.0f}</div>
+                <div class='metric-value'>{rf_mean_display}</div>
                 <div class='metric-label'>Avg RF</div>
             </div>
             """, unsafe_allow_html=True)
         
         with stat_col2:
+            rf_max = lb_graph['RF'].max()
+            rf_max_display = f"{rf_max:.0f}" if rf_max is not None and not pd.isna(rf_max) else "N/A"
             st.markdown(f"""
             <div class='metric-card'>
-                <div class='metric-value'>{lb_graph['RF'].max():.0f}</div>
+                <div class='metric-value'>{rf_max_display}</div>
                 <div class='metric-label'>Max RF</div>
             </div>
             """, unsafe_allow_html=True)
         
         with stat_col3:
+            ltdd_mean = lb_graph['LTDD'].mean()
+            ltdd_mean_display = f"{ltdd_mean:.1f}" if ltdd_mean is not None and not pd.isna(ltdd_mean) else "N/A"
             st.markdown(f"""
             <div class='metric-card'>
-                <div class='metric-value'>{lb_graph['LTDD'].mean():.1f}</div>
+                <div class='metric-value'>{ltdd_mean_display}</div>
                 <div class='metric-label'>Avg LTDD</div>
             </div>
             """, unsafe_allow_html=True)
