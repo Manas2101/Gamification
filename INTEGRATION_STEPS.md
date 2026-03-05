@@ -1,252 +1,95 @@
-# Integration Steps - Connecting Database to Dashboard
+Complete Setup and Run Instructions
+Here are all the commands you need to run, line by line:
 
-## Quick Start (3 Steps)
-
-### Step 1: Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### Step 2: Initialize Database
-```bash
-python setup_database.py
-```
-Follow the prompts to:
-- Enter your bearer token
-- Fetch initial data
-- Optionally backfill historical data
-
-### Step 3: Update app.py (Optional)
-
-To use the database instead of CSV, add these lines at the top of `app.py`:
-
-```python
-# Add after existing imports (around line 11)
-from streamlit_integration import load_dashboard_data, show_data_refresh_section
-
-# Replace the load_history() section (around line 1368) with:
-latest_df, history_df = load_dashboard_data()
-
-# Add refresh controls in sidebar (add anywhere in sidebar section):
-show_data_refresh_section()
-```
-
-## Detailed Integration Options
-
-### Option A: Minimal Integration (Keep CSV as fallback)
-
-Keep your existing code and add database as an option:
-
-```python
-import os
-from streamlit_integration import DashboardDataLoader
-
-# Try loading from database first, fallback to CSV
-try:
-    loader = DashboardDataLoader()
-    history_df = loader.load_historical_metrics()
-    if history_df.empty:
-        raise ValueError("No database data")
-except:
-    # Fallback to CSV
-    history_df = load_history()
-```
-
-### Option B: Full Database Integration (Recommended)
-
-Replace CSV loading completely:
-
-1. **Backup your current app.py**
-```bash
-cp app.py app.py.backup
-```
-
-2. **Add imports at top of app.py** (after line 11):
-```python
-from streamlit_integration import load_dashboard_data, show_data_refresh_section
-```
-
-3. **Replace data loading section** (around line 1354-1368):
-```python
-# OLD CODE (comment out or remove):
-# def load_history():
-#     if os.path.exists(HISTORY_FILE):
-#         hist = pd.read_csv(HISTORY_FILE, parse_dates=['Week','Week_Start'])
-#         return hist
-#     else:
-#         return create_sample_history(HISTORY_FILE)
-# 
-# history_df = load_history()
-
-# NEW CODE:
-latest_df, history_df = load_dashboard_data()
-```
-
-4. **Add refresh controls in sidebar** (around line 1450 or in sidebar section):
-```python
-# Add data refresh section
-show_data_refresh_section()
-```
-
-### Option C: Hybrid Approach (Use both)
-
-Use database for real-time data, keep CSV for backup:
-
-```python
-from streamlit_integration import DashboardDataLoader
-
-# Load from database
-loader = DashboardDataLoader()
-db_data = loader.load_latest_metrics()
-
-if not db_data.empty:
-    # Use database data
-    history_df = loader.load_historical_metrics()
-    st.sidebar.success("📊 Using real-time data")
-else:
-    # Fallback to CSV
-    history_df = load_history()
-    st.sidebar.warning("📁 Using CSV data (no database)")
-
-# Add refresh option
-show_data_refresh_section()
-```
-
-## Testing the Integration
-
-### 1. Test Database Connection
-```python
-python -c "from database import MetricsDatabase; db = MetricsDatabase(); print('✅ Database OK')"
-```
-
-### 2. Test Data Fetching (requires bearer token)
-```python
-python example_usage.py
-```
-
-### 3. Test Dashboard
-```bash
-streamlit run app.py
-```
-
-## Data Flow
-
-```
-User enters Bearer Token in Dashboard
-           ↓
-Click "Refresh Data" button
-           ↓
-TeamBook API → Fetch all pods
-           ↓
-For each pod:
-  DataSight API → Fetch MTTR, LTTD, RF, CFR
-           ↓
-Randomize missing fields (stack, BU, etc.)
-           ↓
-Calculate DPI and scores
-           ↓
-Store in SQLite database
-           ↓
-Dashboard displays updated data
-```
-
-## Weekly Refresh Schedule
-
-### Manual Refresh
-- Click "🔄 Refresh Data" in dashboard sidebar
-- Enter bearer token when prompted
-
-### Automated Refresh (Cron)
-
-**Linux/Mac:**
-```bash
-# Edit crontab
-crontab -e
-
-# Add this line (runs every Monday at 9 AM)
-0 9 * * 1 cd /Users/kritikapandey/Desktop/Gamification && /usr/bin/python3 -c "from data_fetcher import DataFetcher; import os; DataFetcher(os.getenv('BEARER_TOKEN')).refresh_current_week()" >> /tmp/gamification_refresh.log 2>&1
-```
-
-**Windows (Task Scheduler):**
-Create a batch file `refresh_data.bat`:
-```batch
-@echo off
-cd C:\path\to\Gamification
-python -c "from data_fetcher import DataFetcher; import os; DataFetcher(os.getenv('BEARER_TOKEN')).refresh_current_week()"
-```
-
-Then schedule it in Task Scheduler to run weekly.
-
-## Troubleshooting
-
-### Issue: "No module named 'api_integration'"
-**Solution:** Make sure you're in the correct directory
-```bash
+Step 1: Navigate to Project Directory
+bash
 cd /Users/kritikapandey/Desktop/Gamification
-python app.py
-```
+Step 2: Install Python Dependencies
+bash
+pip install -r requirements.txt
+Or if you're using pip3:
 
-### Issue: "Database is locked"
-**Solution:** Close any other processes accessing the database
-```bash
-# Find processes using the database
-lsof metrics.db
-# Kill if needed
-```
+bash
+pip3 install -r requirements.txt
+Step 3: Create .env File with Your Bearer Tokens
+bash
+cp .env.example .env
+Now edit the .env file:
 
-### Issue: "Invalid bearer token"
-**Solution:** 
-1. Verify token is correct
-2. Check token hasn't expired
-3. Ensure token has proper permissions for both APIs
+bash
+nano .env
+Add your actual bearer tokens (replace the placeholder values):
 
-### Issue: "No data showing in dashboard"
-**Solution:**
-```python
-# Check database contents
+env
+TEAMBOOK_BEARER_TOKEN=your_actual_teambook_token_here
+DATASIGHT_BEARER_TOKEN=your_actual_datasight_token_here
+MAX_WEEKS_TO_KEEP=5
+DB_PATH=metrics.db
+SERVICE_LINE_ID=449
+Save and exit:
+
+Press Ctrl + O (save)
+Press Enter (confirm)
+Press Ctrl + X (exit)
+Step 4: Initialize Database and Fetch Initial Data
+bash
+python setup_database.py
+Or:
+
+bash
+python3 setup_database.py
+Follow the interactive prompts:
+
+Press Enter to continue
+Enter your bearer token when asked (or it will use from .env)
+Choose y to fetch data now
+Choose y to backfill historical data (optional)
+Enter number of months (e.g., 3)
+Step 5: Run the Streamlit Dashboard
+bash
+streamlit run app.py
+The dashboard will open automatically in your browser at http://localhost:8501
+
+Step 6: (Optional) Set Up Weekly Auto-Refresh
+For Mac/Linux - Using Cron:
+bash
+crontab -e
+Add this line (runs every Monday at 9 AM):
+
+cron
+0 9 * * 1 cd /Users/kritikapandey/Desktop/Gamification && /usr/local/bin/python3 weekly_refresh.py >> weekly_refresh.log 2>&1
+Save and exit (:wq if using vim, or Ctrl+O then Ctrl+X if using nano)
+
+Quick Reference Commands
+Manual Data Refresh (anytime):
+bash
+python weekly_refresh.py
+Check Database Contents:
+bash
 python -c "from database import MetricsDatabase; db = MetricsDatabase(); print(db.get_latest_metrics())"
-```
+Verify Tokens are Loaded:
+bash
+python -c "import config; print('TeamBook:', bool(config.TEAMBOOK_BEARER_TOKEN)); print('DataSight:', bool(config.DATASIGHT_BEARER_TOKEN))"
+Check How Many Weeks are Stored:
+bash
+python -c "from database import MetricsDatabase; import sqlite3; db = MetricsDatabase(); conn = sqlite3.connect(db.db_path); weeks = conn.execute('SELECT DISTINCT week_date FROM weekly_metrics ORDER BY week_date DESC').fetchall(); print(f'Weeks: {len(weeks)}'); [print(w[0]) for w in weeks]; conn.close()"
+Troubleshooting
+If you get "Module not found" error:
+bash
+pip install streamlit pandas numpy requests python-dotenv
+If database is locked:
+bash
+rm metrics.db
+python setup_database.py
+If you need to clear cache:
+In the dashboard sidebar, click "Clear Cache" button
 
-## File Structure
-
-```
-Gamification/
-├── app.py                          # Main dashboard (existing)
-├── api_integration.py              # NEW: API clients
-├── database.py                     # NEW: Database operations
-├── metrics_calculator.py           # NEW: Score calculations
-├── data_fetcher.py                 # NEW: Data orchestrator
-├── streamlit_integration.py        # NEW: Streamlit helpers
-├── config.py                       # NEW: Configuration
-├── setup_database.py               # NEW: Setup script
-├── example_usage.py                # NEW: Examples
-├── metrics.db                      # NEW: SQLite database (created on first run)
-├── metrics_history.csv             # OLD: CSV backup (keep for now)
-├── requirements.txt                # UPDATED: Added requests
-└── README_API_INTEGRATION.md       # NEW: Full documentation
-```
-
-## Next Steps
-
-1. ✅ **Setup Complete** - You've created all necessary files
-2. 🔄 **Test Integration** - Run `python setup_database.py`
-3. 🎯 **Update Dashboard** - Choose integration option (A, B, or C)
-4. 📊 **Verify Data** - Check dashboard shows real data
-5. ⏰ **Schedule Refresh** - Set up weekly automation
-6. 🚀 **Go Live** - Share with team!
-
-## Support Commands
-
-```bash
-# Check database status
-python -c "from database import MetricsDatabase; db = MetricsDatabase(); pods = db.get_all_pods(); print(f'Pods: {len(pods)}'); metrics = db.get_latest_metrics(); print(f'Metrics: {len(metrics)}')"
-
-# Manually refresh data
-python -c "from data_fetcher import DataFetcher; DataFetcher('YOUR_TOKEN').refresh_current_week()"
-
-# Clear cache
-python -c "import streamlit as st; st.cache_data.clear()"
-
-# View logs
-tail -f /tmp/gamification_refresh.log
-```
+Summary of What Happens:
+✅ Dependencies installed
+✅ .env file created with your tokens
+✅ Database initialized (metrics.db)
+✅ Initial data fetched from APIs
+✅ Dashboard running at http://localhost:8501
+✅ Weekly auto-refresh (if cron set up)
+✅ Only last 5 weeks kept automatically
+Your dashboard is now live with real-time API data! 🎉
