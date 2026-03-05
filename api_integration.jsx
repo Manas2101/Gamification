@@ -160,8 +160,8 @@ class DataSightAPI:
         
         data = self._make_request('incident/metric/mttr/by-group/teambook/metric', params)
         
-        if data and 'items' in data and len(data['items']) > 0:
-            return data['items'][0].get('mttr')  # API returns 'mttr'
+        if data and 'data' in data and len(data['data']) > 0:
+            return data['data'][0].get('mttr')  # API returns 'mttr'
         return None
     
     def get_lttd(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
@@ -187,8 +187,8 @@ class DataSightAPI:
         
         data = self._make_request('releases/metric/lttd/teambook/metric', params)
         
-        if data and 'items' in data and len(data['items']) > 0:
-            return data['items'][0].get('lttd')  # API returns 'lttd'
+        if data and 'data' in data and len(data['data']) > 0:
+            return data['data'][0].get('lttd')  # API returns 'lttd'
         return None
     
     def get_release_frequency(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[int]:
@@ -214,8 +214,8 @@ class DataSightAPI:
         
         data = self._make_request('releases/metric/release-frequency/teambook/metric', params)
         
-        if data and 'items' in data and len(data['items']) > 0:
-            return data['items'][0].get('releases')  # API returns 'releases' for release frequency
+        if data and 'data' in data and len(data['data']) > 0:
+            return data['data'][0].get('releases')  # API returns 'releases' for release frequency
         return None
     
     def get_cfr(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
@@ -241,8 +241,8 @@ class DataSightAPI:
         
         data = self._make_request('releases/metric/cfr/teambook/metric', params)
         
-        if data and 'items' in data and len(data['items']) > 0:
-            return data['items'][0].get('change_failure_rate')  # API returns 'change_failure_rate'
+        if data and 'data' in data and len(data['data']) > 0:
+            return data['data'][0].get('change_failure_rate')  # API returns 'change_failure_rate'
         return None
     
     def get_all_metrics(self, pod_id: int, from_date: datetime, to_date: datetime) -> Dict:

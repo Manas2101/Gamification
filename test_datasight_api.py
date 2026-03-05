@@ -64,8 +64,9 @@ def test_datasight_apis():
         if response.status_code == 200:
             data = response.json()
             print(f"Response: {data}")
-            if 'items' in data and len(data['items']) > 0:
-                print(f"✅ MTTR found: {data['items'][0].get('mttr')}")
+            if 'data' in data and len(data['data']) > 0:
+                mttr_value = data['data'][0].get('mttr')
+                print(f"✅ MTTR found: {mttr_value}")
             else:
                 print("⚠️ No MTTR data in response")
         else:
@@ -97,8 +98,9 @@ def test_datasight_apis():
         if response.status_code == 200:
             data = response.json()
             print(f"Response: {data}")
-            if 'items' in data and len(data['items']) > 0:
-                print(f"✅ LTTD found: {data['items'][0].get('lttd')}")
+            if 'data' in data and len(data['data']) > 0:
+                lttd_value = data['data'][0].get('lttd')
+                print(f"✅ LTTD found: {lttd_value}")
             else:
                 print("⚠️ No LTTD data in response")
         else:
@@ -130,8 +132,9 @@ def test_datasight_apis():
         if response.status_code == 200:
             data = response.json()
             print(f"Response: {data}")
-            if 'items' in data and len(data['items']) > 0:
-                print(f"✅ RF found: {data['items'][0].get('releases')}")
+            if 'data' in data and len(data['data']) > 0:
+                rf_value = data['data'][0].get('releases')
+                print(f"✅ RF found: {rf_value}")
             else:
                 print("⚠️ No RF data in response")
         else:
@@ -163,8 +166,9 @@ def test_datasight_apis():
         if response.status_code == 200:
             data = response.json()
             print(f"Response: {data}")
-            if 'items' in data and len(data['items']) > 0:
-                print(f"✅ CFR found: {data['items'][0].get('change_failure_rate')}")
+            if 'data' in data and len(data['data']) > 0:
+                cfr_value = data['data'][0].get('change_failure_rate')
+                print(f"✅ CFR found: {cfr_value}")
             else:
                 print("⚠️ No CFR data in response")
         else:

@@ -2255,13 +2255,13 @@ with tab4:
         st.markdown("<h3 style='color:white; margin-top:30px;'>📊 Detailed Score Breakdown</h3>", unsafe_allow_html=True)
 
         scores_data = [
-            ('⚡ RF Score', t_latest['RF_Score'], 35, '#06b6d4'),
-            ('💨 Flow Score', t_latest['Flow_Score'], 25, '#60a5fa'),
-            ('🛡️ CFR Score', t_latest['CFR_Score'], 7, '#f97316'),
-            ('⏱️ MTTR Score', t_latest['MTTR_Score'], 7, '#f59e0b'),
-            ('🔒 Priv Score', t_latest['Priv_Score'], 6, '#8b5cf6'),
-            ('🔐 Stability Score', t_latest['Stability_Score'], 20, '#ec4899'),
-            ('🤖 Automation Score', t_latest['Automation_Score'], 20, '#10b981')
+            ('⚡ RF Score', t_latest.get('RF_Score', 0), 35, '#06b6d4'),
+            ('💨 Flow Score', t_latest.get('Flow_Score', 0), 25, '#60a5fa'),
+            ('🛡️ CFR Score', t_latest.get('CFR_Score', 0), 7, '#f97316'),
+            ('⏱️ MTTR Score', t_latest.get('MTTR_Score', 0), 7, '#f59e0b'),
+            ('🔒 Priv Score', t_latest.get('Priv_Score', 0), 6, '#8b5cf6'),
+            ('🔐 Stability Score', t_latest.get('Stability_Score', 0), 20, '#ec4899'),
+            ('🤖 Automation Score', t_latest.get('Automation_Score', 0), 20, '#10b981')
         ]
         
         for metric, value, max_val, color in scores_data:
