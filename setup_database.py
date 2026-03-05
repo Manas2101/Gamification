@@ -45,6 +45,15 @@ def fetch_initial_data(fetch_data=True, backfill_months=0):
         return
     
     # Check if tokens are configured
+    logger.info("Checking bearer tokens...")
+    logger.info(f"TEAMBOOK_BEARER_TOKEN configured: {bool(config.TEAMBOOK_BEARER_TOKEN)}")
+    logger.info(f"DATASIGHT_BEARER_TOKEN configured: {bool(config.DATASIGHT_BEARER_TOKEN)}")
+    
+    if config.TEAMBOOK_BEARER_TOKEN:
+        logger.info(f"TeamBook token length: {len(config.TEAMBOOK_BEARER_TOKEN)}")
+    if config.DATASIGHT_BEARER_TOKEN:
+        logger.info(f"DataSight token length: {len(config.DATASIGHT_BEARER_TOKEN)}")
+    
     if not config.TEAMBOOK_BEARER_TOKEN or not config.DATASIGHT_BEARER_TOKEN:
         logger.warning("⚠️ Bearer tokens not configured in .env file")
         logger.warning("Skipping data fetch. Configure tokens and run weekly_refresh.py")

@@ -45,10 +45,17 @@ class TeamBookAPI:
         """
         try:
             url = f"{self.BASE_URL}/pod?serviceline={self.SERVICE_LINE_ID}"
+            logger.info(f"Fetching pods from: {url}")
+            logger.debug(f"Token configured: {bool(self.bearer_token)}")
+            logger.debug(f"Token length: {len(self.bearer_token) if self.bearer_token else 0}")
+            
             response = requests.get(url, headers=self.headers, verify=False)
+            logger.info(f"Response status code: {response.status_code}")
+            
             response.raise_for_status()
             
             data = response.json()
+            logger.debug(f"Response data keys: {data.keys() if isinstance(data, dict) else 'Not a dict'}")
             
             pods = []
             if 'child' in data:
@@ -57,13 +64,22 @@ class TeamBookAPI:
                         'pod_id': pod.get('Pod ID'),
                         'pod_name': pod.get('Pod')
                     })
+            else:
+                logger.warning(f"No 'child' key in response. Available keys: {data.keys() if isinstance(data, dict) else 'N/A'}")
             
-            logger.info(f"Fetched {len(pods)} pods from TeamBook")
+            logger.info(f"Successfully fetched {len(pods)} pods")
             return pods
             
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP Error fetching pods: {e}")
+            logger.error(f"Response content: {e.response.text if hasattr(e, 'response') else 'N/A'}")
+            return []
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching pods from TeamBook: {e}")
-            raise
+            logger.error(f"Request Error fetching pods: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error fetching pods: {e}", exc_info=True)
+            return []
 
 
 class DataSightAPI:
