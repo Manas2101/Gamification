@@ -55,17 +55,28 @@ class TeamBookAPI:
             response.raise_for_status()
             
             data = response.json()
-            logger.debug(f"Response data keys: {data.keys() if isinstance(data, dict) else 'Not a dict'}")
             
             pods = []
-            if 'child' in data:
+            # API returns a direct array of pod objects
+            if isinstance(data, list):
+                logger.info(f"Response is a list with {len(data)} items")
+                for pod in data:
+                    pods.append({
+                        'pod_id': pod.get('Pod ID'),
+                        'pod_name': pod.get('Pod')
+                    })
+            # Fallback: check if nested under 'child' key
+            elif isinstance(data, dict) and 'child' in data:
+                logger.info(f"Response has 'child' key with {len(data['child'])} items")
                 for pod in data['child']:
                     pods.append({
                         'pod_id': pod.get('Pod ID'),
                         'pod_name': pod.get('Pod')
                     })
             else:
-                logger.warning(f"No 'child' key in response. Available keys: {data.keys() if isinstance(data, dict) else 'N/A'}")
+                logger.warning(f"Unexpected response format. Type: {type(data)}")
+                if isinstance(data, dict):
+                    logger.warning(f"Available keys: {list(data.keys())}")
             
             logger.info(f"Successfully fetched {len(pods)} pods")
             return pods
