@@ -8,6 +8,10 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 import logging
+import urllib3
+
+# Disable SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,7 +45,7 @@ class TeamBookAPI:
         """
         try:
             url = f"{self.BASE_URL}/pod?serviceline={self.SERVICE_LINE_ID}"
-            response = requests.get(url, headers=self.headers)
+            response = requests.get(url, headers=self.headers, verify=False)
             response.raise_for_status()
             
             data = response.json()
@@ -99,7 +103,7 @@ class DataSightAPI:
         """
         try:
             url = f"{self.BASE_URL}/{endpoint}"
-            response = requests.get(url, headers=self.headers, params=params)
+            response = requests.get(url, headers=self.headers, params=params, verify=False)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
