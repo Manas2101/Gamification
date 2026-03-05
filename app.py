@@ -1639,17 +1639,18 @@ except Exception:
 
 quality_flags = []
 
-if (display_history['Critical_Data_Present'] == False).any():
+# Check if columns exist before accessing them
+if 'Critical_Data_Present' in display_history.columns:
+    if (display_history['Critical_Data_Present'] == False).any():
+        quality_flags.append('Some teams missing critical data (scores hidden)')
 
-    quality_flags.append('Some teams missing critical data (scores hidden)')
+if 'LTDD_Measurable' in display_history.columns:
+    if (display_history['LTDD_Measurable'] < 0.9).any():
+        quality_flags.append('Some teams have LTDD measurability <90% (flow capped)')
 
-if (display_history['LTDD_Measurable'] < 0.9).any():
-
-    quality_flags.append('Some teams have LTDD measurability <90% (flow capped)')
-
-if (display_history['CFR_Reported'] == False).any():
-
-    quality_flags.append('Some teams not reporting CFR (stability capped)')
+if 'CFR_Reported' in display_history.columns:
+    if (display_history['CFR_Reported'] == False).any():
+        quality_flags.append('Some teams not reporting CFR (stability capped)')
 
  
 
