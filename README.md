@@ -80,3 +80,6 @@ Upload your team data via the sidebar:
 4. Data persists across sessions
 
 Enjoy your gamified DevOps transformation journey! 🎉
+
+
+python3 -c "import sqlite3; conn = sqlite3.connect('metrics.db'); cursor = conn.cursor(); cursor.execute('SELECT pod_id, rf, lttd, cfr, mttr, rf_score, flow_score, cfr_score, mttr_score, dpi FROM weekly_metrics LIMIT 5'); print('pod_id | rf | lttd | cfr | mttr | rf_score | flow_score | cfr_score | mttr_score | dpi'); print('-' * 100); [print(f'{row[0]} | {row[1]} | {row[2]} | {row[3]} | {row[4]} | {row[5]} | {row[6]} | {row[7]} | {row[8]} | {row[9]}') for row in cursor.fetchall()]; conn.close()"
