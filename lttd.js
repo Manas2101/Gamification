@@ -1,0 +1,626 @@
+// LTTD Metrics Dashboard JavaScript
+
+class LTTDManager {
+    constructor() {
+        this.currentRecords = [];
+        this.noLttdRecords = [];
+        this.showingNoLttd = false;
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.setDefaultDates();
+    }
+
+    setupEventListeners() {
+        const form = document.getElementById('lttdForm');
+        const clearBtn = document.getElementById('clearBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const toggleNoLttdBtn = document.getElementById('toggleNoLttdBtn');
+        const sendEmailBtn = document.getElementById('sendEmailBtn');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.fetchLTTDRecords();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            this.clearForm();
+        });
+
+        exportBtn.addEventListener('click', () => {
+            this.exportToCSV();
+        });
+
+        toggleNoLttdBtn.addEventListener('click', () => {
+            this.toggleNoLttdRecords();
+        });
+
+        if (sendEmailBtn) {
+            sendEmailBtn.addEventListener('click', () => {
+                this.showEmailModal();
+            });
+        }
+
+        // Email modal event listeners
+        const closeModal = document.getElementById('closeModal');
+        const cancelEmailBtn = document.getElementById('cancelEmailBtn');
+        const confirmSendEmailBtn = document.getElementById('confirmSendEmailBtn');
+
+        if (closeModal) {
+            closeModal.addEventListener('click', () => {
+                this.hideEmailModal();
+            });
+        }
+
+        if (cancelEmailBtn) {
+            cancelEmailBtn.addEventListener('click', () => {
+                this.hideEmailModal();
+            });
+        }
+
+        if (confirmSendEmailBtn) {
+            confirmSendEmailBtn.addEventListener('click', () => {
+                this.sendCombinedEmail();
+            });
+        }
+
+        // Close modal when clicking outside
+        const emailModal = document.getElementById('emailModal');
+        if (emailModal) {
+            emailModal.addEventListener('click', (e) => {
+                if (e.target === emailModal) {
+                    this.hideEmailModal();
+                }
+            });
+        }
+    }
+
+    setDefaultDates() {
+        const now = new Date();
+        const currentMonth = now.toISOString().slice(0, 7);
+        document.getElementById('fromDate').value = currentMonth;
+        document.getElementById('toDate').value = currentMonth;
+    }
+
+    clearForm() {
+        document.getElementById('lttdForm').reset();
+        this.setDefaultDates();
+        this.hideResults();
+        this.hideError();
+    }
+
+    showLoading() {
+        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('fetchBtn').disabled = true;
+    }
+
+    hideLoading() {
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('fetchBtn').disabled = false;
+    }
+
+    showError(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        errorText.textContent = message;
+        errorDiv.style.display = 'flex';
+    }
+
+    hideError() {
+        document.getElementById('errorMessage').style.display = 'none';
+    }
+
+    showResults() {
+        document.getElementById('resultsSection').style.display = 'block';
+    }
+
+    hideResults() {
+        document.getElementById('resultsSection').style.display = 'none';
+    }
+
+    async fetchLTTDRecords() {
+        this.hideError();
+        this.hideResults();
+        this.showLoading();
+
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+        const teambookId = '449'; // Hardcoded
+        const level = '2'; // Hardcoded
+
+        if (!fromDate || !toDate) {
+            this.hideLoading();
+            this.showError('Please fill in all required fields');
+            return;
+        }
+
+        try {
+            console.log('Fetching LTTD records with params:', { fromDate, toDate, teambookId, level });
+
+            const response = await fetch('/api/lttd/records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from_date: fromDate,
+                    to_date: toDate,
+                    teambook_id: teambookId,
+                    level: parseInt(level)
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch LTTD records');
+            }
+
+            const data = await response.json();
+            console.log('Received data:', data);
+
+            if (data.status === 'success' && data.records) {
+                this.currentRecords = data.records;
+                this.noLttdRecords = data.no_lttd_records || [];
+                this.groupedNoLttd = data.grouped_no_lttd || [];
+                this.showingNoLttd = false;
+                
+                // Update no LTTD count and show button if there are records
+                const toggleBtn = document.getElementById('toggleNoLttdBtn');
+                const sendEmailBtn = document.getElementById('sendEmailBtn');
+                
+                if (toggleBtn) {
+                    if (this.noLttdRecords.length > 0) {
+                        toggleBtn.style.display = 'flex';
+                        toggleBtn.classList.remove('active');
+                        toggleBtn.innerHTML = `<i class="fas fa-eye"></i> Show Records with No LTTD (<span id="noLttdCount">${this.noLttdRecords.length}</span>)`;
+                    } else {
+                        toggleBtn.style.display = 'none';
+                    }
+                }
+                
+                // Show email button if there are records (either high LTTD or no LTTD)
+                if (sendEmailBtn) {
+                    if (this.currentRecords.length > 0 || this.noLttdRecords.length > 0) {
+                        sendEmailBtn.style.display = 'flex';
+                    } else {
+                        sendEmailBtn.style.display = 'none';
+                    }
+                }
+                
+                this.renderTable(data.records, data.total_before_filter, data.filter_applied);
+                this.showResults();
+            } else {
+                throw new Error(data.error || 'No records found');
+            }
+
+        } catch (error) {
+            console.error('Error fetching LTTD records:', error);
+            this.showError(error.message || 'Failed to fetch LTTD records. Please check your parameters and try again.');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    renderTable(records, totalBeforeFilter, filterApplied) {
+        const tbody = document.getElementById('lttdTableBody');
+        tbody.innerHTML = '';
+
+        if (!records || records.length === 0) {
+            const message = this.showingNoLttd ? 'No records with missing LTTD found' : 'No LTTD records found matching the filter criteria';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="14" style="text-align: center; padding: 40px; color: #888;">
+                        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                        ${message}
+                        ${totalBeforeFilter && !this.showingNoLttd ? `<br><small style="margin-top: 8px; display: block;">(${totalBeforeFilter} total records fetched, 0 matched filter)</small>` : ''}
+                    </td>
+                </tr>
+            `;
+            document.getElementById('recordCount').textContent = '0 records';
+            return;
+        }
+
+        records.forEach(record => {
+            const row = document.createElement('tr');
+            
+            const month = record.month || '';
+            const year = record.year || '';
+            const monthYear = month && year ? `${month}-${year}` : '';
+            
+            // Use business_service field for application name
+            const appName = record.business_service || '';
+
+            row.innerHTML = `
+                <td>${this.escapeHtml(monthYear)}</td>
+                <td>${this.escapeHtml(record.id || record.cr_id || '')}</td>
+                <td>${this.formatDate(record.start_date)}</td>
+                <td colspan="2">${this.escapeHtml(appName)}</td>
+                <td>${this.escapeHtml(record.requested_by || '')}</td>
+                <td>${this.escapeHtml(record.assignment_group || '')}</td>
+                <td>${this.escapeHtml(record.l3_business_unit || '')}</td>
+                <td>${this.escapeHtml(record.l4_business_unit || '')}</td>
+                <td>${this.escapeHtml(record.requested_by || '')}</td>
+                <td><strong>${this.formatLTTD(record.lead_time_to_deploy_numeric_days)}</strong></td>
+                <td>${this.escapeHtml(record.cr_processing_hurdle || '')}</td>
+                <td>${this.renderLink(record.ice_cr_link, 'ICE CR')}</td>
+                <td>${this.renderLink(record.cr_first_commit_url, 'Commit')}</td>
+                <td>${this.renderLink(record.repo_link, 'Repo')}</td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+
+        const countText = `${records.length} record${records.length !== 1 ? 's' : ''}`;
+        const filterText = totalBeforeFilter ? ` (filtered from ${totalBeforeFilter} total)` : '';
+        document.getElementById('recordCount').textContent = countText + filterText;
+    }
+
+    formatDate(dateString) {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+        } catch (e) {
+            return dateString;
+        }
+    }
+
+    formatLTTD(days) {
+        if (days === null || days === undefined) return '';
+        const numDays = parseFloat(days);
+        if (isNaN(numDays)) return days;
+        return numDays.toFixed(1) + ' days';
+    }
+
+    renderLink(url, text) {
+        if (!url) return '';
+        return `<a href="${this.escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${this.escapeHtml(text)}</a>`;
+    }
+
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    renderGroupedNoLttdTable() {
+        const tbody = document.getElementById('lttdTableBody');
+        tbody.innerHTML = '';
+
+        if (!this.groupedNoLttd || this.groupedNoLttd.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="14" style="text-align: center; padding: 40px; color: #888;">
+                        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                        No records with missing LTTD found
+                    </td>
+                </tr>
+            `;
+            document.getElementById('recordCount').textContent = '0 records';
+            return;
+        }
+
+        // Render grouped records
+        this.groupedNoLttd.forEach(group => {
+            // Add group header row
+            const headerRow = document.createElement('tr');
+            headerRow.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
+            headerRow.style.fontWeight = 'bold';
+            headerRow.innerHTML = `
+                <td colspan="14" style="padding: 12px; border-left: 4px solid #3b82f6; color: #ffffff;">
+                    <i class="fas fa-folder-open" style="margin-right: 8px; color: #3b82f6;"></i>
+                    ${this.escapeHtml(group.app_name)} 
+                    <span style="color: #93c5fd; font-weight: normal; margin-left: 8px;">(${group.count} record${group.count !== 1 ? 's' : ''})</span>
+                </td>
+            `;
+            tbody.appendChild(headerRow);
+
+            // Add records for this group
+            group.records.forEach(record => {
+                const row = document.createElement('tr');
+                
+                const month = record.month || '';
+                const year = record.year || '';
+                const monthYear = month && year ? `${month}-${year}` : '';
+                const appName = record.business_service || '';
+
+                row.innerHTML = `
+                    <td>${this.escapeHtml(monthYear)}</td>
+                    <td>${this.escapeHtml(record.id || record.cr_id || '')}</td>
+                    <td>${this.formatDate(record.start_date)}</td>
+                    <td colspan="2">${this.escapeHtml(appName)}</td>
+                    <td>${this.escapeHtml(record.requested_by || '')}</td>
+                    <td>${this.escapeHtml(record.assignment_group || '')}</td>
+                    <td>${this.escapeHtml(record.l3_business_unit || '')}</td>
+                    <td>${this.escapeHtml(record.l4_business_unit || '')}</td>
+                    <td>${this.escapeHtml(record.requested_by || '')}</td>
+                    <td><strong style="color: #dc2626;">N/A</strong></td>
+                    <td>${this.escapeHtml(record.cr_processing_hurdle || '')}</td>
+                    <td>${this.renderLink(record.ice_cr_link, 'ICE CR')}</td>
+                    <td>${this.renderLink(record.cr_first_commit_url, 'Commit')}</td>
+                    <td>${this.renderLink(record.repo_link, 'Repo')}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        });
+
+        const totalCount = this.noLttdRecords.length;
+        const groupCount = this.groupedNoLttd.length;
+        document.getElementById('recordCount').textContent = `${totalCount} record${totalCount !== 1 ? 's' : ''} in ${groupCount} app${groupCount !== 1 ? 's' : ''}`;
+    }
+
+    exportToCSV() {
+        if (!this.currentRecords || this.currentRecords.length === 0) {
+            alert('No data to export');
+            return;
+        }
+
+        const headers = [
+            'Month-Year',
+            'Change Reference',
+            'Start Date',
+            'Application Name',
+            'Applicant Group',
+            'Assign Group',
+            'Report Group',
+            'DTT (L7 Pod)',
+            'Requested By',
+            'LTTD Days',
+            'CR Processing Hurdle',
+            'ICE CR Link',
+            'CR First Commit URL',
+            'Repo Link'
+        ];
+
+        let csvContent = headers.join(',') + '\n';
+
+        this.currentRecords.forEach(record => {
+            const month = record.month || '';
+            const year = record.year || '';
+            const monthYear = month && year ? `${month}-${year}` : '';
+            const appName = record.business_service || '';
+
+            const row = [
+                monthYear,
+                record.id || record.cr_id || '',
+                record.start_date || '',
+                appName,
+                record.requested_by || '',
+                record.assignment_group || '',
+                record.l3_business_unit || '',
+                record.l4_business_unit || '',
+                record.requested_by || '',
+                record.lead_time_to_deploy_numeric_days || '',
+                record.cr_processing_hurdle || '',
+                record.ice_cr_link || '',
+                record.cr_first_commit_url || '',
+                record.repo_link || ''
+            ];
+
+            csvContent += row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',') + '\n';
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        const timestamp = new Date().toISOString().slice(0, 10);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `lttd_records_${timestamp}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    toggleNoLttdRecords() {
+        const toggleBtn = document.getElementById('toggleNoLttdBtn');
+        const totalRecords = this.currentRecords.length + this.noLttdRecords.length;
+        
+        if (this.showingNoLttd) {
+            // Switch back to filtered records
+            this.showingNoLttd = false;
+            this.renderTable(this.currentRecords, totalRecords, 'Filtered Records');
+            toggleBtn.classList.remove('active');
+            toggleBtn.innerHTML = `<i class="fas fa-eye"></i> Show Records with No LTTD (<span id="noLttdCount">${this.noLttdRecords.length}</span>)`;
+        } else {
+            // Switch to no LTTD records - show grouped view
+            this.showingNoLttd = true;
+            this.renderGroupedNoLttdTable();
+            toggleBtn.classList.add('active');
+            toggleBtn.innerHTML = `<i class="fas fa-eye-slash"></i> Hide Records with No LTTD`;
+        }
+    }
+
+    async showEmailModal() {
+        // First, fetch emails from Teambook API
+        const sendEmailBtn = document.getElementById('sendEmailBtn');
+        const originalText = sendEmailBtn.innerHTML;
+        sendEmailBtn.disabled = true;
+        sendEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching emails...';
+
+        try {
+            // Combine all records to fetch emails
+            const allRecords = [...this.currentRecords, ...this.noLttdRecords];
+            
+            const fetchResponse = await fetch('/automation/lttd/api/lttd/fetch-emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ records: allRecords })
+            });
+
+            if (!fetchResponse.ok) {
+                const errorData = await fetchResponse.json();
+                throw new Error(errorData.error || 'Failed to fetch email addresses');
+            }
+
+            const emailData = await fetchResponse.json();
+            console.log('Email fetch result:', emailData);
+
+            if (emailData.status !== 'success') {
+                throw new Error(emailData.error || 'Failed to fetch email addresses');
+            }
+
+            // Store enriched records with emails
+            this.enrichedHighLttdRecords = emailData.records.filter(r => 
+                this.currentRecords.some(cr => cr.id === r.id)
+            );
+            this.enrichedNoLttdRecords = emailData.records.filter(r => 
+                this.noLttdRecords.some(nr => nr.id === r.id)
+            );
+
+            // Get unique email addresses
+            const uniqueEmails = [...new Set(emailData.records
+                .filter(r => r.email)
+                .map(r => r.email))];
+
+            if (uniqueEmails.length === 0) {
+                alert('No email addresses found from Teambook API. Please check the records.');
+                return;
+            }
+
+            // Use the first email as primary recipient, or show all if multiple
+            const primaryEmail = uniqueEmails[0];
+            
+            // Show modal with fetched email
+            const modal = document.getElementById('emailModal');
+            const modalHighCount = document.getElementById('modalHighCount');
+            const modalNoLttdCount = document.getElementById('modalNoLttdCount');
+            const toEmailInput = document.getElementById('toEmail');
+
+            if (modal) {
+                modalHighCount.textContent = this.currentRecords.length;
+                modalNoLttdCount.textContent = this.noLttdRecords.length;
+                toEmailInput.value = primaryEmail;
+                
+                // Show info about fetched emails
+                const emailInfo = document.getElementById('fetchedEmailInfo');
+                if (emailInfo) {
+                    const infoSpan = emailInfo.querySelector('span');
+                    if (uniqueEmails.length > 1) {
+                        infoSpan.textContent = `Found ${uniqueEmails.length} unique email addresses. Using ${primaryEmail} as primary recipient.`;
+                        emailInfo.style.display = 'flex';
+                    } else {
+                        infoSpan.textContent = `Fetched email from Teambook API: ${primaryEmail}`;
+                        emailInfo.style.display = 'flex';
+                    }
+                }
+                
+                modal.style.display = 'flex';
+            }
+
+        } catch (error) {
+            console.error('Error fetching emails:', error);
+            alert(`Failed to fetch email addresses: ${error.message}`);
+        } finally {
+            sendEmailBtn.disabled = false;
+            sendEmailBtn.innerHTML = originalText;
+        }
+    }
+
+    hideEmailModal() {
+        const modal = document.getElementById('emailModal');
+        if (modal) {
+            modal.style.display = 'none';
+            // Clear form
+            document.getElementById('toEmail').value = '';
+            document.getElementById('ccEmail1').value = '';
+            document.getElementById('ccEmail2').value = '';
+            
+            const emailInfo = document.getElementById('fetchedEmailInfo');
+            if (emailInfo) {
+                emailInfo.style.display = 'none';
+            }
+        }
+    }
+
+    async sendCombinedEmail() {
+        const toEmail = document.getElementById('toEmail').value.trim();
+        const ccEmail1 = document.getElementById('ccEmail1').value.trim();
+        const ccEmail2 = document.getElementById('ccEmail2').value.trim();
+
+        if (!toEmail) {
+            alert('Please enter a recipient email address.');
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(toEmail)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+
+        // Build CC list
+        const ccEmails = [];
+        if (ccEmail1 && emailRegex.test(ccEmail1)) {
+            ccEmails.push(ccEmail1);
+        }
+        if (ccEmail2 && emailRegex.test(ccEmail2)) {
+            ccEmails.push(ccEmail2);
+        }
+
+        const confirmSendBtn = document.getElementById('confirmSendEmailBtn');
+        const originalText = confirmSendBtn.innerHTML;
+        confirmSendBtn.disabled = true;
+        confirmSendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            // Use enriched records with emails if available, otherwise use original records
+            const highLttdRecords = this.enrichedHighLttdRecords || this.currentRecords;
+            const noLttdRecords = this.enrichedNoLttdRecords || this.noLttdRecords;
+
+            const sendResponse = await fetch('/automation/lttd/api/lttd/send-emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    high_lttd_records: highLttdRecords,
+                    no_lttd_records: noLttdRecords,
+                    to_email: toEmail,
+                    cc_emails: ccEmails
+                })
+            });
+
+            if (!sendResponse.ok) {
+                const errorData = await sendResponse.json();
+                throw new Error(errorData.error || 'Failed to send email');
+            }
+
+            const sendData = await sendResponse.json();
+            console.log('Email send result:', sendData);
+
+            if (sendData.status === 'success') {
+                const ccInfo = ccEmails.length > 0 ? ` (CC: ${ccEmails.join(', ')})` : '';
+                alert(`Email sent successfully to ${toEmail}${ccInfo}\n\nHigh LTTD Records: ${sendData.high_lttd_count}\nMissing LTTD Records: ${sendData.no_lttd_count}`);
+                this.hideEmailModal();
+            } else {
+                throw new Error(sendData.error || 'Failed to send email');
+            }
+
+        } catch (error) {
+            console.error('Error sending email:', error);
+            alert(`Failed to send email: ${error.message}`);
+        } finally {
+            confirmSendBtn.disabled = false;
+            confirmSendBtn.innerHTML = originalText;
+        }
+    }
+}
+
+// Initialize the LTTD Manager when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new LTTDManager();
+});

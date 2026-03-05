@@ -60,7 +60,7 @@ class TeamBookAPI:
             # API returns a direct array of pod objects
             if isinstance(data, list):
                 logger.info(f"Response is a list with {len(data)} items")
-                for pod in data:
+                for pod in data: 
                     pods.append({
                         'pod_id': pod.get('Pod ID'),
                         'pod_name': pod.get('Pod')
