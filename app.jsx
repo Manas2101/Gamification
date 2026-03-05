@@ -1761,7 +1761,7 @@ with tab1:
             <div style='display:flex; justify-content:space-between; align-items:center;'>
                 <div>
                     <h2 class='team-name'>{team_choice}</h2>
-                    <div style='font-size:16px; color:rgba(255,255,255,0.8);'>DPI Score: <span style='font-size:24px; font-weight:800; color:#ffd700;'>{trow.get('DPI', 0):.1f if trow.get('DPI') is not None else 'N/A'}</span></div>
+                    <div style='font-size:16px; color:rgba(255,255,255,0.8);'>DPI Score: <span style='font-size:24px; font-weight:800; color:#ffd700;'>{f"{trow.get('DPI', 0):.1f}" if trow.get('DPI') is not None else 'N/A'}</span></div>
                 </div>
                 <div>{tier_html(trow['Tier'])}</div>
             </div>
@@ -1899,7 +1899,7 @@ with tab2:
                     <div class='team-card' style='background:{medal_color}; padding:15px; margin-bottom:10px; text-align:center;'>
                         <div style='font-size:32px; margin-bottom:5px;'>{medal}</div>
                         <div style='font-size:14px; font-weight:700; color:white; margin-bottom:3px;'>{row['Team']}</div>
-                        <div style='font-size:18px; font-weight:800; color:#93c5fd;'>{row.get('DPI', 0):.1f if row.get('DPI') is not None else 'N/A'}</div>
+                        <div style='font-size:18px; font-weight:800; color:#93c5fd;'>{f"{row.get('DPI', 0):.1f}" if row.get('DPI') is not None else 'N/A'}</div>
                         <div style='font-size:11px; color:rgba(255,255,255,0.6); margin-top:3px;'>Rank #{rank}</div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -2177,7 +2177,7 @@ with tab3:
                                     <div style='font-size:28px; margin-bottom:8px;'>{icon}</div>
                                     <div style='font-size:16px; font-weight:700; margin-bottom:5px; color:white;'>{team_data['Team']}</div>
                                     <div style='font-size:14px; color:rgba(255,255,255,0.8);'>{metric_display}</div>
-                                    <div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {team_data.get('DPI', 0):.1f if team_data.get('DPI') is not None else 'N/A'} | Rank #{team_data.get('Rank', 'N/A')}</div>
+                                    <div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {f"{team_data.get('DPI', 0):.1f}" if team_data.get('DPI') is not None else 'N/A'} | Rank #{team_data.get('Rank', 'N/A')}</div>
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
@@ -2217,7 +2217,7 @@ with tab4:
             <div class='achievement-icon'>🏆</div>
             <div style='text-align:center;'>
                 <div style='font-size:32px; font-weight:800; margin-bottom:10px;'>{t_latest.get('Tier', 'N/A')}</div>
-                <div style='font-size:20px;'>DPI Score: <span style='font-weight:800; color:#ffd700;'>{t_latest.get('DPI', 0):.1f if t_latest.get('DPI') is not None else 'N/A'}</span></div>
+                <div style='font-size:20px;'>DPI Score: <span style='font-weight:800; color:#ffd700;'>{f"{t_latest.get('DPI', 0):.1f}" if t_latest.get('DPI') is not None else 'N/A'}</span></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
