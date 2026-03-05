@@ -161,8 +161,9 @@ class DataSightAPI:
         data = self._make_request('incident/metric/mttr/by-group/teambook/metric', params)
         
         if data and 'data' in data and len(data['data']) > 0:
-            return data['data'][0].get('mttr')  # API returns 'mttr'
-        return None
+            mttr_value = data['data'][0].get('mttr')
+            return mttr_value if mttr_value is not None else 0
+        return 0
     
     def get_lttd(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
         """
@@ -188,8 +189,9 @@ class DataSightAPI:
         data = self._make_request('releases/metric/lttd/teambook/metric', params)
         
         if data and 'data' in data and len(data['data']) > 0:
-            return data['data'][0].get('lttd')  # API returns 'lttd'
-        return None
+            lttd_value = data['data'][0].get('lttd')
+            return lttd_value if lttd_value is not None else 0
+        return 0
     
     def get_release_frequency(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[int]:
         """
@@ -215,8 +217,9 @@ class DataSightAPI:
         data = self._make_request('releases/metric/release-frequency/teambook/metric', params)
         
         if data and 'data' in data and len(data['data']) > 0:
-            return data['data'][0].get('releases')  # API returns 'releases' for release frequency
-        return None
+            rf_value = data['data'][0].get('releases')
+            return rf_value if rf_value is not None else 0
+        return 0
     
     def get_cfr(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
         """
@@ -242,8 +245,9 @@ class DataSightAPI:
         data = self._make_request('releases/metric/cfr/teambook/metric', params)
         
         if data and 'data' in data and len(data['data']) > 0:
-            return data['data'][0].get('change_failure_rate')  # API returns 'change_failure_rate'
-        return None
+            cfr_value = data['data'][0].get('change_failure_rate')
+            return cfr_value if cfr_value is not None else 0
+        return 0
     
     def get_all_metrics(self, pod_id: int, from_date: datetime, to_date: datetime) -> Dict:
         """

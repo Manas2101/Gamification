@@ -2365,6 +2365,6 @@ with tab5:
         """, unsafe_allow_html=True)
 
 # --- DATA REFRESH SECTION ---
-# Add refresh controls in sidebar for real-time API data
-show_data_refresh_section()
+# Sidebar removed - use weekly_refresh.py or setup_database.py to add new week data
+# show_data_refresh_section()
  
