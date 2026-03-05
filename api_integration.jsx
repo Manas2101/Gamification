@@ -50,8 +50,8 @@ class TeamBookAPI:
             if 'child' in data:
                 for pod in data['child']:
                     pods.append({
-                        'pod_id': pod.get('id'),
-                        'pod_name': pod.get('name')
+                        'pod_id': pod.get('Pod ID'),
+                        'pod_name': pod.get('Pod')
                     })
             
             logger.info(f"Fetched {len(pods)} pods from TeamBook")
@@ -130,7 +130,7 @@ class DataSightAPI:
         data = self._make_request('incident/metric/mttr/by-group/teambook/metric', params)
         
         if data and 'items' in data and len(data['items']) > 0:
-            return data['items'][0].get('mttr')
+            return data['items'][0].get('mttr')  # API returns 'mttr'
         return None
     
     def get_lttd(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
@@ -157,7 +157,7 @@ class DataSightAPI:
         data = self._make_request('releases/metric/lttd/teambook/metric', params)
         
         if data and 'items' in data and len(data['items']) > 0:
-            return data['items'][0].get('lttd')
+            return data['items'][0].get('lttd')  # API returns 'lttd'
         return None
     
     def get_release_frequency(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[int]:
@@ -184,7 +184,7 @@ class DataSightAPI:
         data = self._make_request('releases/metric/release-frequency/teambook/metric', params)
         
         if data and 'items' in data and len(data['items']) > 0:
-            return data['items'][0].get('releaseFrequency')
+            return data['items'][0].get('releases')  # API returns 'releases' for release frequency
         return None
     
     def get_cfr(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
@@ -211,7 +211,7 @@ class DataSightAPI:
         data = self._make_request('releases/metric/cfr/teambook/metric', params)
         
         if data and 'items' in data and len(data['items']) > 0:
-            return data['items'][0].get('cfr')
+            return data['items'][0].get('change_failure_rate')  # API returns 'change_failure_rate'
         return None
     
     def get_all_metrics(self, pod_id: int, from_date: datetime, to_date: datetime) -> Dict:

@@ -10,6 +10,9 @@ import numpy as np
 
 import re
 
+# Database integration imports
+from streamlit_integration import load_dashboard_data, show_data_refresh_section
+
  
 
 st.set_page_config(layout="wide", page_title="🚀 DevOps Gamification Dashboard", page_icon="🏆")
@@ -1351,21 +1354,21 @@ def create_sample_history(path, teams=70, weeks=5):
 
  
 
-def load_history():
+# OLD CSV-based loading (replaced with database)
+# def load_history():
+#     if os.path.exists(HISTORY_FILE):
+#         hist = pd.read_csv(HISTORY_FILE, parse_dates=['Week','Week_Start'])
+#         return hist
+#     else:
+#         return create_sample_history(HISTORY_FILE)
 
-    if os.path.exists(HISTORY_FILE):
+# NEW: Load data from database (real-time API data)
+latest_df, history_df = load_dashboard_data()
 
-        hist = pd.read_csv(HISTORY_FILE, parse_dates=['Week','Week_Start'])
-
-        return hist
-
-    else:
-
-        return create_sample_history(HISTORY_FILE)
-
- 
-
-history_df = load_history()
+# If no data in database, create sample data
+if history_df.empty:
+    st.warning('⚠️ No data in database. Please configure bearer tokens and refresh data.')
+    history_df = create_sample_history(HISTORY_FILE)
 
  
 
@@ -2322,4 +2325,7 @@ with tab5:
         </div>
         """, unsafe_allow_html=True)
 
+# --- DATA REFRESH SECTION ---
+# Add refresh controls in sidebar for real-time API data
+show_data_refresh_section()
  
