@@ -1761,7 +1761,7 @@ with tab1:
             <div style='display:flex; justify-content:space-between; align-items:center;'>
                 <div>
                     <h2 class='team-name'>{team_choice}</h2>
-                    <div style='font-size:16px; color:rgba(255,255,255,0.8);'>DPI Score: <span style='font-size:24px; font-weight:800; color:#ffd700;'>{trow['DPI']:.1f}</span></div>
+                    <div style='font-size:16px; color:rgba(255,255,255,0.8);'>DPI Score: <span style='font-size:24px; font-weight:800; color:#ffd700;'>{trow.get('DPI', 0):.1f if trow.get('DPI') is not None else 'N/A'}</span></div>
                 </div>
                 <div>{tier_html(trow['Tier'])}</div>
             </div>
@@ -1774,48 +1774,56 @@ with tab1:
         cols = st.columns(2)
 
         with cols[0]:
-            rf_pct = int((trow['RF_Score']/35)*100) if not pd.isna(trow['RF_Score']) else 0
+            rf_score = trow.get('RF_Score')
+            rf_pct = int((rf_score/35)*100) if rf_score is not None and not pd.isna(rf_score) else 0
+            rf_display = f"{rf_score:.1f}" if rf_score is not None and not pd.isna(rf_score) else "N/A"
             st.markdown(f"""
             <div style='margin-bottom:20px;'>
                 <div style='color:white; font-weight:600; margin-bottom:8px;'>⚡ RF Score</div>
                 <div class='metric-bar'>
                     <div class='metric-fill' style='width:{rf_pct}%; background:#06b6d4;'></div>
                 </div>
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{trow['RF_Score']:.1f} / 35</div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{rf_display} / 35</div>
             </div>
             """, unsafe_allow_html=True)
 
-            flow_pct = int((trow['Flow_Score']/25)*100) if not pd.isna(trow['Flow_Score']) else 0
+            flow_score = trow.get('Flow_Score')
+            flow_pct = int((flow_score/25)*100) if flow_score is not None and not pd.isna(flow_score) else 0
+            flow_display = f"{flow_score:.1f}" if flow_score is not None and not pd.isna(flow_score) else "N/A"
             st.markdown(f"""
             <div style='margin-bottom:20px;'>
                 <div style='color:white; font-weight:600; margin-bottom:8px;'>💨 Flow Score</div>
                 <div class='metric-bar'>
                     <div class='metric-fill' style='width:{flow_pct}%; background:#60a5fa;'></div>
                 </div>
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{trow['Flow_Score']:.1f} / 25</div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{flow_display} / 25</div>
             </div>
             """, unsafe_allow_html=True)
 
         with cols[1]:
-            stab_pct = int((trow['Stability_Score']/20)*100) if not pd.isna(trow['Stability_Score']) else 0
+            stab_score = trow.get('Stability_Score')
+            stab_pct = int((stab_score/20)*100) if stab_score is not None and not pd.isna(stab_score) else 0
+            stab_display = f"{stab_score:.1f}" if stab_score is not None and not pd.isna(stab_score) else "N/A"
             st.markdown(f"""
             <div style='margin-bottom:20px;'>
                 <div style='color:white; font-weight:600; margin-bottom:8px;'>🛡️ Stability Score</div>
                 <div class='metric-bar'>
                     <div class='metric-fill' style='width:{stab_pct}%; background:#f97316;'></div>
                 </div>
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{trow['Stability_Score']:.1f} / 20</div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{stab_display} / 20</div>
             </div>
             """, unsafe_allow_html=True)
 
-            auto_pct = int((trow['Automation_Score']/20)*100) if not pd.isna(trow['Automation_Score']) else 0
+            auto_score = trow.get('Automation_Score')
+            auto_pct = int((auto_score/20)*100) if auto_score is not None and not pd.isna(auto_score) else 0
+            auto_display = f"{auto_score:.1f}" if auto_score is not None and not pd.isna(auto_score) else "N/A"
             st.markdown(f"""
             <div style='margin-bottom:20px;'>
                 <div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 Automation Score</div>
                 <div class='metric-bar'>
                     <div class='metric-fill' style='width:{auto_pct}%; background:#10b981;'></div>
                 </div>
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{trow['Automation_Score']:.1f} / 20</div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{auto_display} / 20</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1826,13 +1834,17 @@ with tab1:
             <div style='font-size:20px; font-weight:700; margin-bottom:15px;'>💡 Recommended Actions</div>
         """, unsafe_allow_html=True)
 
-        rf_progress = min(1.0, trow['RF'] / 280.0)
+        rf_val = trow.get('RF', 0)
+        rf_progress = min(1.0, rf_val / 280.0) if rf_val is not None else 0
 
-        ltdd_progress = min(1.0, 1.8 / max(trow['LTDD'], 0.001))
+        ltdd_val = trow.get('LTDD', 9999)
+        ltdd_progress = min(1.0, 1.8 / max(ltdd_val, 0.001)) if ltdd_val is not None else 0
 
-        automation_progress = trow['Automation_Score'] / 20.0 if not pd.isna(trow['Automation_Score']) else 0
+        auto_val = trow.get('Automation_Score', 0)
+        automation_progress = auto_val / 20.0 if auto_val is not None and not pd.isna(auto_val) else 0
 
-        stability_progress = trow['Stability_Score'] / 20.0 if not pd.isna(trow['Stability_Score']) else 0
+        stab_val = trow.get('Stability_Score', 0)
+        stability_progress = stab_val / 20.0 if stab_val is not None and not pd.isna(stab_val) else 0
 
         recs = []
 
@@ -1887,7 +1899,7 @@ with tab2:
                     <div class='team-card' style='background:{medal_color}; padding:15px; margin-bottom:10px; text-align:center;'>
                         <div style='font-size:32px; margin-bottom:5px;'>{medal}</div>
                         <div style='font-size:14px; font-weight:700; color:white; margin-bottom:3px;'>{row['Team']}</div>
-                        <div style='font-size:18px; font-weight:800; color:#93c5fd;'>{row['DPI']:.1f}</div>
+                        <div style='font-size:18px; font-weight:800; color:#93c5fd;'>{row.get('DPI', 0):.1f if row.get('DPI') is not None else 'N/A'}</div>
                         <div style='font-size:11px; color:rgba(255,255,255,0.6); margin-top:3px;'>Rank #{rank}</div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -2147,13 +2159,17 @@ with tab3:
                         with cols[idx % 3]:
                             metric_display = ''
                             if metric_key == 'RF':
-                                metric_display = f"RF: {team_data['RF']:.0f}"
+                                rf_val = team_data.get('RF')
+                                metric_display = f"RF: {rf_val:.0f}" if rf_val is not None else "RF: N/A"
                             elif metric_key == 'LTDD':
-                                metric_display = f"LTDD: {team_data['LTDD']:.1f} days"
+                                ltdd_val = team_data.get('LTDD')
+                                metric_display = f"LTDD: {ltdd_val:.1f} days" if ltdd_val is not None else "LTDD: N/A"
                             elif metric_key == 'CFR':
-                                metric_display = f"CFR: {team_data['CFR']*100:.1f}%"
+                                cfr_val = team_data.get('CFR')
+                                metric_display = f"CFR: {cfr_val*100:.1f}%" if cfr_val is not None else "CFR: N/A"
                             elif metric_key == 'Automation_Score':
-                                metric_display = f"Auto Score: {team_data['Automation_Score']:.0f}/20"
+                                auto_val = team_data.get('Automation_Score')
+                                metric_display = f"Auto Score: {auto_val:.0f}/20" if auto_val is not None else "Auto Score: N/A"
                             
                             st.markdown(f"""
                             <div class='team-card' style='background:{bg_color}; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.1);'>
@@ -2161,7 +2177,7 @@ with tab3:
                                     <div style='font-size:28px; margin-bottom:8px;'>{icon}</div>
                                     <div style='font-size:16px; font-weight:700; margin-bottom:5px; color:white;'>{team_data['Team']}</div>
                                     <div style='font-size:14px; color:rgba(255,255,255,0.8);'>{metric_display}</div>
-                                    <div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {team_data['DPI']:.1f} | Rank #{team_data['Rank']}</div>
+                                    <div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {team_data.get('DPI', 0):.1f if team_data.get('DPI') is not None else 'N/A'} | Rank #{team_data.get('Rank', 'N/A')}</div>
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
@@ -2200,8 +2216,8 @@ with tab4:
         <div class='achievement-card' style='background: linear-gradient(135deg, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')}, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')});'>
             <div class='achievement-icon'>🏆</div>
             <div style='text-align:center;'>
-                <div style='font-size:32px; font-weight:800; margin-bottom:10px;'>{t_latest['Tier']}</div>
-                <div style='font-size:20px;'>DPI Score: <span style='font-weight:800; color:#ffd700;'>{t_latest['DPI']:.1f}</span></div>
+                <div style='font-size:32px; font-weight:800; margin-bottom:10px;'>{t_latest.get('Tier', 'N/A')}</div>
+                <div style='font-size:20px;'>DPI Score: <span style='font-weight:800; color:#ffd700;'>{t_latest.get('DPI', 0):.1f if t_latest.get('DPI') is not None else 'N/A'}</span></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -2278,9 +2294,9 @@ with tab4:
 
                 '🛡️ CFR': prev_row['CFR'] - t_latest['CFR'],
 
-                '⏰ MTTR': prev_row['MTTR'] - t_latest['MTTR'],
+                '⏰ MTTR': (prev_row.get('MTTR', 0) or 0) - (t_latest.get('MTTR', 0) or 0),
 
-                '🎯 DPI': t_latest['DPI'] - prev_row['DPI']
+                '🎯 DPI': (t_latest.get('DPI', 0) or 0) - (prev_row.get('DPI', 0) or 0)
 
             }
 
