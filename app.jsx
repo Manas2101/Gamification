@@ -4001,7 +4001,13 @@ with tab4:
 
  
 
-    t_latest = display_latest_df[display_latest_df['Team']==team].iloc[0]
+    team_data = display_latest_df[display_latest_df['Team']==team]
+    
+    if team_data.empty:
+        st.error(f"⚠️ No data found for team '{team}'. Please run `python3 quick_populate.py` to populate the database.")
+        st.stop()
+    
+    t_latest = team_data.iloc[0]
 
  
 
