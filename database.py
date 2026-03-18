@@ -145,6 +145,20 @@ class MetricsDatabase:
 
                 dpi INTEGER,
 
+                velocity REAL,
+
+                flow REAL,
+
+                stability REAL,
+
+                automation REAL,
+
+                quality_security REAL,
+
+                ai_adoption REAL,
+
+                tier_name TEXT,
+
                 data_quality_flags TEXT,
 
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -279,9 +293,13 @@ class MetricsDatabase:
 
                 rf_score, flow_score, cfr_score, mttr_score, priv_score,
 
-                automation_score, stability_score, dpi, data_quality_flags
+                automation_score, stability_score, dpi,
 
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                velocity, flow, stability, automation, quality_security, ai_adoption, tier_name,
+
+                data_quality_flags
+
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
             ON CONFLICT(pod_id, week_date) DO UPDATE SET
 
@@ -328,6 +346,20 @@ class MetricsDatabase:
                 stability_score = excluded.stability_score,
 
                 dpi = excluded.dpi,
+
+                velocity = excluded.velocity,
+
+                flow = excluded.flow,
+
+                stability = excluded.stability,
+
+                automation = excluded.automation,
+
+                quality_security = excluded.quality_security,
+
+                ai_adoption = excluded.ai_adoption,
+
+                tier_name = excluded.tier_name,
 
                 data_quality_flags = excluded.data_quality_flags
 
@@ -382,6 +414,20 @@ class MetricsDatabase:
             metrics.get('stability_score'),
 
             metrics.get('dpi'),
+
+            metrics.get('velocity'),
+
+            metrics.get('flow'),
+
+            metrics.get('stability'),
+
+            metrics.get('automation'),
+
+            metrics.get('quality_security'),
+
+            metrics.get('ai_adoption'),
+
+            metrics.get('tier'),
 
             metrics.get('data_quality_flags', '')
 

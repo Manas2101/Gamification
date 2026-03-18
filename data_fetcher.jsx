@@ -53,18 +53,14 @@ class DataFetcher:
         # Process each app's metrics
         for app_metrics in raw_metrics:
             try:
-                # Generate random values for missing fields (if needed)
-                random_fields = self.calculator.randomize_missing_fields()
-                
-                # Merge API data with random fields (API data takes precedence)
+                # Use only YAML + API data (no random generation)
                 complete_metrics = {
-                    **random_fields,
-                    **app_metrics,  # API + YAML data overwrites random
+                    **app_metrics,  # YAML + API data
                     'week_date': week_date,
-                    'week_start': week_date
+                    'week_start': week_date,
                 }
                 
-                # Calculate scores and DPI
+                # Calculate DPI using new 6-pillar scoring system (0-100 scale)
                 calculated_scores = self.calculator.calculate_all_scores(complete_metrics)
                 
                 # Merge all data

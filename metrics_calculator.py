@@ -1,351 +1,335 @@
 """
 Metrics calculation module for DPI and component scores
-Implements scoring logic based on DevOps metrics
+Implements 6-pillar scoring system (0-100 scale)
 """
 
-import numpy as np
-import random
-from typing import Dict, List
+from typing import Dict
 
 
 class MetricsCalculator:
-    """Calculate DPI and component scores from raw metrics"""
+    """Calculate DPI and 6-pillar scores from raw metrics"""
     
     @staticmethod
-    def calculate_rf_score(rf: int) -> int:
+    def calculate_velocity_score(rf: int, app_type: str, tier: int) -> float:
         """
-        Calculate Release Frequency score
+        Velocity pillar (30% of total)
+        Based on release frequency
         
         Args:
-            rf: Release frequency (number of releases)
-            
+            rf: Release frequency (releases per month)
+            app_type: App type (modern/traditional/legacy/vendor)
+            tier: App tier (1=critical, 2=important, 3=standard)
+        
         Returns:
-            Score between 5-35
+            Score 0-100 for this pillar
         """
         if rf is None:
-            return 5
+            rf = 0
         
-        if rf >= 300:
-            return 35
-        elif rf >= 200:
-            return 32
-        elif rf >= 150:
-            return 25
-        elif rf >= 100:
-            return 18
-        elif rf >= 50:
-            return 10
+        # Vendor apps excluded from RF scoring
+        if app_type == "vendor":
+            return 50.0  # Neutral score
+        
+        # Tier-based targets
+        if tier == 1:
+            target = 20  # Tier 1: 20 releases/month = 100%
+        elif tier == 2:
+            target = 12  # Tier 2: 12 releases/month = 100%
         else:
-            return 5
+            target = 8   # Tier 3: 8 releases/month = 100%
+        
+        # Linear scale: 0 releases = 0%, target releases = 100%
+        score = min(100.0, (rf / target) * 100)
+        
+        return round(score, 1)
     
     @staticmethod
-    def calculate_flow_score(lttd: float, ltdd_measurable: float) -> int:
+    def calculate_flow_score(lttd: float) -> float:
         """
-        Calculate Flow score based on LTTD
+        Flow pillar (20% of total)
+        Based on Lead Time to Deploy
         
         Args:
-            lttd: Lead Time to Deploy (in days)
-            ltdd_measurable: LTTD measurability percentage
-            
+            lttd: Lead time to deploy in days
+        
         Returns:
-            Score between 5-25 (capped at 10 if measurability < 90%)
+            Score 0-100 for this pillar
         """
         if lttd is None:
-            return 5
+            return 50.0  # Neutral if no data
         
-        base_score = 5
-        if lttd <= 2:
-            base_score = 25
+        # Scoring scale:
+        # <=1 day = 100%
+        # <=2 days = 90%
+        # <=5 days = 70%
+        # <=10 days = 40%
+        # >10 days = linear decline to 0% at 30 days
+        
+        if lttd <= 1:
+            return 100.0
+        elif lttd <= 2:
+            return 90.0
         elif lttd <= 5:
-            base_score = 20
+            return 70.0
         elif lttd <= 10:
-            base_score = 15
-        elif lttd <= 15:
-            base_score = 10
+            return 40.0
+        elif lttd <= 30:
+            # Linear: 40% at 10 days, 0% at 30 days
+            return round(40.0 - ((lttd - 10) / 20) * 40, 1)
         else:
-            base_score = 5
-        
-        # Cap at 10 if measurability < 90%
-        if ltdd_measurable is not None and ltdd_measurable < 0.90:
-            base_score = min(base_score, 10)
-        
-        return base_score
+            return 0.0
     
     @staticmethod
-    def calculate_cfr_score(cfr: float) -> int:
+    def calculate_stability_score(cfr: float, mttr: float) -> float:
         """
-        Calculate Change Failure Rate score
+        Stability pillar (20% of total)
+        Based on Change Failure Rate and Mean Time to Restore
         
         Args:
-            cfr: Change Failure Rate (0-1)
-            
-        Returns:
-            Score between 1-7
-        """
-        if cfr is None:
-            return 4
+            cfr: Change failure rate (0-1)
+            mttr: Mean time to restore in hours
         
-        if cfr <= 0.05:
-            return 7
-        elif cfr <= 0.10:
-            return 7
-        elif cfr <= 0.15:
-            return 4
-        elif cfr <= 0.20:
-            return 4
-        elif cfr <= 0.25:
-            return 1
-        else:
-            return 1
+        Returns:
+            Score 0-100 for this pillar
+        """
+        cfr_score = 50.0
+        mttr_score = 50.0
+        
+        # CFR scoring (50% of pillar)
+        if cfr is not None:
+            if cfr <= 0.05:
+                cfr_score = 100.0
+            elif cfr <= 0.10:
+                cfr_score = 85.0
+            elif cfr <= 0.15:
+                cfr_score = 65.0
+            elif cfr <= 0.20:
+                cfr_score = 40.0
+            elif cfr <= 0.30:
+                cfr_score = 20.0
+            else:
+                cfr_score = 0.0
+        
+        # MTTR scoring (50% of pillar)
+        if mttr is not None:
+            if mttr <= 1:
+                mttr_score = 100.0
+            elif mttr <= 2:
+                mttr_score = 80.0
+            elif mttr <= 4:
+                mttr_score = 60.0
+            elif mttr <= 8:
+                mttr_score = 40.0
+            elif mttr <= 24:
+                mttr_score = 20.0
+            else:
+                mttr_score = 0.0
+        
+        # Average CFR and MTTR scores
+        total = (cfr_score * 0.5) + (mttr_score * 0.5)
+        return round(total, 1)
     
     @staticmethod
-    def calculate_mttr_score(mttr: float) -> int:
+    def calculate_automation_score(ci: bool, cd: bool, standard_pipeline: bool,
+                                   zero_touch: bool, automated_rollback: bool,
+                                   feature_flags: bool, approval_gates: int) -> float:
         """
-        Calculate Mean Time To Restore score
+        Automation pillar (15% of total)
+        Based on pipeline maturity flags
         
         Args:
-            mttr: MTTR in hours
-            
-        Returns:
-            Score between 1-7
-        """
-        if mttr is None:
-            return 4
+            ci: CI automated
+            cd: CD automated
+            standard_pipeline: Standard pipeline adopted
+            zero_touch: Zero-touch deployment
+            automated_rollback: Automated rollback enabled
+            feature_flags: Feature flags adopted
+            approval_gates: Number of manual approval gates
         
-        if mttr <= 1:
-            return 7
-        elif mttr <= 2:
-            return 4
-        else:
-            return 1
-    
-    @staticmethod
-    def calculate_priv_score(priv_access: int) -> int:
-        """
-        Calculate Privileged Access score
-        
-        Args:
-            priv_access: Number of privileged access instances
-            
         Returns:
-            Score between 0-6
+            Score 0-100 for this pillar
         """
-        if priv_access == 0:
-            return 0
-        elif priv_access == 1:
-            return 2
-        elif priv_access == 2:
-            return 4
-        else:
-            return 6
-    
-    @staticmethod
-    def calculate_automation_score(ci: bool, cd: bool, iac: bool, 
-                                   rollback: bool, self_service: bool) -> int:
-        """
-        Calculate Automation score
+        score = 0.0
         
-        Args:
-            ci: CI enabled
-            cd: CD enabled
-            iac: Infrastructure as Code enabled
-            rollback: Rollback capability
-            self_service: Self-service enabled
-            
-        Returns:
-            Score between 0-20
-        """
-        score = 0
+        # Core automation (60 points)
         if ci:
-            score += 5
+            score += 20
         if cd:
-            score += 3
-        if iac:
-            score += 4
-        if rollback:
-            score += 3
-        if self_service:
-            score += 5
-        return score
+            score += 20
+        if standard_pipeline:
+            score += 20
+        
+        # Advanced automation (40 points)
+        if zero_touch:
+            score += 15
+        if automated_rollback:
+            score += 10
+        if feature_flags:
+            score += 15
+        
+        # Penalty for approval gates (each gate -10 points, max -30)
+        gate_penalty = min(30, approval_gates * 10)
+        score = max(0, score - gate_penalty)
+        
+        return round(score, 1)
     
     @staticmethod
-    def calculate_stability_score(cfr_reported: bool, automation_audited: bool,
-                                  critical_data_present: bool, cfr: float,
-                                  mttr: float, ltdd_measurable: float) -> int:
+    def calculate_quality_security_score(sast_enabled: bool, data_classification: str,
+                                         priv_access_for_deploy: bool) -> float:
         """
-        Calculate Stability score
+        Quality & Security pillar (10% of total)
+        Based on security practices
         
         Args:
-            cfr_reported: CFR reporting status
-            automation_audited: Automation audit status
-            critical_data_present: Critical data presence
-            cfr: Change Failure Rate
-            mttr: Mean Time To Restore
-            ltdd_measurable: LTTD measurability
-            
+            sast_enabled: SAST/DAST enabled
+            data_classification: Data sensitivity (public/internal/restricted/confidential)
+            priv_access_for_deploy: Requires privileged access for deploy
+        
         Returns:
-            Score between 0-20
+            Score 0-100 for this pillar
         """
-        score = 0
+        score = 0.0
         
-        # Base points for reporting
-        if cfr_reported:
-            score += 2
-        if automation_audited:
-            score += 2
-        if critical_data_present:
-            score += 2
+        # SAST enabled (40 points)
+        if sast_enabled:
+            score += 40
         
-        # Performance-based points
-        if cfr is not None and cfr <= 0.10:
-            score += 4
-        if mttr is not None and mttr <= 1:
-            score += 5
-        if ltdd_measurable is not None and ltdd_measurable >= 0.95:
-            score += 5
+        # Data classification appropriate (30 points)
+        if data_classification in ["public", "internal"]:
+            score += 30
+        elif data_classification == "restricted":
+            score += 20
+        elif data_classification == "confidential":
+            score += 10
         
-        return min(score, 20)
+        # No privileged access required (30 points)
+        if not priv_access_for_deploy:
+            score += 30
+        
+        return round(score, 1)
     
     @staticmethod
-    def calculate_dpi(rf_score: int, flow_score: int, cfr_score: int,
-                     mttr_score: int, priv_score: int, automation_score: int,
-                     stability_score: int) -> int:
+    def calculate_ai_adoption_score(copilot_enabled: bool, ai_tools_count: int,
+                                   ai_test_generation: bool, apis_published: bool) -> float:
         """
-        Calculate DevOps Performance Index (DPI)
+        AI & Adoption pillar (5% of total)
+        Based on AI tool usage and API publishing
         
         Args:
-            rf_score: Release Frequency score
-            flow_score: Flow score
-            cfr_score: CFR score
-            mttr_score: MTTR score
-            priv_score: Privileged Access score
-            automation_score: Automation score
-            stability_score: Stability score
-            
-        Returns:
-            Total DPI score
-        """
-        return (rf_score + flow_score + cfr_score + mttr_score + 
-                priv_score + automation_score + stability_score)
-    
-    @staticmethod
-    def determine_tier(dpi: int) -> str:
-        """
-        Determine performance tier based on DPI
+            copilot_enabled: GitHub Copilot enabled
+            ai_tools_count: Number of AI tools declared
+            ai_test_generation: AI test generation used
+            apis_published: APIs published to catalog
         
-        Args:
-            dpi: DevOps Performance Index
-            
         Returns:
-            Tier name
+            Score 0-100 for this pillar
         """
-        if dpi >= 85:
-            return "Elite"
-        elif dpi >= 70:
-            return "Advanced"
-        elif dpi >= 50:
-            return "Emerging"
-        else:
-            return "Needs Support"
-    
-    @staticmethod
-    def get_data_quality_flags(ltdd_measurable: float) -> List[str]:
-        """
-        Generate data quality flags
+        score = 0.0
         
-        Args:
-            ltdd_measurable: LTTD measurability percentage
-            
-        Returns:
-            List of quality flags
-        """
-        flags = []
-        if ltdd_measurable is not None and ltdd_measurable < 0.90:
-            flags.append("LTDD_Measurability<90% -> Flow capped")
-        return flags
+        # Copilot enabled (40 points)
+        if copilot_enabled:
+            score += 40
+        
+        # AI tools declared (20 points)
+        if ai_tools_count > 0:
+            score += min(20, ai_tools_count * 10)
+        
+        # AI test generation (20 points)
+        if ai_test_generation:
+            score += 20
+        
+        # APIs published (20 points)
+        if apis_published:
+            score += 20
+        
+        return round(min(100.0, score), 1)
     
     @classmethod
     def calculate_all_scores(cls, metrics: Dict) -> Dict:
         """
-        Calculate all scores and DPI from raw metrics
+        Calculate complete DPI with all 6 pillars (0-100 scale)
         
         Args:
-            metrics: Dictionary containing raw metric values
-            
+            metrics: Dictionary with YAML + API metrics
+        
         Returns:
-            Dictionary with all calculated scores
+            Dictionary with pillar scores and total DPI (0-100)
         """
-        # Calculate component scores
-        rf_score = cls.calculate_rf_score(metrics.get('rf'))
-        flow_score = cls.calculate_flow_score(
-            metrics.get('lttd'), 
-            metrics.get('ltdd_measurable')
-        )
-        cfr_score = cls.calculate_cfr_score(metrics.get('cfr'))
-        mttr_score = cls.calculate_mttr_score(metrics.get('mttr'))
-        priv_score = cls.calculate_priv_score(metrics.get('priv_access', 0))
-        automation_score = cls.calculate_automation_score(
-            metrics.get('ci', False),
-            metrics.get('cd', False),
-            metrics.get('iac', False),
-            metrics.get('rollback', False),
-            metrics.get('self_service', False)
-        )
-        stability_score = cls.calculate_stability_score(
-            metrics.get('cfr_reported', True),
-            metrics.get('automation_audited', True),
-            metrics.get('critical_data_present', True),
-            metrics.get('cfr'),
-            metrics.get('mttr'),
-            metrics.get('ltdd_measurable')
+        # Calculate each pillar (0-100 scale)
+        velocity = cls.calculate_velocity_score(
+            metrics.get('rf', 0),
+            metrics.get('app_type', 'traditional'),
+            metrics.get('tier', 2)
         )
         
-        # Calculate DPI
-        dpi = cls.calculate_dpi(
-            rf_score, flow_score, cfr_score, mttr_score,
-            priv_score, automation_score, stability_score
+        flow = cls.calculate_flow_score(
+            metrics.get('lttd')
+        )
+        
+        stability = cls.calculate_stability_score(
+            metrics.get('cfr'),
+            metrics.get('mttr')
+        )
+        
+        automation = cls.calculate_automation_score(
+            metrics.get('ci', False),
+            metrics.get('cd', False),
+            metrics.get('standard_pipeline_adopted', False),
+            metrics.get('zero_touch_deployment', False),
+            metrics.get('automated_rollback', False),
+            metrics.get('feature_flags_adopted', False),
+            metrics.get('approval_gate_count', 0)
+        )
+        
+        quality_security = cls.calculate_quality_security_score(
+            metrics.get('sast_enabled', False),
+            metrics.get('data_classification', 'internal'),
+            metrics.get('priv_access_for_deploy', True)
+        )
+        
+        ai_adoption = cls.calculate_ai_adoption_score(
+            metrics.get('copilot_enabled', False),
+            len(metrics.get('ai_tools_declared', [])),
+            metrics.get('ai_test_generation', False),
+            metrics.get('apis_published', False)
+        )
+        
+        # Calculate weighted DPI (0-100)
+        dpi = (
+            velocity * 0.30 +
+            flow * 0.20 +
+            stability * 0.20 +
+            automation * 0.15 +
+            quality_security * 0.10 +
+            ai_adoption * 0.05
         )
         
         # Determine tier
-        tier = cls.determine_tier(dpi)
-        
-        # Get quality flags
-        data_quality_flags = cls.get_data_quality_flags(
-            metrics.get('ltdd_measurable')
-        )
+        if dpi >= 85:
+            tier = "Elite"
+        elif dpi >= 70:
+            tier = "Advanced"
+        elif dpi >= 55:
+            tier = "Emerging"
+        else:
+            tier = "Needs Support"
         
         return {
-            'rf_score': rf_score,
-            'flow_score': flow_score,
-            'cfr_score': cfr_score,
-            'mttr_score': mttr_score,
-            'priv_score': priv_score,
-            'automation_score': automation_score,
-            'stability_score': stability_score,
-            'dpi': dpi,
+            'dpi': round(dpi, 1),
             'tier': tier,
-            'data_quality_flags': str(data_quality_flags)
-        }
-    
-    @staticmethod
-    def randomize_missing_fields() -> Dict:
-        """
-        Generate random values for fields not available from API or YAML
-        Note: These are fallback values only - YAML data takes precedence
-        
-        Returns:
-            Dictionary with randomized field values (used as defaults)
-        """
-        stacks = ['Legacy', 'Cloud Native', 'Hybrid']
-        business_units = ['BU A', 'BU B', 'BU C']
-        
-        return {
-            'ltdd_measurable': round(random.uniform(0.85, 1.0), 2),
-            'priv_access': random.randint(0, 3),
-            'iac': random.choice([True, False]),  # Not in YAML yet
-            'cfr_reported': True,
-            'automation_audited': True,
-            'critical_data_present': True,
-            # Note: ci, cd, rollback, self_service now come from YAML
-            # stack and business_unit also come from YAML
+            'velocity': velocity,
+            'flow': flow,
+            'stability': stability,
+            'automation': automation,
+            'quality_security': quality_security,
+            'ai_adoption': ai_adoption,
+            # Legacy field names for backward compatibility
+            'rf_score': int(velocity * 0.35),
+            'flow_score': int(flow * 0.25),
+            'cfr_score': int(stability * 0.07),
+            'mttr_score': int(stability * 0.07),
+            'priv_score': 0,
+            'automation_score': int(automation * 0.20),
+            'stability_score': int(stability * 0.20),
+            'data_quality_flags': ''
         }

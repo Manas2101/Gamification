@@ -1,13 +1,24 @@
 """
-Metrics calculation module for DPI and component scores
-Implements 6-pillar scoring system (0-100 scale)
+DPI Scoring Module - 6 Pillar System (0-100 scale)
+Calculates DevOps Performance Index using YAML registry + DataSight API metrics
+
+Pillars:
+  1. Velocity (30%) - Release frequency, deployment speed
+  2. Flow (20%) - Lead time, deployment efficiency  
+  3. Stability (20%) - CFR, MTTR, reliability
+  4. Automation (15%) - CI/CD, pipeline maturity
+  5. Quality & Security (10%) - SAST, data classification
+  6. AI & Adoption (5%) - Copilot, API catalog
 """
 
+import logging
 from typing import Dict
 
+logger = logging.getLogger(__name__)
 
-class MetricsCalculator:
-    """Calculate DPI and 6-pillar scores from raw metrics"""
+
+class DPIScorer:
+    """Calculate 6-pillar DPI scores (0-100 scale)"""
     
     @staticmethod
     def calculate_velocity_score(rf: int, app_type: str, tier: int) -> float:
@@ -245,9 +256,9 @@ class MetricsCalculator:
         return round(min(100.0, score), 1)
     
     @classmethod
-    def calculate_all_scores(cls, metrics: Dict) -> Dict:
+    def calculate_dpi(cls, metrics: Dict) -> Dict:
         """
-        Calculate complete DPI with all 6 pillars (0-100 scale)
+        Calculate complete DPI with all 6 pillars
         
         Args:
             metrics: Dictionary with YAML + API metrics
@@ -324,12 +335,10 @@ class MetricsCalculator:
             'quality_security': quality_security,
             'ai_adoption': ai_adoption,
             # Legacy field names for backward compatibility
-            'rf_score': int(velocity * 0.35),
+            'rf_score': int(velocity * 0.35),  # Approximate mapping
             'flow_score': int(flow * 0.25),
             'cfr_score': int(stability * 0.07),
             'mttr_score': int(stability * 0.07),
-            'priv_score': 0,
             'automation_score': int(automation * 0.20),
             'stability_score': int(stability * 0.20),
-            'data_quality_flags': ''
         }
