@@ -1,0 +1,120 @@
+# ============================================================
+# DPI APP REGISTRY — INTAKE TEMPLATE
+# ============================================================
+# HOW TO USE THIS FILE:
+#
+# OPTION A — Champion fills live during the interview call:
+#   1. Open this file in GitHub web editor during the 1:1
+#   2. Fill each field as the conversation happens
+#   3. Save as: apps/{eim}.yaml
+#   4. Commit and push
+#
+# OPTION B — App owner fills async (if they missed the call):
+#   1. App owner opens this file in GitHub web editor
+#   2. Fills all fields and commits to branch: intake/{eim}
+#   3. Raises PR with title: "Registry intake: {eim}"
+#
+# Fields marked [REQUIRED] must be filled.
+# Fields marked [DEFAULT: x] can be left as-is if the default is correct.
+# ============================================================
+
+# ── IDENTITY ─────────────────────────────────────────────────
+app_name: "RDH"                      # [REQUIRED] Human name for leaderboard. e.g. "Payments API"
+eim: "9594666"                       # [REQUIRED] EIM ID for this app
+teambook_pods: ['RDH']               # [REQUIRED] TeamBook pod names (used for DataSight API)
+teambook_level: "4"                  # [REQUIRED] TeamBook pod level (passed to DataSight API)
+
+# ── TEAM ─────────────────────────────────────────────────────
+itso: "Rama Mohan Rao G V K"                          # ITSO name and details
+team_lead_email: "rammohan.rao@hsbc.co.in"            # [REQUIRED] Who receives alerts and owns the DPI score
+release_champion: ["Bhavani Shanker Neeloju", "Kunal Umbrani"]  # [REQUIRED] Person driving releases. Can be same as team lead.
+
+# ── APP CLASSIFICATION ────────────────────────────────────────
+# [REQUIRED] Choose ONE:
+#   modern       — Cloud-native, full CI/CD possible, feature flags viable
+#   traditional  — On-prem or hybrid, CI possible, CD needs work
+#   legacy       — Infrequent releases, patch-driven, config changes
+#   vendor       — Release schedule controlled by vendor (iSeries, packaged apps)
+#                  NOTE: vendor apps are excluded from RF scoring.
+#                  Their DPI is calculated on 4 pillars only.
+app_type: "modern"
+
+# [REQUIRED] Primary tech stack:
+#   java-spring | dotnet | node | python | iSeries | vendor | mixed | other
+stack: "java-spring"
+
+# Is this app currently in production?
+# If false, pipeline runs via feature flags still count toward RF.
+in_production: true             # [DEFAULT: true]
+
+tier: 2                         # [DEFAULT: 2]  1=mission-critical  2=important  3=standard
+
+# ── GIT REPOSITORIES ─────────────────────────────────────────
+# [REQUIRED] List ALL Git repos for this app.
+# Mark exactly ONE repo as is_primary: true — this drives LTDD measurement.
+repos:
+  - git_org: ""                 # [REQUIRED] The GitHub org that contains this repo
+    repo_name: ""               # [REQUIRED] The repo name (just the name, not org/name)
+    role: "backend"             # [DEFAULT: backend]  backend | frontend | infra | shared-lib | config
+    is_primary: true            # Exactly one repo must be true. This drives LTDD.
+
+# ── PIPELINE FLAGS ────────────────────────────────────────────
+# These are your manual Y/N flags — each one directly feeds
+# the Automation pillar of the DPI score.
+# Answer honestly — these are improvement levers, not a test.
+
+ci_automated: true              # Does CI trigger automatically on every push? Y/N
+cd_automated: true              # Does deployment trigger automatically after CI? Y/N
+standard_pipeline_adopted: true  # Are you on the org standard pipeline template? Y/N
+git_hygiene_adopted: false      # Has the team formally adopted git hygiene practices? Y/N
+cr_auto_creation: false         # Are change requests auto-raised in ServiceNow? Y/N
+zero_touch_deployment: false    # Can you deploy with NO human intervention? Y/N
+automated_rollback: true        # Is rollback fully automated? Y/N
+feature_flags_adopted: false    # Are feature flags used to decouple deploy from release? Y/N
+
+# How many manual human approval gates exist in your pipeline today?
+# Count each person/team that must approve before production deploy.
+approval_gate_count: 0          # [REQUIRED] Enter the actual number, even if it's 5+
+
+# ── ACCESS & SECURITY ─────────────────────────────────────────
+# Does deploying to production REQUIRE a person with elevated/privileged access?
+# This is a DPI negative score — it structurally blocks zero-touch.
+# Be honest — this is the lever to improve, not a judgment.
+priv_access_for_deploy: true   # [DEFAULT: true — change to false if not required]
+
+# When was privileged access last formally reviewed?
+# Format: YYYY-MM-DD   Must be within 90 days for full compliance score.
+priv_access_reviewed_date: ""   # Leave blank if never reviewed
+
+# Is SAST or DAST security scanning in your pipeline?
+sast_enabled: true
+
+# Data sensitivity of this app's data
+data_classification: "internal"  # public | internal | restricted | confidential
+
+# ── COMPLIANCE ────────────────────────────────────────────────
+# These URLs are checked automatically — if the URL is unreachable, score is deducted.
+release_page_url: ""            # Confluence/SharePoint URL for release notes
+compliance_evidence_page: ""    # URL where compliance evidence is maintained
+
+# ── AI & ADOPTION ─────────────────────────────────────────────
+copilot_enabled: false          # Does the team have GitHub Copilot seats?
+ai_tools_declared: []           # List any AI tools used: ["github-copilot", "cursor", etc]
+ai_test_generation: false       # Using AI for test generation?
+apis_published: false           # Are this app's APIs in the org API catalog?
+catalog_url: ""                 # URL to API catalog entry
+api_count: 0                    # How many APIs does this app expose?
+
+# ── INTERVIEW NOTES (captured during champion 1:1 call) ───────
+# agreed_rf_target_per_month: 0
+# # The RF target per month that YOU AND THE APP OWNER agreed on during the call.
+# # This becomes their personal target on the DPI scorecard.
+
+# improvement_action_1: ""        # First concrete action they committed to
+# improvement_action_2: ""        # Second action
+# improvement_action_3: ""        # Third action
+
+# notes: ""
+# # Any other context about this app useful for scoring or conversations.
+# # e.g. "App migrating to cloud in Q3 — legacy constraints temporary"
+# # e.g. "Vendor contract expires June — release schedule improving after"

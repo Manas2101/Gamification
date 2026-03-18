@@ -18,44 +18,50 @@ logger = logging.getLogger(__name__)
 class DataFetcher:
     """Orchestrates the complete data fetching and storage workflow"""
     
-    def __init__(self, teambook_token: str, datasight_token: str = None, db_path: str = "metrics.db"):
+    def __init__(self, datasight_token: str, db_path: str = "metrics.db", registry_dir: str = None):
         """
         Initialize data fetcher
         
         Args:
-            teambook_token: Bearer token for TeamBook API
-            datasight_token: Bearer token for DataSight API (optional, defaults to teambook_token)
+            datasight_token: Bearer token for DataSight API
             db_path: Path to SQLite database
+            registry_dir: Path to YAML registry directory (optional)
         """
-        self.collector = MetricsCollector(teambook_token, datasight_token)
+        self.collector = MetricsCollector(datasight_token, registry_dir)
         self.db = MetricsDatabase(db_path)
         self.calculator = MetricsCalculator()
     
     def fetch_and_store_weekly_data(self, week_date: Optional[datetime] = None):
         """
-        Fetch metrics for all pods and store in database
+        Fetch metrics for all apps and store in database
         
         Args:
-            week_date: Week date to fetch (defaults to current month)
+            week_date: Week date to fetch (defaults to current week Monday)
         """
         if week_date is None:
-            week_date = datetime.now().replace(day=1)
+            week_date = datetime.now()
         
-        logger.info(f"Starting data fetch for week: {week_date.strftime('%Y-%m')}")
+        # Normalize to Monday/week-start
+        week_date = week_date - timedelta(days=week_date.weekday())
+        week_date = week_date.replace(hour=0, minute=0, second=0, microsecond=0)
         
-        # Fetch raw metrics from APIs
+        logger.info(f"Starting data fetch for week starting: {week_date.strftime('%Y-%m-%d')}")
+        
+        # Fetch raw metrics from APIs (includes YAML data + API metrics)
         raw_metrics = self.collector.collect_weekly_metrics(week_date)
         
-        # Process each pod's metrics
-        for pod_metrics in raw_metrics:
+        # Process each app's metrics
+        for app_metrics in raw_metrics:
             try:
-                # Generate random values for missing fields
+                # Generate random values for missing fields (if needed)
                 random_fields = self.calculator.randomize_missing_fields()
                 
-                # Merge API data with random fields
+                # Merge API data with random fields (API data takes precedence)
                 complete_metrics = {
-                    **pod_metrics,
-                    **random_fields
+                    **random_fields,
+                    **app_metrics,  # API + YAML data overwrites random
+                    'week_date': week_date,
+                    'week_start': week_date
                 }
                 
                 # Calculate scores and DPI
@@ -64,14 +70,13 @@ class DataFetcher:
                 # Merge all data
                 final_metrics = {
                     **complete_metrics,
-                    **calculated_scores,
-                    'week_start': week_date
+                    **calculated_scores
                 }
                 
-                # Store pod information
+                # Store pod information (using EIM as pod_id)
                 self.db.upsert_pod(
-                    pod_id=final_metrics['pod_id'],
-                    pod_name=final_metrics['pod_name'],
+                    pod_id=final_metrics['pod_id'],  # EIM ID
+                    pod_name=final_metrics.get('app_name', final_metrics['pod_name']),
                     stack=final_metrics.get('stack'),
                     business_unit=final_metrics.get('business_unit'),
                     tier=final_metrics.get('tier')
@@ -80,10 +85,10 @@ class DataFetcher:
                 # Store weekly metrics
                 self.db.insert_weekly_metrics(final_metrics)
                 
-                logger.info(f"Stored metrics for pod: {final_metrics['pod_name']} (DPI: {final_metrics['dpi']})")
+                logger.info(f"Stored metrics for app: {final_metrics.get('app_name')} (EIM: {final_metrics['eim']}, DPI: {final_metrics['dpi']})")
                 
             except Exception as e:
-                logger.error(f"Error processing pod {pod_metrics.get('pod_name')}: {e}")
+                logger.error(f"Error processing app {app_metrics.get('app_name', app_metrics.get('pod_name'))}: {e}", exc_info=True)
                 continue
         
         logger.info("Weekly data fetch completed successfully")
@@ -183,12 +188,11 @@ class DataFetcher:
 
 def main():
     """Example usage"""
-    # Replace with actual bearer tokens
-    TEAMBOOK_TOKEN = "your_teambook_bearer_token_here"
+    # Replace with actual bearer token
     DATASIGHT_TOKEN = "your_datasight_bearer_token_here"
     
-    # Initialize fetcher with separate tokens
-    fetcher = DataFetcher(TEAMBOOK_TOKEN, DATASIGHT_TOKEN)
+    # Initialize fetcher (no TeamBook token needed - uses YAML registry)
+    fetcher = DataFetcher(DATASIGHT_TOKEN)
     
     # Fetch current week data
     fetcher.refresh_current_week()
@@ -198,7 +202,7 @@ def main():
     
     # Get latest data for dashboard
     latest_data = fetcher.get_latest_dashboard_data()
-    print(f"Fetched {len(latest_data)} pods")
+    print(f"Fetched {len(latest_data)} apps")
     print(latest_data.head())
 
 

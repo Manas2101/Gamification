@@ -137,12 +137,13 @@ class DataSightAPI:
             logger.error(f"Error fetching from {endpoint}: {e}")
             return {}
     
-    def get_mttr(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
+    def get_mttr(self, teambook_name: str, teambook_level: str, from_date: datetime, to_date: datetime) -> Optional[float]:
         """
         Fetch MTTR (Mean Time To Restore) metric
         
         Args:
-            pod_id: TeamBook pod ID
+            teambook_name: TeamBook pod name
+            teambook_level: TeamBook pod level
             from_date: Start date
             to_date: End date
             
@@ -152,8 +153,8 @@ class DataSightAPI:
         params = {
             'from': self._format_date(from_date),
             'to': self._format_date(to_date),
-            'teambookIds': pod_id,
-            'teambookLevel': self.TEAMBOOK_LEVEL,
+            'teambookNames': teambook_name,
+            'teambookLevel': teambook_level,
             'page': 1,
             'size': self.PAGE_SIZE
         }
@@ -165,12 +166,13 @@ class DataSightAPI:
             return mttr_value if mttr_value is not None else 0
         return 0
     
-    def get_lttd(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
+    def get_lttd(self, teambook_name: str, teambook_level: str, from_date: datetime, to_date: datetime) -> Optional[float]:
         """
         Fetch LTTD (Lead Time To Deploy) metric
         
         Args:
-            pod_id: TeamBook pod ID
+            teambook_name: TeamBook pod name
+            teambook_level: TeamBook pod level
             from_date: Start date
             to_date: End date
             
@@ -180,8 +182,8 @@ class DataSightAPI:
         params = {
             'from': self._format_date(from_date),
             'to': self._format_date(to_date),
-            'teambookIds': pod_id,
-            'teambookLevel': self.TEAMBOOK_LEVEL,
+            'teambookNames': teambook_name,
+            'teambookLevel': teambook_level,
             'page': 1,
             'size': self.PAGE_SIZE
         }
@@ -193,23 +195,24 @@ class DataSightAPI:
             return lttd_value if lttd_value is not None else 0
         return 0
     
-    def get_release_frequency(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[int]:
+    def get_release_frequency(self, teambook_name: str, teambook_level: str, from_date: datetime, to_date: datetime) -> Optional[int]:
         """
-        Fetch Release Frequency metric
+        Fetch Release Frequency metric (ytd_pdptppy_basis)
         
         Args:
-            pod_id: TeamBook pod ID
+            teambook_name: TeamBook pod name
+            teambook_level: TeamBook pod level
             from_date: Start date
             to_date: End date
             
         Returns:
-            Release Frequency value or None
+            Release Frequency value (ytd_pdptppy_basis) or None
         """
         params = {
             'from': self._format_date(from_date),
             'to': self._format_date(to_date),
-            'teambookIds': pod_id,
-            'teambookLevel': self.TEAMBOOK_LEVEL,
+            'teambookNames': teambook_name,
+            'teambookLevel': teambook_level,
             'page': 1,
             'size': self.PAGE_SIZE
         }
@@ -217,16 +220,21 @@ class DataSightAPI:
         data = self._make_request('releases/metric/release-frequency/teambook/metric', params)
         
         if data and 'data' in data and len(data['data']) > 0:
-            rf_value = data['data'][0].get('releases')
+            # Fetch RF as ytd_pdptppy_basis from response
+            rf_value = data['data'][0].get('ytd_pdptppy_basis')
+            if rf_value is None:
+                # Fallback to 'releases' field if ytd_pdptppy_basis not found
+                rf_value = data['data'][0].get('releases')
             return rf_value if rf_value is not None else 0
         return 0
     
-    def get_cfr(self, pod_id: int, from_date: datetime, to_date: datetime) -> Optional[float]:
+    def get_cfr(self, teambook_name: str, teambook_level: str, from_date: datetime, to_date: datetime) -> Optional[float]:
         """
         Fetch CFR (Change Failure Rate) metric
         
         Args:
-            pod_id: TeamBook pod ID
+            teambook_name: TeamBook pod name
+            teambook_level: TeamBook pod level
             from_date: Start date
             to_date: End date
             
@@ -236,8 +244,8 @@ class DataSightAPI:
         params = {
             'from': self._format_date(from_date),
             'to': self._format_date(to_date),
-            'teambookIds': pod_id,
-            'teambookLevel': self.TEAMBOOK_LEVEL,
+            'teambookNames': teambook_name,
+            'teambookLevel': teambook_level,
             'page': 1,
             'size': self.PAGE_SIZE
         }
@@ -249,12 +257,13 @@ class DataSightAPI:
             return cfr_value if cfr_value is not None else 0
         return 0
     
-    def get_all_metrics(self, pod_id: int, from_date: datetime, to_date: datetime) -> Dict:
+    def get_all_metrics(self, teambook_name: str, teambook_level: str, from_date: datetime, to_date: datetime) -> Dict:
         """
-        Fetch all metrics for a pod
+        Fetch all metrics for a pod using teambook name
         
         Args:
-            pod_id: TeamBook pod ID
+            teambook_name: TeamBook pod name
+            teambook_level: TeamBook pod level
             from_date: Start date
             to_date: End date
             
@@ -262,57 +271,76 @@ class DataSightAPI:
             Dictionary containing all metrics
         """
         return {
-            'mttr': self.get_mttr(pod_id, from_date, to_date),
-            'lttd': self.get_lttd(pod_id, from_date, to_date),
-            'rf': self.get_release_frequency(pod_id, from_date, to_date),
-            'cfr': self.get_cfr(pod_id, from_date, to_date)
+            'mttr': self.get_mttr(teambook_name, teambook_level, from_date, to_date),
+            'lttd': self.get_lttd(teambook_name, teambook_level, from_date, to_date),
+            'rf': self.get_release_frequency(teambook_name, teambook_level, from_date, to_date),
+            'cfr': self.get_cfr(teambook_name, teambook_level, from_date, to_date)
         }
 
 
 class MetricsCollector:
-    """Orchestrates data collection from TeamBook and DataSight APIs"""
+    """Orchestrates data collection from YAML registry and DataSight API"""
     
-    def __init__(self, teambook_token: str, datasight_token: str = None):
+    def __init__(self, datasight_token: str, registry_dir: str = None):
         """
         Initialize metrics collector
         
         Args:
-            teambook_token: Bearer token for TeamBook API
-            datasight_token: Bearer token for DataSight API (optional, defaults to teambook_token)
+            datasight_token: Bearer token for DataSight API
+            registry_dir: Path to YAML registry directory (optional)
         """
-        self.teambook = TeamBookAPI(teambook_token)
-        self.datasight = DataSightAPI(datasight_token or teambook_token)
+        self.datasight = DataSightAPI(datasight_token)
+        
+        # Import here to avoid circular dependency
+        from registry_loader import RegistryLoader
+        self.registry = RegistryLoader(registry_dir)
     
     def collect_weekly_metrics(self, week_date: datetime) -> List[Dict]:
         """
-        Collect metrics for all pods for a specific week
+        Collect metrics for all apps from YAML registry
         
         Args:
             week_date: Date representing the week (YYYY-MM format)
             
         Returns:
-            List of dictionaries containing pod metrics
+            List of dictionaries containing app metrics
         """
-        pods = self.teambook.get_pods()
+        apps = self.registry.load_all()
         metrics_data = []
         
-        for pod in pods:
-            pod_id = pod['pod_id']
-            pod_name = pod['pod_name']
+        for app in apps:
+            # Get first teambook pod name (primary pod)
+            if not app.teambook_pods:
+                logger.warning(f"App {app.app_name} has no teambook pods defined, skipping")
+                continue
             
-            logger.info(f"Fetching metrics for pod: {pod_name} (ID: {pod_id})")
+            teambook_name = app.teambook_pods[0]
+            teambook_level = app.teambook_level
             
-            metrics = self.datasight.get_all_metrics(pod_id, week_date, week_date)
+            logger.info(f"Fetching metrics for app: {app.app_name} (EIM: {app.eim}, Pod: {teambook_name}, Level: {teambook_level})")
+            
+            metrics = self.datasight.get_all_metrics(teambook_name, teambook_level, week_date, week_date)
             
             metrics_data.append({
-                'pod_id': pod_id,
-                'pod_name': pod_name,
+                'pod_id': app.eim,  # Use EIM as pod_id
+                'pod_name': teambook_name,
+                'app_name': app.app_name,
+                'eim': app.eim,
                 'week_date': week_date,
                 'mttr': metrics.get('mttr'),
                 'lttd': metrics.get('lttd'),
                 'rf': metrics.get('rf'),
-                'cfr': metrics.get('cfr')
+                'cfr': metrics.get('cfr'),
+                # Include all YAML data for scoring
+                'stack': app.stack,
+                'business_unit': 'Default',  # Can be added to YAML if needed
+                'tier': app.tier,
+                'ci': app.ci_automated,
+                'cd': app.cd_automated,
+                'iac': False,  # Can be added to YAML if needed
+                'rollback': app.automated_rollback,
+                'self_service': app.zero_touch_deployment,
             })
         
-        logger.info(f"Collected metrics for {len(metrics_data)} pods")
+        logger.info(f"Collected metrics for {len(metrics_data)} apps")
         return metrics_data

@@ -330,10 +330,11 @@ class MetricsCalculator:
     @staticmethod
     def randomize_missing_fields() -> Dict:
         """
-        Generate random values for fields not available from API
+        Generate random values for fields not available from API or YAML
+        Note: These are fallback values only - YAML data takes precedence
         
         Returns:
-            Dictionary with randomized field values
+            Dictionary with randomized field values (used as defaults)
         """
         stacks = ['Legacy', 'Cloud Native', 'Hybrid']
         business_units = ['BU A', 'BU B', 'BU C']
@@ -341,14 +342,10 @@ class MetricsCalculator:
         return {
             'ltdd_measurable': round(random.uniform(0.85, 1.0), 2),
             'priv_access': random.randint(0, 3),
-            'ci': random.choice([True, False]),
-            'cd': random.choice([True, False]),
-            'iac': random.choice([True, False]),
-            'rollback': random.choice([True, False]),
-            'self_service': random.choice([True, False]),
+            'iac': random.choice([True, False]),  # Not in YAML yet
             'cfr_reported': True,
             'automation_audited': True,
             'critical_data_present': True,
-            'stack': random.choice(stacks),
-            'business_unit': random.choice(business_units)
+            # Note: ci, cd, rollback, self_service now come from YAML
+            # stack and business_unit also come from YAML
         }
