@@ -2737,6 +2737,10 @@ display_history = display_history.rename(columns={k: v for k, v in _rename_score
 
 display_latest_week = display_history['Week_Start'].max()
 
+# Convert to datetime if it's a string (from database date() function)
+if isinstance(display_latest_week, str):
+    display_latest_week = pd.to_datetime(display_latest_week)
+
  
 
 display_prev_weeks = sorted(display_history['Week_Start'].unique())
