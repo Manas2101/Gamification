@@ -375,3 +375,20 @@ For issues or questions:
 - Review YAML syntax in `apps/*.yaml`
 - Verify API token configuration in `.env`
 - Check logs in `weekly_refresh.log`
+
+
+
+# quick_populate.py
+from data_fetcher import DataFetcher
+import config
+
+# Initialize with DataSight token only
+fetcher = DataFetcher(
+    datasight_token=config.DATASIGHT_BEARER_TOKEN,
+    db_path=config.DB_PATH
+)
+
+# Fetch current week data from YAML apps
+fetcher.refresh_current_week()
+
+print("✅ Database populated!")
