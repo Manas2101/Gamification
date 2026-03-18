@@ -503,21 +503,19 @@ class MetricsDatabase:
 
                 wm.dpi as DPI,
 
-                p.tier as Tier,
+                wm.tier_name as Tier,
 
-                wm.rf_score as RF_Score,
+                wm.velocity as Velocity,
 
-                wm.flow_score as Flow_Score,
+                wm.flow as Flow,
 
-                wm.cfr_score as CFR_Score,
+                wm.stability as Stability,
 
-                wm.mttr_score as MTTR_Score,
+                wm.automation as Automation,
 
-                wm.priv_score as Priv_Score,
+                wm.quality_security as Quality_Security,
 
-                wm.automation_score as Automation_Score,
-
-                wm.stability_score as Stability_Score,
+                wm.ai_adoption as AI_Adoption,
 
                 wm.data_quality_flags as Data_Quality_Flags
 
@@ -629,21 +627,19 @@ class MetricsDatabase:
 
                     wm.dpi as DPI,
 
-                    p.tier as Tier,
+                    wm.tier_name as Tier,
 
-                    wm.rf_score as RF_Score,
+                    wm.velocity as Velocity,
 
-                    wm.flow_score as Flow_Score,
+                    wm.flow as Flow,
 
-                    wm.cfr_score as CFR_Score,
+                    wm.stability as Stability,
 
-                    wm.mttr_score as MTTR_Score,
+                    wm.automation as Automation,
 
-                    wm.priv_score as Priv_Score,
+                    wm.quality_security as Quality_Security,
 
-                    wm.automation_score as Automation_Score,
-
-                    wm.stability_score as Stability_Score,
+                    wm.ai_adoption as AI_Adoption,
 
                     wm.data_quality_flags as Data_Quality_Flags
 
@@ -707,21 +703,19 @@ class MetricsDatabase:
 
                     wm.dpi as DPI,
 
-                    p.tier as Tier,
+                    wm.tier_name as Tier,
 
-                    wm.rf_score as RF_Score,
+                    wm.velocity as Velocity,
 
-                    wm.flow_score as Flow_Score,
+                    wm.flow as Flow,
 
-                    wm.cfr_score as CFR_Score,
+                    wm.stability as Stability,
 
-                    wm.mttr_score as MTTR_Score,
+                    wm.automation as Automation,
 
-                    wm.priv_score as Priv_Score,
+                    wm.quality_security as Quality_Security,
 
-                    wm.automation_score as Automation_Score,
-
-                    wm.stability_score as Stability_Score,
+                    wm.ai_adoption as AI_Adoption,
 
                     wm.data_quality_flags as Data_Quality_Flags
 

@@ -93,15 +93,14 @@ class DashboardDataLoader:
             'Stack': ['Cloud Native', 'Hybrid'],
             'Business Unit': ['BU A', 'BU B'],
             'Week_Start': [datetime.now(), datetime.now()],
-            'DPI': [55, 62],
+            'DPI': [55.0, 62.0],
             'Tier': ['Emerging', 'Emerging'],
-            'RF_Score': [18, 25],
-            'Flow_Score': [10, 15],
-            'CFR_Score': [4, 4],
-            'MTTR_Score': [4, 4],
-            'Priv_Score': [2, 0],
-            'Automation_Score': [15, 15],
-            'Stability_Score': [10, 12],
+            'Velocity': [45.0, 52.0],
+            'Flow': [60.0, 70.0],
+            'Stability': [50.0, 55.0],
+            'Automation': [65.0, 70.0],
+            'Quality_Security': [60.0, 65.0],
+            'AI_Adoption': [20.0, 25.0],
             'Data_Quality_Flags': ['[]', '[]']
         })
     

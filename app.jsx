@@ -1881,407 +1881,8 @@ st.markdown("""
  
 
 # --- DPI Calculation Functions ---
-
- 
-
-
- 
-
-def calculate_rf_score(rf):
-
- 
-
-    if rf <= 50: return 5
-
- 
-
-    if 50 < rf <= 100: return 10
-
- 
-
-    if 100 < rf <= 180: return 18
-
- 
-
-    if 180 < rf <= 250: return 25
-
- 
-
-    if 250 < rf <= 300: return 32
-
- 
-
-    return 35
-
- 
-
-
- 
-
-def calculate_ltdd_score(ltdd, measurable_crs_perc):
-
- 
-
-    score = 0
-
- 
-
-    if ltdd < 2: score = 25
-
- 
-
-    elif 2 <= ltdd <= 5: score = 20
-
- 
-
-    elif 5 < ltdd <= 10: score = 15
-
- 
-
-    elif 10 < ltdd <= 20: score = 10
-
- 
-
-    else: score = 5
-
- 
-
-
- 
-
-    if pd.isna(measurable_crs_perc):
-
- 
-
-        measurable_crs_perc = 1.0
-
- 
-
-    if measurable_crs_perc < 0.9:
-
- 
-
-        return min(score, 10)
-
- 
-
-    return score
-
- 
-
-
- 
-
-def calculate_cfr_score(cfr):
-
- 
-
-    if cfr > 0.2: return 1
-
- 
-
-    if 0.1 <= cfr <= 0.2: return 4
-
- 
-
-    return 7
-
- 
-
-
- 
-
-def calculate_mttr_score(mttr):
-
- 
-
-    if mttr > 2: return 1
-
- 
-
-    if 1 <= mttr <= 2: return 4
-
- 
-
-    return 7
-
- 
-
-
- 
-
-def calculate_priv_access_score(level):
-
- 
-
-    score_map = {0:0, 1:2, 2:4, 3:6}
-
- 
-
-    return score_map.get(int(level) if not pd.isna(level) else 0, 0)
-
- 
-
-
- 
-
-def calculate_automation_score(ci, cd, iac, rollback, self_service):
-
- 
-
-    score = 0
-
- 
-
-    if ci: score += 5
-
- 
-
-    if cd: score += 5
-
- 
-
-    if iac: score += 4
-
- 
-
-    if rollback: score += 3
-
- 
-
-    if self_service: score += 3
-
- 
-
-    return score
-
- 
-
-
- 
-
-def get_tier(dpi):
-
- 
-
-    if dpi >= 85: return "Elite"
-
- 
-
-    if 70 <= dpi < 85: return "Advanced"
-
- 
-
-    if 50 <= dpi < 70: return "Emerging"
-
- 
-
-    return "Needs Support"
-
- 
-
-
- 
-
-def calculate_dpi_row(row):
-
- 
-
-    # expects a normalized row (booleans, numbers)
-
- 
-
-    # If critical data missing => not published
-
- 
-
-    if not row.get('Critical_Data_Present', True):
-
- 
-
-        return {
-
- 
-
-            'DPI': np.nan,
-
- 
-
-            'Tier': 'Not Published',
-
- 
-
-            'RF_Score': np.nan,
-
- 
-
-            'Flow_Score': np.nan,
-
- 
-
-            'CFR_Score': np.nan,
-
- 
-
-            'MTTR_Score': np.nan,
-
- 
-
-            'Priv_Score': np.nan,
-
- 
-
-            'Automation_Score': np.nan,
-
- 
-
-            'Stability_Score': np.nan,
-
- 
-
-            'Data_Quality_Flags': ['Critical_Data_Missing']
-
- 
-
-        }
-
- 
-
-
- 
-
-    flags = []
-
- 
-
-    rf_score = calculate_rf_score(row.get('RF', 0))
-
- 
-
-    flow_score = calculate_ltdd_score(row.get('LTDD', 9999), row.get('LTDD_Measurable', 1.0))
-
- 
-
-    if row.get('LTDD_Measurable', 1.0) < 0.9:
-
- 
-
-        flags.append('LTDD_Measurability<90% -> Flow capped')
-
- 
-
-
- 
-
-    cfr_score = calculate_cfr_score(row.get('CFR', 1.0))
-
- 
-
-    mttr_score = calculate_mttr_score(row.get('MTTR', 999))
-
- 
-
-    priv_score = calculate_priv_access_score(row.get('Priv_Access', 0))
-
- 
-
-
- 
-
-    stability_score = cfr_score + mttr_score + priv_score
-
- 
-
-    if not row.get('CFR_Reported', True):
-
- 
-
-        flags.append('CFR not reported -> Stability capped at 8')
-
- 
-
-        stability_score = min(stability_score, 8)
-
- 
-
-
- 
-
-    automation_score = calculate_automation_score(row.get('CI', False), row.get('CD', False), row.get('IaC', False), row.get('Rollback', False), row.get('Self_Service', False))
-
- 
-
-    if not row.get('Automation_Audited', True) and automation_score > 0:
-
- 
-
-        flags.append('Automation claimed but not audited -> Automation capped at 10')
-
- 
-
-        automation_score = min(automation_score, 10)
-
- 
-
-
- 
-
-    total = rf_score + flow_score + stability_score + automation_score
-
- 
-
-    tier = get_tier(total)
-
- 
-
-
- 
-
-    return {
-
- 
-
-        'DPI': total,
-
- 
-
-        'Tier': tier,
-
- 
-
-        'RF_Score': rf_score,
-
- 
-
-        'Flow_Score': flow_score,
-
- 
-
-        'CFR_Score': cfr_score,
-
- 
-
-        'MTTR_Score': mttr_score,
-
- 
-
-        'Priv_Score': priv_score,
-
- 
-
-        'Automation_Score': automation_score,
-
- 
-
-        'Stability_Score': stability_score,
-
- 
-
-        'Data_Quality_Flags': flags
-
- 
-
-    }
+# NOTE: DPI is now calculated in metrics_calculator.py and stored in database
+# The UI reads scores directly from the database - no recalculation needed
 
  
 
@@ -2504,18 +2105,8 @@ def validate_and_normalize(df):
 
  
 
-    # compute DPI fields
-
- 
-
-    computed = df.apply(lambda r: pd.Series(calculate_dpi_row(r)), axis=1)
-
- 
-
-    df = pd.concat([df, computed], axis=1)
-
- 
-
+    # DPI fields now come from database - no computation needed
+    # Database provides: DPI, Tier, Velocity, Flow, Stability, Automation, Quality_Security, AI_Adoption
 
  
 
@@ -3521,41 +3112,27 @@ with tab1:
 
         with cols[0]:
 
-            # DB uses lowercase (rf_score). CSV exports may use Title Case (RF_Score).
+            # New 6-pillar scoring: Velocity (0-100)
 
-            # Support both + any odd variants.
+            velocity = trow.get('Velocity', 0)
 
-            rf_score = (
+            velocity_pct = int(velocity) if velocity is not None and not pd.isna(velocity) else 0
 
-                trow.get('rf_score')
-
-                if trow.get('rf_score') is not None
-
-                else trow.get('RF_Score')
-
-            )
-
-            if rf_score is None:
-
-                rf_score = trow.get('RF score')
-
-            rf_pct = int((rf_score/35)*100) if rf_score is not None and not pd.isna(rf_score) else 0
-
-            rf_display = f"{rf_score:.1f}" if rf_score is not None and not pd.isna(rf_score) else 'N/A'
+            velocity_display = f"{velocity:.1f}" if velocity is not None and not pd.isna(velocity) else 'N/A'
 
             st.markdown(f"""
 
             <div style='margin-bottom:20px;'>
 
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>⚡ RF Score</div>
+                <div style='color:white; font-weight:600; margin-bottom:8px;'>⚡ Velocity (Release Frequency)</div>
 
                 <div class='metric-bar'>
 
-                    <div class='metric-fill' style='width:{rf_pct}%; background:#06b6d4;'></div>
+                    <div class='metric-fill' style='width:{velocity_pct}%; background:#06b6d4;'></div>
 
                 </div>
 
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{rf_display} / 35</div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{velocity_display} / 100</div>
 
             </div>
 
@@ -3563,17 +3140,17 @@ with tab1:
 
  
 
-            flow_score = trow.get('Flow_Score')
+            flow = trow.get('Flow', 0)
 
-            flow_pct = int((flow_score/25)*100) if flow_score is not None and not pd.isna(flow_score) else 0
+            flow_pct = int(flow) if flow is not None and not pd.isna(flow) else 0
 
-            flow_display = f"{flow_score:.1f}" if flow_score is not None and not pd.isna(flow_score) else "N/A"
+            flow_display = f"{flow:.1f}" if flow is not None and not pd.isna(flow) else "N/A"
 
             st.markdown(f"""
 
             <div style='margin-bottom:20px;'>
 
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>💨 Flow Score</div>
+                <div style='color:white; font-weight:600; margin-bottom:8px;'>💨 Flow (Lead Time)</div>
 
                 <div class='metric-bar'>
 
@@ -3581,7 +3158,7 @@ with tab1:
 
                 </div>
 
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{flow_display} / 25</div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{flow_display} / 100</div>
 
             </div>
 
@@ -3591,25 +3168,25 @@ with tab1:
 
         with cols[1]:
 
-            stab_score = trow.get('Stability_Score')
+            stability = trow.get('Stability', 0)
 
-            stab_pct = int((stab_score/20)*100) if stab_score is not None and not pd.isna(stab_score) else 0
+            stab_pct = int(stability) if stability is not None and not pd.isna(stability) else 0
 
-            stab_display = f"{stab_score:.1f}" if stab_score is not None and not pd.isna(stab_score) else "N/A"
+            stab_display = f"{stability:.1f}" if stability is not None and not pd.isna(stability) else "N/A"
 
             st.markdown(f"""
 
             <div style='margin-bottom:20px;'>
 
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>🛡️ Stability Score</div>
+                <div style='color:white; font-weight:600; margin-bottom:8px;'>🛡️ Stability (CFR + MTTR)</div>
 
                 <div class='metric-bar'>
 
-                    <div class='metric-fill' style='width:{stab_pct}%; background:#f97316;'></div>
+                    <div class='metric-fill' style='width:{stab_pct}%; background:#ec4899;'></div>
 
                 </div>
 
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{stab_display} / 20</div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{stab_display} / 100</div>
 
             </div>
 
@@ -3617,17 +3194,17 @@ with tab1:
 
  
 
-            auto_score = trow.get('Automation_Score')
+            automation = trow.get('Automation', 0)
 
-            auto_pct = int((auto_score/20)*100) if auto_score is not None and not pd.isna(auto_score) else 0
+            auto_pct = int(automation) if automation is not None and not pd.isna(automation) else 0
 
-            auto_display = f"{auto_score:.1f}" if auto_score is not None and not pd.isna(auto_score) else "N/A"
+            auto_display = f"{automation:.1f}" if automation is not None and not pd.isna(automation) else "N/A"
 
             st.markdown(f"""
 
             <div style='margin-bottom:20px;'>
 
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 Automation Score</div>
+                <div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 Automation (CI/CD Maturity)</div>
 
                 <div class='metric-bar'>
 
@@ -3635,10 +3212,41 @@ with tab1:
 
                 </div>
 
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{auto_display} / 20</div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{auto_display} / 100</div>
 
             </div>
 
+            """, unsafe_allow_html=True)
+
+        # Add second row for remaining pillars
+        cols2 = st.columns(2)
+        
+        with cols2[0]:
+            quality_security = trow.get('Quality_Security', 0)
+            quality_pct = int(quality_security) if quality_security is not None and not pd.isna(quality_security) else 0
+            quality_display = f"{quality_security:.1f}" if quality_security is not None and not pd.isna(quality_security) else "N/A"
+            st.markdown(f"""
+            <div style='margin-bottom:20px;'>
+                <div style='color:white; font-weight:600; margin-bottom:8px;'>🔒 Quality & Security</div>
+                <div class='metric-bar'>
+                    <div class='metric-fill' style='width:{quality_pct}%; background:#f97316;'></div>
+                </div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{quality_display} / 100</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with cols2[1]:
+            ai_adoption = trow.get('AI_Adoption', 0)
+            ai_pct = int(ai_adoption) if ai_adoption is not None and not pd.isna(ai_adoption) else 0
+            ai_display = f"{ai_adoption:.1f}" if ai_adoption is not None and not pd.isna(ai_adoption) else "N/A"
+            st.markdown(f"""
+            <div style='margin-bottom:20px;'>
+                <div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 AI & Adoption</div>
+                <div class='metric-bar'>
+                    <div class='metric-fill' style='width:{ai_pct}%; background:#8b5cf6;'></div>
+                </div>
+                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{ai_display} / 100</div>
+            </div>
             """, unsafe_allow_html=True)
 
  
@@ -3657,27 +3265,24 @@ with tab1:
 
  
 
-        rf_val = trow.get('RF', 0)
+        # Use new 6-pillar scores (0-100 scale)
+        velocity_val = trow.get('Velocity', 0)
+        velocity_progress = velocity_val / 100.0 if velocity_val is not None and not pd.isna(velocity_val) else 0
 
-        rf_progress = min(1.0, rf_val / 280.0) if rf_val is not None else 0
+        flow_val = trow.get('Flow', 0)
+        flow_progress = flow_val / 100.0 if flow_val is not None and not pd.isna(flow_val) else 0
 
- 
+        automation_val = trow.get('Automation', 0)
+        automation_progress = automation_val / 100.0 if automation_val is not None and not pd.isna(automation_val) else 0
 
-        ltdd_val = trow.get('LTDD', 9999)
-
-        ltdd_progress = min(1.0, 1.8 / max(ltdd_val, 0.001)) if ltdd_val is not None else 0
-
- 
-
-        auto_val = trow.get('Automation_Score', 0)
-
-        automation_progress = auto_val / 20.0 if auto_val is not None and not pd.isna(auto_val) else 0
-
- 
-
-        stab_val = trow.get('Stability_Score', 0)
-
-        stability_progress = stab_val / 20.0 if stab_val is not None and not pd.isna(stab_val) else 0
+        stability_val = trow.get('Stability', 0)
+        stability_progress = stability_val / 100.0 if stability_val is not None and not pd.isna(stability_val) else 0
+        
+        quality_val = trow.get('Quality_Security', 0)
+        quality_progress = quality_val / 100.0 if quality_val is not None and not pd.isna(quality_val) else 0
+        
+        ai_val = trow.get('AI_Adoption', 0)
+        ai_progress = ai_val / 100.0 if ai_val is not None and not pd.isna(ai_val) else 0
 
  
 
@@ -3685,35 +3290,35 @@ with tab1:
 
  
 
-        if rf_progress < 0.5:
+        if velocity_progress < 0.5:
+
+            recs.append('🚀 Increase release velocity: automate CD and reduce batch sizes')
 
  
 
-            recs.append('🚀 Increase release cadence: automate CD and reduce batch sizes')
+        if flow_progress < 0.5:
 
- 
-
-        if ltdd_progress < 0.8:
-
- 
-
-            recs.append('⏱️ Improve LTDD measurement and CI speed')
+            recs.append('⚡ Reduce Lead Time: streamline approvals and automate testing')
 
  
 
         if automation_progress < 0.5:
 
- 
-
-            recs.append('🤖 Prioritise CI/CD and IaC coverage')
+            recs.append('🤖 Boost automation: enable CI/CD, zero-touch deployment, and feature flags')
 
  
 
         if stability_progress < 0.5:
 
- 
-
-            recs.append('🛡️ Invest in observability, incident response and rollback')
+            recs.append('🛡️ Improve stability: reduce CFR and MTTR through better testing')
+        
+        if quality_progress < 0.5:
+        
+            recs.append('🔒 Enhance security: enable SAST/DAST and remove privileged access requirements')
+        
+        if ai_progress < 0.5:
+        
+            recs.append('🤖 Adopt AI tools: enable GitHub Copilot and publish APIs to catalog')
 
  
 
