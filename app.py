@@ -41,9 +41,7 @@ st.set_page_config(layout="wide", page_title="🚀 DevOps Gamification Dashboard
 
 # --- Custom CSS for Gamification UI ---
 
-st.markdown("""
-
-<style>
+st.markdown("""<style>
 
  
 
@@ -1857,18 +1855,14 @@ canvas {
 
  
 
-# --- Animated Hero Header ---
+# --- Animated Hero Header --- v2.0 (inline styles)
 
 st.markdown("""
-
-<div class='hero-header'>
-
-    <h1 class='hero-title'>🚀 DevOps Transformation Gamification 2026</h1>
-
-    <p class='hero-subtitle'>⚡ Target: RF 280 | ⏱ LTDD 1.8 | 🎯 Sustainable Maturity</p>
-
+<!-- Cache bust: v2.0 inline styles -->
+<div style='text-align: center; padding: 40px 20px; background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(139,92,246,0.1)); border-radius: 20px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.1);'>
+<h1 style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>🚀 DevOps Transformation Gamification 2026</h1>
+<p style='font-size: 18px; color: rgba(255,255,255,0.8); margin: 0;'>⚡ Target: RF 280 | ⏱ LTDD 1.8 | 🎯 Sustainable Maturity</p>
 </div>
-
 """, unsafe_allow_html=True)
 
  
@@ -2645,7 +2639,7 @@ def badge_html(badge):
 
  
 
-    return f"<span class='badge' title='{desc}'>{icon} {badge}</span>"
+    return f"<span style='background: linear-gradient(135deg, #8b5cf6, #6366f1); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 0 4px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.2);' title='{desc}'>{icon} {badge}</span>"
 
  
 
@@ -2668,7 +2662,7 @@ def tier_html(tier, dpi=None):
 
  
 
-    return f"<div class='tier-badge' style='background:{color}' title='{desc}'>{tier}{dpi_text}</div>"
+    return f"<div style='padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.2); background:{color}' title='{desc}'>{tier}{dpi_text}</div>"
 
  
 
@@ -2927,25 +2921,23 @@ with tab1:
 
     with st.expander("📋 Scoring Summary (Quick Reference)", expanded=False):
 
-        st.markdown("""
+        st.markdown("""<div style='color:white;'>
 
-        <div style='color:white;'>
+<ul style='color:white;'>
 
-        <ul style='color:white;'>
+<li style='color:white; margin-bottom:10px;'><strong>Velocity (RF)</strong> — 35 pts (target 280 → 32 pts)</li>
 
-            <li style='color:white; margin-bottom:10px;'><strong>Velocity (RF)</strong> — 35 pts (target 280 → 32 pts)</li>
+<li style='color:white; margin-bottom:10px;'><strong>Flow (LTDD)</strong> — 25 pts (LTDD &lt;2 → 25 pts). If LTDD measurability &lt;90% → Flow capped at 10.</li>
 
-            <li style='color:white; margin-bottom:10px;'><strong>Flow (LTDD)</strong> — 25 pts (LTDD &lt;2 → 25 pts). If LTDD measurability &lt;90% → Flow capped at 10.</li>
+<li style='color:white; margin-bottom:10px;'><strong>Stability</strong> — 20 pts (CFR 7 pts, MTTR 7 pts, Privileged Access 6 pts). If CFR not reported → Stability capped at 8.</li>
 
-            <li style='color:white; margin-bottom:10px;'><strong>Stability</strong> — 20 pts (CFR 7 pts, MTTR 7 pts, Privileged Access 6 pts). If CFR not reported → Stability capped at 8.</li>
+<li style='color:white; margin-bottom:10px;'><strong>Automation</strong> — 20 pts (CI 5, CD 5, IaC 4, Rollback 3, Self-service 3). If automation not audited → capped at 10.</li>
 
-            <li style='color:white; margin-bottom:10px;'><strong>Automation</strong> — 20 pts (CI 5, CD 5, IaC 4, Rollback 3, Self-service 3). If automation not audited → capped at 10.</li>
+<li style='color:white; margin-bottom:10px;'><strong>Integrity</strong>: If critical data missing → score not published.</li>
 
-            <li style='color:white; margin-bottom:10px;'><strong>Integrity</strong>: If critical data missing → score not published.</li>
+</ul>
 
-        </ul>
-
-        </div>
+</div>
 
         """, unsafe_allow_html=True)
 
@@ -2954,8 +2946,7 @@ with tab1:
     # top metrics for selected BU with animated cards
     
     # Re-inject critical CSS to ensure it's loaded (workaround for timing issues)
-    st.markdown("""
-    <style>
+    st.markdown("""<style>
     .metric-card {
         background: rgba(45,55,72,0.2);
         backdrop-filter: blur(10px);
@@ -2986,7 +2977,7 @@ with tab1:
         text-transform: uppercase;
         letter-spacing: 1px;
     }
-    </style>
+</style>
     """, unsafe_allow_html=True)
 
  
@@ -3009,17 +3000,10 @@ with tab1:
 
         avg_dpi_display = f"{avg_dpi:.1f}" if avg_dpi is not None and not pd.isna(avg_dpi) else "N/A"
 
-        st.markdown(f"""
-
-        <div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-
-            <div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_dpi_display}</div>
-
-            <div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>🎯 Avg DPI</div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_dpi_display}</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>🎯 Avg DPI</div>
+</div>""", unsafe_allow_html=True)
 
  
 
@@ -3027,17 +3011,10 @@ with tab1:
 
         avg_rf_display = f"{avg_rf:.0f}" if avg_rf is not None and not pd.isna(avg_rf) else "N/A"
 
-        st.markdown(f"""
-
-        <div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-
-            <div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_rf_display}</div>
-
-            <div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>⚡ Avg RF</div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_rf_display}</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>⚡ Avg RF</div>
+</div>""", unsafe_allow_html=True)
 
  
 
@@ -3045,33 +3022,19 @@ with tab1:
 
         avg_ltdd_display = f"{avg_ltdd:.1f}" if avg_ltdd is not None and not pd.isna(avg_ltdd) else "N/A"
 
-        st.markdown(f"""
-
-        <div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-
-            <div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_ltdd_display}</div>
-
-            <div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>⏱ Avg LTDD</div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_ltdd_display}</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>⏱ Avg LTDD</div>
+</div>""", unsafe_allow_html=True)
 
  
 
     with col4:
 
-        st.markdown(f"""
-
-        <div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-
-            <div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{pct:.0f}%</div>
-
-            <div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>🏆 Elite/Advanced</div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{pct:.0f}%</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>🏆 Elite/Advanced</div>
+</div>""", unsafe_allow_html=True)
 
  
 
@@ -3118,25 +3081,23 @@ with tab1:
 
  
 
-        st.markdown(f"""
+        st.markdown(f"""<div style='background: rgba(45,55,72,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);'>
 
-        <div class='team-card'>
+<div style='display:flex; justify-content:space-between; align-items:center;'>
 
-            <div style='display:flex; justify-content:space-between; align-items:center;'>
+<div>
 
-                <div>
+<h2 style='font-size: 24px; font-weight: 700; color: white; margin: 0;'>{team_choice}</h2>
 
-                    <h2 class='team-name'>{team_choice}</h2>
+<div style='font-size:16px; color:rgba(255,255,255,0.8);'>DPI Score: <span style='font-size:24px; font-weight:800; color:#ffd700;'>{f"{trow.get('DPI', 0):.1f}" if trow.get('DPI') is not None else 'N/A'}</span></div>
 
-                    <div style='font-size:16px; color:rgba(255,255,255,0.8);'>DPI Score: <span style='font-size:24px; font-weight:800; color:#ffd700;'>{f"{trow.get('DPI', 0):.1f}" if trow.get('DPI') is not None else 'N/A'}</span></div>
+</div>
 
-                </div>
+<div>{tier_html(trow['Tier'])}</div>
 
-                <div>{tier_html(trow['Tier'])}</div>
+</div>
 
-            </div>
-
-        </div>
+</div>
 
         """, unsafe_allow_html=True)
 
@@ -3162,21 +3123,19 @@ with tab1:
 
             velocity_display = f"{velocity:.1f}" if velocity is not None and not pd.isna(velocity) else 'N/A'
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='margin-bottom:20px;'>
 
-            <div style='margin-bottom:20px;'>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>⚡ Velocity (Release Frequency)</div>
 
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>⚡ Velocity (Release Frequency)</div>
+<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
 
-                <div class='metric-bar'>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{velocity_pct}%; background:#06b6d4;'></div>
 
-                    <div class='metric-fill' style='width:{velocity_pct}%; background:#06b6d4;'></div>
+</div>
 
-                </div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{velocity_display} / 100</div>
 
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{velocity_display} / 100</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -3188,21 +3147,19 @@ with tab1:
 
             flow_display = f"{flow:.1f}" if flow is not None and not pd.isna(flow) else "N/A"
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='margin-bottom:20px;'>
 
-            <div style='margin-bottom:20px;'>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>💨 Flow (Lead Time)</div>
 
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>💨 Flow (Lead Time)</div>
+<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
 
-                <div class='metric-bar'>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{flow_pct}%; background:#60a5fa;'></div>
 
-                    <div class='metric-fill' style='width:{flow_pct}%; background:#60a5fa;'></div>
+</div>
 
-                </div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{flow_display} / 100</div>
 
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{flow_display} / 100</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -3216,21 +3173,19 @@ with tab1:
 
             stab_display = f"{stability:.1f}" if stability is not None and not pd.isna(stability) else "N/A"
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='margin-bottom:20px;'>
 
-            <div style='margin-bottom:20px;'>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>🛡️ Stability (CFR + MTTR)</div>
 
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>🛡️ Stability (CFR + MTTR)</div>
+<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
 
-                <div class='metric-bar'>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{stab_pct}%; background:#ec4899;'></div>
 
-                    <div class='metric-fill' style='width:{stab_pct}%; background:#ec4899;'></div>
+</div>
 
-                </div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{stab_display} / 100</div>
 
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{stab_display} / 100</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -3242,21 +3197,19 @@ with tab1:
 
             auto_display = f"{automation:.1f}" if automation is not None and not pd.isna(automation) else "N/A"
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='margin-bottom:20px;'>
 
-            <div style='margin-bottom:20px;'>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 Automation (CI/CD Maturity)</div>
 
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 Automation (CI/CD Maturity)</div>
+<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
 
-                <div class='metric-bar'>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{auto_pct}%; background:#10b981;'></div>
 
-                    <div class='metric-fill' style='width:{auto_pct}%; background:#10b981;'></div>
+</div>
 
-                </div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{auto_display} / 100</div>
 
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{auto_display} / 100</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -3267,28 +3220,26 @@ with tab1:
             quality_security = trow.get('Quality_Security', 0)
             quality_pct = int(quality_security) if quality_security is not None and not pd.isna(quality_security) else 0
             quality_display = f"{quality_security:.1f}" if quality_security is not None and not pd.isna(quality_security) else "N/A"
-            st.markdown(f"""
-            <div style='margin-bottom:20px;'>
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>🔒 Quality & Security</div>
-                <div class='metric-bar'>
-                    <div class='metric-fill' style='width:{quality_pct}%; background:#f97316;'></div>
-                </div>
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{quality_display} / 100</div>
-            </div>
+            st.markdown(f"""<div style='margin-bottom:20px;'>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>🔒 Quality & Security</div>
+<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{quality_pct}%; background:#f97316;'></div>
+</div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{quality_display} / 100</div>
+</div>
             """, unsafe_allow_html=True)
         
         with cols2[1]:
             ai_adoption = trow.get('AI_Adoption', 0)
             ai_pct = int(ai_adoption) if ai_adoption is not None and not pd.isna(ai_adoption) else 0
             ai_display = f"{ai_adoption:.1f}" if ai_adoption is not None and not pd.isna(ai_adoption) else "N/A"
-            st.markdown(f"""
-            <div style='margin-bottom:20px;'>
-                <div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 AI & Adoption</div>
-                <div class='metric-bar'>
-                    <div class='metric-fill' style='width:{ai_pct}%; background:#8b5cf6;'></div>
-                </div>
-                <div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{ai_display} / 100</div>
-            </div>
+            st.markdown(f"""<div style='margin-bottom:20px;'>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 AI & Adoption</div>
+<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{ai_pct}%; background:#8b5cf6;'></div>
+</div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{ai_display} / 100</div>
+</div>
             """, unsafe_allow_html=True)
 
  
@@ -3297,11 +3248,9 @@ with tab1:
 
  
 
-        st.markdown("""
+        st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #8b5cf6, #6366f1);'>
 
-        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #8b5cf6, #6366f1);'>
-
-            <div style='font-size:20px; font-weight:700; margin-bottom:15px;'>💡 Recommended Actions</div>
+<div style='font-size:20px; font-weight:700; margin-bottom:15px;'>💡 Recommended Actions</div>
 
         """, unsafe_allow_html=True)
 
@@ -3425,19 +3374,17 @@ with tab2:
 
                    
 
-                    st.markdown(f"""
+                    st.markdown(f"""<div style='background: rgba(45,55,72,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); background:{medal_color}; padding:15px; margin-bottom:10px; text-align:center;'>
 
-                    <div class='team-card' style='background:{medal_color}; padding:15px; margin-bottom:10px; text-align:center;'>
+<div style='font-size:32px; margin-bottom:5px;'>{medal}</div>
 
-                        <div style='font-size:32px; margin-bottom:5px;'>{medal}</div>
+<div style='font-size:14px; font-weight:700; color:white; margin-bottom:3px;'>{row['Team']}</div>
 
-                        <div style='font-size:14px; font-weight:700; color:white; margin-bottom:3px;'>{row['Team']}</div>
+<div style='font-size:18px; font-weight:800; color:#93c5fd;'>{f"{row.get('DPI', 0):.1f}" if row.get('DPI') is not None else 'N/A'}</div>
 
-                        <div style='font-size:18px; font-weight:800; color:#93c5fd;'>{f"{row.get('DPI', 0):.1f}" if row.get('DPI') is not None else 'N/A'}</div>
+<div style='font-size:11px; color:rgba(255,255,255,0.6); margin-top:3px;'>Rank #{rank}</div>
 
-                        <div style='font-size:11px; color:rgba(255,255,255,0.6); margin-top:3px;'>Rank #{rank}</div>
-
-                    </div>
+</div>
 
                     """, unsafe_allow_html=True)
 
@@ -3503,80 +3450,16 @@ with tab2:
 
             # Build complete table HTML as single string
 
-            table_html = """<style>
-
-.rank-table {
-
-    width: 100%;
-
-    border-collapse: collapse;
-
-}
-
-.rank-table-header {
-
-    background: rgba(45,55,72,0.4);
-
-    color: white;
-
-    font-weight: 700;
-
-    padding: 12px;
-
-    text-align: left;
-
-    border-bottom: 2px solid rgba(96,165,250,0.3);
-
-}
-
-.rank-table-row {
-
-    background: rgba(45,55,72,0.2);
-
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-
-    transition: all 0.3s ease;
-
-}
-
-.rank-table-row:hover {
-
-    background: rgba(45,55,72,0.35);
-
-    transform: translateX(5px);
-
-}
-
-.rank-table-cell {
-
-    padding: 12px;
-
-    color: white;
-
-}
-
-</style>
-
-<table class='rank-table'>
-
-    <tr>
-
-        <th class='rank-table-header' style='width:60px;'>Rank</th>
-
-        <th class='rank-table-header'>Team</th>
-
-        <th class='rank-table-header' style='width:80px;'>DPI</th>
-
-        <th class='rank-table-header' style='width:70px;'>RF</th>
-
-        <th class='rank-table-header' style='width:80px;'>LTDD</th>
-
-        <th class='rank-table-header' style='width:100px;'>Tier</th>
-
-        <th class='rank-table-header' style='width:80px;'>Δ Rank</th>
-
-    </tr>
-
+            table_html = """<table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>
+<tr>
+<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:60px;'>Rank</th>
+<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5);'>Team</th>
+<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:80px;'>DPI</th>
+<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:70px;'>RF</th>
+<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:80px;'>LTDD</th>
+<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:100px;'>Tier</th>
+<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:80px;'>Δ Rank</th>
+</tr>
 """
 
            
@@ -3603,24 +3486,15 @@ with tab2:
 
                
 
-                table_html += f"""    <tr class='rank-table-row'>
-
-        <td class='rank-table-cell' style='font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
-
-        <td class='rank-table-cell' style='font-weight:700;'>{row['Team']}</td>
-
-        <td class='rank-table-cell' style='font-weight:700; color:#fbbf24;'>{dpi_display}</td>
-
-        <td class='rank-table-cell'>{rf_display}</td>
-
-        <td class='rank-table-cell'>{ltdd_display}</td>
-
-        <td class='rank-table-cell'><span style='background:{tier_color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;'>{row['Tier']}</span></td>
-
-        <td class='rank-table-cell'>{rank_indicator}</td>
-
-    </tr>
-
+                table_html += f"""<tr style='border-bottom: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;'>
+<td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
+<td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:700;'>{row['Team']}</td>
+<td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:700; color:#fbbf24;'>{dpi_display}</td>
+<td style='padding: 12px; color: rgba(255,255,255,0.9);'>{rf_display}</td>
+<td style='padding: 12px; color: rgba(255,255,255,0.9);'>{ltdd_display}</td>
+<td style='padding: 12px; color: rgba(255,255,255,0.9);'><span style='background:{tier_color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;'>{row['Tier']}</span></td>
+<td style='padding: 12px; color: rgba(255,255,255,0.9);'>{rank_indicator}</td>
+</tr>
 """
 
            
@@ -3675,15 +3549,13 @@ with tab2:
 
             rf_mean_display = f"{rf_mean:.0f}" if rf_mean is not None and not pd.isna(rf_mean) else "N/A"
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-            <div class='metric-card'>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{rf_mean_display}</div>
 
-                <div class='metric-value'>{rf_mean_display}</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Avg RF</div>
 
-                <div class='metric-label'>Avg RF</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -3695,15 +3567,13 @@ with tab2:
 
             rf_max_display = f"{rf_max:.0f}" if rf_max is not None and not pd.isna(rf_max) else "N/A"
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-            <div class='metric-card'>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{rf_max_display}</div>
 
-                <div class='metric-value'>{rf_max_display}</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Max RF</div>
 
-                <div class='metric-label'>Max RF</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -3715,15 +3585,13 @@ with tab2:
 
             ltdd_mean_display = f"{ltdd_mean:.1f}" if ltdd_mean is not None and not pd.isna(ltdd_mean) else "N/A"
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-            <div class='metric-card'>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{ltdd_mean_display}</div>
 
-                <div class='metric-value'>{ltdd_mean_display}</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Avg LTDD</div>
 
-                <div class='metric-label'>Avg LTDD</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -3731,15 +3599,13 @@ with tab2:
 
         with stat_col4:
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-            <div class='metric-card'>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{len(lb_graph)}</div>
 
-                <div class='metric-value'>{len(lb_graph)}</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Teams</div>
 
-                <div class='metric-label'>Teams</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -3792,27 +3658,25 @@ with tab3:
 
     with criteria_col:
 
-        st.markdown("""
+        st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: rgba(96,165,250,0.15); padding:15px;'>
 
-        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: rgba(96,165,250,0.15); padding:15px;'>
+<div style='font-size:14px; font-weight:700; margin-bottom:12px; color:white;'>📋 Badge Criteria</div>
 
-            <div style='font-size:14px; font-weight:700; margin-bottom:12px; color:white;'>📋 Badge Criteria</div>
+<div style='font-size:11px; line-height:1.6; color:rgba(255,255,255,0.9);'>
 
-            <div style='font-size:11px; line-height:1.6; color:rgba(255,255,255,0.9);'>
+<div style='margin-bottom:8px;'><strong>🏆 Release Champion</strong><br/>RF ≥ 250</div>
 
-                <div style='margin-bottom:8px;'><strong>🏆 Release Champion</strong><br/>RF ≥ 250</div>
+<div style='margin-bottom:8px;'><strong>⚡ High Velocity</strong><br/>RF ≥ 180</div>
 
-                <div style='margin-bottom:8px;'><strong>⚡ High Velocity</strong><br/>RF ≥ 180</div>
+<div style='margin-bottom:8px;'><strong>💨 Flow Master</strong><br/>LTDD < 2 days</div>
 
-                <div style='margin-bottom:8px;'><strong>💨 Flow Master</strong><br/>LTDD < 2 days</div>
+<div style='margin-bottom:8px;'><strong>🛡️ Stability Shield</strong><br/>CFR < 5%</div>
 
-                <div style='margin-bottom:8px;'><strong>🛡️ Stability Shield</strong><br/>CFR < 5%</div>
+<div style='margin-bottom:8px;'><strong>🤖 Automation Pro</strong><br/>Auto Score = 20</div>
 
-                <div style='margin-bottom:8px;'><strong>🤖 Automation Pro</strong><br/>Auto Score = 20</div>
+</div>
 
-            </div>
-
-        </div>
+</div>
 
         """, unsafe_allow_html=True)
 
@@ -3896,17 +3760,15 @@ with tab3:
 
             with stat_cols[idx]:
 
-                st.markdown(f"""
+                st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-                <div class='metric-card'>
+<div style='font-size:36px; margin-bottom:10px;'>{icon}</div>
 
-                    <div style='font-size:36px; margin-bottom:10px;'>{icon}</div>
+<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; font-size:32px;'>{count}</div>
 
-                    <div class='metric-value' style='font-size:32px;'>{count}</div>
+<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size:11px;'>{badge_name}</div>
 
-                    <div class='metric-label' style='font-size:11px;'>{badge_name}</div>
-
-                </div>
+</div>
 
                 """, unsafe_allow_html=True)
 
@@ -3976,23 +3838,21 @@ with tab3:
 
                            
 
-                            st.markdown(f"""
+                            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); background:{bg_color}; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.1);'>
 
-                            <div class='team-card' style='background:{bg_color}; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.1);'>
+<div style='text-align:center;'>
 
-                                <div style='text-align:center;'>
+<div style='font-size:28px; margin-bottom:8px;'>{icon}</div>
 
-                                    <div style='font-size:28px; margin-bottom:8px;'>{icon}</div>
+<div style='font-size:16px; font-weight:700; margin-bottom:5px; color:white;'>{team_data['Team']}</div>
 
-                                    <div style='font-size:16px; font-weight:700; margin-bottom:5px; color:white;'>{team_data['Team']}</div>
+<div style='font-size:14px; color:rgba(255,255,255,0.8);'>{metric_display}</div>
 
-                                    <div style='font-size:14px; color:rgba(255,255,255,0.8);'>{metric_display}</div>
+<div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {f"{team_data.get('DPI', 0):.1f}" if team_data.get('DPI') is not None else 'N/A'} | Rank #{team_data.get('Rank', 'N/A')}</div>
 
-                                    <div style='font-size:12px; margin-top:5px; color:rgba(255,255,255,0.6);'>DPI: {f"{team_data.get('DPI', 0):.1f}" if team_data.get('DPI') is not None else 'N/A'} | Rank #{team_data.get('Rank', 'N/A')}</div>
+</div>
 
-                                </div>
-
-                            </div>
+</div>
 
                             """, unsafe_allow_html=True)
 
@@ -4000,13 +3860,11 @@ with tab3:
 
                 with st.expander(f"{icon} {badge_name} (0 teams)", expanded=False):
 
-                    st.markdown(f"""
-
-                    <div style='text-align:center; color:rgba(255,255,255,0.6); padding:20px;'>
+                    st.markdown(f"""<div style='text-align:center; color:rgba(255,255,255,0.6); padding:20px;'>
 
                         {icon} No teams earned this badge yet
 
-                    </div>
+</div>
 
                     """, unsafe_allow_html=True)
 
@@ -4062,21 +3920,19 @@ with tab4:
 
     with r1c1:
 
-        st.markdown(f"""
+        st.markdown(f"""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')}, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')});'>
 
-        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')}, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')});'>
+<div style='font-size: 48px; margin-bottom: 15px;'>🏆</div>
 
-            <div class='achievement-icon'>🏆</div>
+<div style='text-align:center;'>
 
-            <div style='text-align:center;'>
+<div style='font-size:32px; font-weight:800; margin-bottom:10px;'>{t_latest.get('Tier', 'N/A')}</div>
 
-                <div style='font-size:32px; font-weight:800; margin-bottom:10px;'>{t_latest.get('Tier', 'N/A')}</div>
+<div style='font-size:20px;'>DPI Score: <span style='font-weight:800; color:#ffd700;'>{f"{t_latest.get('DPI', 0):.1f}" if t_latest.get('DPI') is not None else 'N/A'}</span></div>
 
-                <div style='font-size:20px;'>DPI Score: <span style='font-weight:800; color:#ffd700;'>{f"{t_latest.get('DPI', 0):.1f}" if t_latest.get('DPI') is not None else 'N/A'}</span></div>
+</div>
 
-            </div>
-
-        </div>
+</div>
 
         """, unsafe_allow_html=True)
 
@@ -4120,13 +3976,11 @@ with tab4:
 
  
 
-            st.markdown("""
+            st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
 
-            <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
+<div style='text-align:center;'>ℹ️ No trend data available</div>
 
-                <div style='text-align:center;'>ℹ️ No trend data available</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -4174,25 +4028,23 @@ with tab4:
 
             pct = int((value/max_val)*100) if not pd.isna(value) else 0
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='margin-bottom:15px;'>
 
-            <div style='margin-bottom:15px;'>
+<div style='display:flex; justify-content:space-between; color:white; font-weight:600; margin-bottom:5px;'>
 
-                <div style='display:flex; justify-content:space-between; color:white; font-weight:600; margin-bottom:5px;'>
+<span>{metric}</span>
 
-                    <span>{metric}</span>
+<span>{value:.1f} / {max_val}</span>
 
-                    <span>{value:.1f} / {max_val}</span>
+</div>
 
-                </div>
+<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
 
-                <div class='metric-bar'>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{pct}%; background:{color};'></div>
 
-                    <div class='metric-fill' style='width:{pct}%; background:{color};'></div>
+</div>
 
-                </div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -4248,19 +4100,17 @@ with tab4:
 
                 delta_icon = '↑' if delta > 0 else '↓' if delta < 0 else '→'
 
-                st.markdown(f"""
+                st.markdown(f"""<div style='background: rgba(45,55,72,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); margin-bottom:10px;'>
 
-                <div class='team-card' style='margin-bottom:10px;'>
+<div style='display:flex; justify-content:space-between; align-items:center;'>
 
-                    <div style='display:flex; justify-content:space-between; align-items:center;'>
+<span style='color:white; font-weight:600;'>{metric}</span>
 
-                        <span style='color:white; font-weight:600;'>{metric}</span>
+<span style='color:{delta_color}; font-size:20px; font-weight:800;'>{delta_icon} {abs(delta):.1f}</span>
 
-                        <span style='color:{delta_color}; font-size:20px; font-weight:800;'>{delta_icon} {abs(delta):.1f}</span>
+</div>
 
-                    </div>
-
-                </div>
+</div>
 
                 """, unsafe_allow_html=True)
 
@@ -4270,13 +4120,11 @@ with tab4:
 
  
 
-            st.markdown("""
+            st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
 
-            <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
+<div style='text-align:center;'>ℹ️ No previous week data to compare</div>
 
-                <div style='text-align:center;'>ℹ️ No previous week data to compare</div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -4383,67 +4231,61 @@ with tab4:
 
                     
 
-                    st.markdown(f"""
+                    st.markdown(f"""<div style='background: {bg_color}; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1);'>
 
-                    <div style='background: {bg_color}; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1);'>
+<div style='display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;'>
 
-                        <div style='display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;'>
+<div style='font-size:18px; font-weight:700; color:white;'>{rec['effort_emoji']} {rec['action']}</div>
 
-                            <div style='font-size:18px; font-weight:700; color:white;'>{rec['effort_emoji']} {rec['action']}</div>
+<div style='background:rgba(255,255,255,0.2); padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; color:white;'>+{rec['points_gain']} pts</div>
 
-                            <div style='background:rgba(255,255,255,0.2); padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; color:white;'>+{rec['points_gain']} pts</div>
+</div>
 
-                        </div>
+<div style='font-size:13px; color:rgba(255,255,255,0.9); margin-bottom:8px;'>{rec['detail']}</div>
 
-                        <div style='font-size:13px; color:rgba(255,255,255,0.9); margin-bottom:8px;'>{rec['detail']}</div>
+<div style='display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,0.7);'>
 
-                        <div style='display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,0.7);'>
+<span>📊 {rec['pillar']}</span>
 
-                            <span>📊 {rec['pillar']}</span>
+<span>⏱️ Effort: {rec['effort'].title()}</span>
 
-                            <span>⏱️ Effort: {rec['effort'].title()}</span>
+</div>
 
-                        </div>
-
-                    </div>
+</div>
 
                     """, unsafe_allow_html=True)
 
             else:
 
-                st.markdown("""
+                st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #10b981, #059669);'>
 
-                <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #10b981, #059669);'>
+<div style='text-align:center;'>
 
-                    <div style='text-align:center;'>
+<div style='font-size:32px; margin-bottom:10px;'>🎉</div>
 
-                        <div style='font-size:32px; margin-bottom:10px;'>🎉</div>
+<div style='font-size:18px; font-weight:700;'>Excellent Work!</div>
 
-                        <div style='font-size:18px; font-weight:700;'>Excellent Work!</div>
+<div style='font-size:14px; opacity:0.9; margin-top:5px;'>No critical improvements needed!</div>
 
-                        <div style='font-size:14px; opacity:0.9; margin-top:5px;'>No critical improvements needed!</div>
+</div>
 
-                    </div>
-
-                </div>
+</div>
 
                 """, unsafe_allow_html=True)
 
         else:
 
-            st.markdown(f"""
+            st.markdown(f"""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
 
-            <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
+<div style='text-align:center;'>
 
-                <div style='text-align:center;'>
+<div style='font-size:16px; font-weight:600; margin-bottom:5px;'>ℹ️ No Registry Data</div>
 
-                    <div style='font-size:16px; font-weight:600; margin-bottom:5px;'>ℹ️ No Registry Data</div>
+<div style='font-size:13px; opacity:0.8;'>Add {team} to YAML registry for recommendations</div>
 
-                    <div style='font-size:13px; opacity:0.8;'>Add {team} to YAML registry for recommendations</div>
+</div>
 
-                </div>
-
-            </div>
+</div>
 
             """, unsafe_allow_html=True)
 
@@ -4451,17 +4293,15 @@ with tab4:
 
     except Exception as e:
 
-        st.markdown("""
+        st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
 
-        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
+<div style='text-align:center;'>
 
-            <div style='text-align:center;'>
+<div style='font-size:14px; opacity:0.8;'>💡 Recommendations coming soon</div>
 
-                <div style='font-size:14px; opacity:0.8;'>💡 Recommendations coming soon</div>
+</div>
 
-            </div>
-
-        </div>
+</div>
 
         """, unsafe_allow_html=True)
 
@@ -4483,21 +4323,19 @@ with tab5:
 
  
 
-        st.markdown("""
+        st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #3b82f6, #2563eb);'>
 
-        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #3b82f6, #2563eb);'>
+<div style='font-size: 48px; margin-bottom: 15px;'>📤</div>
 
-            <div class='achievement-icon'>📤</div>
+<div style='text-align:center;'>
 
-            <div style='text-align:center;'>
+<div style='font-size:20px; font-weight:700; margin-bottom:10px;'>How to Use</div>
 
-                <div style='font-size:20px; font-weight:700; margin-bottom:10px;'>How to Use</div>
+<div style='font-size:14px; opacity:0.9;'>Upload weekly CSV, validate, and publish to add to history. Use BU selector to scope views.</div>
 
-                <div style='font-size:14px; opacity:0.9;'>Upload weekly CSV, validate, and publish to add to history. Use BU selector to scope views.</div>
+</div>
 
-            </div>
-
-        </div>
+</div>
 
         """, unsafe_allow_html=True)
 
@@ -4507,21 +4345,19 @@ with tab5:
 
  
 
-        st.markdown("""
+        st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #8b5cf6, #7c3aed);'>
 
-        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #8b5cf6, #7c3aed);'>
+<div style='font-size: 48px; margin-bottom: 15px;'>📊</div>
 
-            <div class='achievement-icon'>📊</div>
+<div style='text-align:center;'>
 
-            <div style='text-align:center;'>
+<div style='font-size:20px; font-weight:700; margin-bottom:10px;'>Scoring Rules</div>
 
-                <div style='font-size:20px; font-weight:700; margin-bottom:10px;'>Scoring Rules</div>
+<div style='font-size:14px; opacity:0.9;'>Open the scoring card at the top for quick rules. Check the expander for detailed scoring breakdown.</div>
 
-                <div style='font-size:14px; opacity:0.9;'>Open the scoring card at the top for quick rules. Check the expander for detailed scoring breakdown.</div>
+</div>
 
-            </div>
-
-        </div>
+</div>
 
         """, unsafe_allow_html=True)
 
@@ -4531,21 +4367,19 @@ with tab5:
 
  
 
-        st.markdown("""
+        st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #10b981, #059669);'>
 
-        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #10b981, #059669);'>
+<div style='font-size: 48px; margin-bottom: 15px;'>🎖️</div>
 
-            <div class='achievement-icon'>🎖️</div>
+<div style='text-align:center;'>
 
-            <div style='text-align:center;'>
+<div style='font-size:20px; font-weight:700; margin-bottom:10px;'>Badges & Tiers</div>
 
-                <div style='font-size:20px; font-weight:700; margin-bottom:10px;'>Badges & Tiers</div>
+<div style='font-size:14px; opacity:0.9;'>Badges are awarded based on RF, LTDD, CFR and automation. Tiers reflect overall DPI performance.</div>
 
-                <div style='font-size:14px; opacity:0.9;'>Badges are awarded based on RF, LTDD, CFR and automation. Tiers reflect overall DPI performance.</div>
+</div>
 
-            </div>
-
-        </div>
+</div>
 
         """, unsafe_allow_html=True)
 
