@@ -34,9 +34,10 @@ if _PROJECT_ROOT.name in ['automation_utilities', 'scripts', 'utils']:
 _DEFAULT_DB_PATH = str(_PROJECT_ROOT / 'metrics.db')
 DB_PATH = os.getenv('DB_PATH', _DEFAULT_DB_PATH)
 
-# Ensure DB_PATH is absolute
+# Ensure DB_PATH is absolute and resolve it relative to project root if needed
 if not os.path.isabs(DB_PATH):
-    DB_PATH = os.path.abspath(DB_PATH)
+    # If relative path, resolve it from project root, not current directory
+    DB_PATH = str(_PROJECT_ROOT / DB_PATH)
 
 # Service Line Configuration
 SERVICE_LINE_ID = int(os.getenv('SERVICE_LINE_ID', '449'))

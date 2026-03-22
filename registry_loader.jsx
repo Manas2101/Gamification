@@ -152,8 +152,19 @@ class RegistryLoader:
     def load_app(self, yaml_path: Path) -> Optional[AppEntry]:
         """Load a single app from YAML file"""
         try:
-            with open(yaml_path) as f:
-                data = yaml.safe_load(f)
+            # Try UTF-8 first, then fallback to cp1252 (Windows encoding)
+            data = None
+            for encoding in ['utf-8', 'cp1252', 'latin-1']:
+                try:
+                    with open(yaml_path, encoding=encoding) as f:
+                        data = yaml.safe_load(f)
+                    break
+                except (UnicodeDecodeError, UnicodeError):
+                    continue
+            
+            if data is None:
+                logger.error(f"Error parsing {yaml_path}: Could not decode file with any supported encoding")
+                return None
             
             if not data:
                 return None
