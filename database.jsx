@@ -35,7 +35,7 @@ class MetricsDatabase:
 
         """
 
-        Initialize database connection
+        Initialize database connection and create tables
 
        
 
@@ -46,6 +46,12 @@ class MetricsDatabase:
         """
 
         self.db_path = db_path
+        
+        # Ensure parent directory exists
+        import os
+        db_dir = os.path.dirname(db_path)
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir, exist_ok=True)
 
         self.init_database()
 

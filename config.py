@@ -22,8 +22,13 @@ if BEARER_TOKEN and not DATASIGHT_BEARER_TOKEN:
     DATASIGHT_BEARER_TOKEN = BEARER_TOKEN
 
 # Database Configuration - Use absolute path to project root
-_PROJECT_ROOT = Path(__file__).parent
-DB_PATH = os.getenv('DB_PATH', str(_PROJECT_ROOT / 'metrics.db'))
+_PROJECT_ROOT = Path(__file__).resolve().parent
+_DEFAULT_DB_PATH = str(_PROJECT_ROOT / 'metrics.db')
+DB_PATH = os.getenv('DB_PATH', _DEFAULT_DB_PATH)
+
+# Ensure DB_PATH is absolute
+if not os.path.isabs(DB_PATH):
+    DB_PATH = os.path.abspath(DB_PATH)
 
 # Service Line Configuration
 SERVICE_LINE_ID = int(os.getenv('SERVICE_LINE_ID', '449'))
