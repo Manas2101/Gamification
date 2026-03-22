@@ -45,13 +45,20 @@ class MetricsDatabase:
 
         """
 
-        self.db_path = db_path
-        
-        # Ensure parent directory exists
         import os
-        db_dir = os.path.dirname(db_path)
+        
+        # Convert to absolute path
+        self.db_path = os.path.abspath(db_path)
+        
+        # Ensure parent directory exists (not the db file itself)
+        db_dir = os.path.dirname(self.db_path)
         if db_dir and not os.path.exists(db_dir):
             os.makedirs(db_dir, exist_ok=True)
+        
+        # If metrics.db exists as a directory (error case), remove it
+        if os.path.isdir(self.db_path):
+            import shutil
+            shutil.rmtree(self.db_path)
 
         self.init_database()
 
