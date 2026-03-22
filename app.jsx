@@ -3301,7 +3301,7 @@ with tab1:
 
         st.markdown("""
 
-        <div class='achievement-card' style='background: linear-gradient(135deg, #8b5cf6, #6366f1);'>
+        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #8b5cf6, #6366f1);'>
 
             <div style='font-size:20px; font-weight:700; margin-bottom:15px;'>💡 Recommended Actions</div>
 
@@ -3796,7 +3796,7 @@ with tab3:
 
         st.markdown("""
 
-        <div class='achievement-card' style='background: rgba(96,165,250,0.15); padding:15px;'>
+        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: rgba(96,165,250,0.15); padding:15px;'>
 
             <div style='font-size:14px; font-weight:700; margin-bottom:12px; color:white;'>📋 Badge Criteria</div>
 
@@ -4066,7 +4066,7 @@ with tab4:
 
         st.markdown(f"""
 
-        <div class='achievement-card' style='background: linear-gradient(135deg, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')}, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')});'>
+        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')}, {COLOR_MAP.get(t_latest['Tier'], '#6b7280')});'>
 
             <div class='achievement-icon'>🏆</div>
 
@@ -4124,7 +4124,7 @@ with tab4:
 
             st.markdown("""
 
-            <div class='achievement-card' style='background: linear-gradient(135deg, #6b7280, #4b5563);'>
+            <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
 
                 <div style='text-align:center;'>ℹ️ No trend data available</div>
 
@@ -4274,7 +4274,7 @@ with tab4:
 
             st.markdown("""
 
-            <div class='achievement-card' style='background: linear-gradient(135deg, #6b7280, #4b5563);'>
+            <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
 
                 <div style='text-align:center;'>ℹ️ No previous week data to compare</div>
 
@@ -4387,13 +4387,13 @@ with tab4:
 
                     st.markdown(f"""
 
-                    <div class='achievement-card' style='background: {bg_color}; margin-bottom:15px;'>
+                    <div style='background: {bg_color}; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1);'>
 
                         <div style='display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;'>
 
                             <div style='font-size:18px; font-weight:700; color:white;'>{rec['effort_emoji']} {rec['action']}</div>
 
-                            <div style='background:rgba(255,255,255,0.2); padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600;'>+{rec['points_gain']} pts</div>
+                            <div style='background:rgba(255,255,255,0.2); padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; color:white;'>+{rec['points_gain']} pts</div>
 
                         </div>
 
@@ -4415,7 +4415,7 @@ with tab4:
 
                 st.markdown("""
 
-                <div class='achievement-card' style='background: linear-gradient(135deg, #10b981, #059669);'>
+                <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #10b981, #059669);'>
 
                     <div style='text-align:center;'>
 
@@ -4435,7 +4435,7 @@ with tab4:
 
             st.markdown(f"""
 
-            <div class='achievement-card' style='background: linear-gradient(135deg, #6b7280, #4b5563);'>
+            <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
 
                 <div style='text-align:center;'>
 
@@ -4455,7 +4455,7 @@ with tab4:
 
         st.markdown("""
 
-        <div class='achievement-card' style='background: linear-gradient(135deg, #6b7280, #4b5563);'>
+        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #6b7280, #4b5563);'>
 
             <div style='text-align:center;'>
 
@@ -4487,7 +4487,7 @@ with tab5:
 
         st.markdown("""
 
-        <div class='achievement-card' style='background: linear-gradient(135deg, #3b82f6, #2563eb);'>
+        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #3b82f6, #2563eb);'>
 
             <div class='achievement-icon'>📤</div>
 
@@ -4511,7 +4511,7 @@ with tab5:
 
         st.markdown("""
 
-        <div class='achievement-card' style='background: linear-gradient(135deg, #8b5cf6, #7c3aed);'>
+        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #8b5cf6, #7c3aed);'>
 
             <div class='achievement-icon'>📊</div>
 
@@ -4535,7 +4535,7 @@ with tab5:
 
         st.markdown("""
 
-        <div class='achievement-card' style='background: linear-gradient(135deg, #10b981, #059669);'>
+        <div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #10b981, #059669);'>
 
             <div class='achievement-icon'>🎖️</div>
 
