@@ -137,6 +137,52 @@ class DataFetcher:
         
         logger.info("Backfill completed")
     
+    def normalize_existing_week_dates(self):
+        """
+        Normalize existing week_date and week_start values in the database
+        Ensures all dates are set to Monday of their respective weeks
+        """
+        logger.info("Normalizing existing week dates in database...")
+        
+        try:
+            import sqlite3
+            conn = sqlite3.connect(self.db.db_path)
+            cursor = conn.cursor()
+            
+            # Get all records
+            cursor.execute('SELECT id, week_date, week_start FROM weekly_metrics')
+            records = cursor.fetchall()
+            
+            normalized_count = 0
+            for record_id, week_date, week_start in records:
+                if week_date:
+                    # Parse the date
+                    if isinstance(week_date, str):
+                        date_obj = datetime.strptime(week_date, '%Y-%m-%d')
+                    else:
+                        date_obj = week_date
+                    
+                    # Normalize to Monday
+                    monday = date_obj - timedelta(days=date_obj.weekday())
+                    monday = monday.replace(hour=0, minute=0, second=0, microsecond=0)
+                    
+                    # Update if different
+                    if date_obj != monday:
+                        cursor.execute('''
+                            UPDATE weekly_metrics 
+                            SET week_date = ?, week_start = ?
+                            WHERE id = ?
+                        ''', (monday.strftime('%Y-%m-%d'), monday.strftime('%Y-%m-%d'), record_id))
+                        normalized_count += 1
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"✅ Normalized {normalized_count} week dates to Monday")
+            
+        except Exception as e:
+            logger.error(f"Error normalizing week dates: {e}")
+    
     def cleanup_old_data(self, max_weeks: int = 5):
         """
         Remove data older than specified number of weeks
