@@ -37,6 +37,15 @@ class DashboardDataLoader:
             logger.info(f"Loaded {len(df)} rows from database")
             if not df.empty:
                 logger.info(f"Teams found: {df['Team'].unique().tolist()}")
+                
+                # Convert Week_Start from string to datetime
+                if 'Week_Start' in df.columns:
+                    df['Week_Start'] = pd.to_datetime(df['Week_Start'])
+                    logger.info(f"Week_Start converted to datetime: {df['Week_Start'].iloc[0]}")
+                
+                # Convert Week to datetime if it's a string
+                if 'Week' in df.columns:
+                    df['Week'] = pd.to_datetime(df['Week'])
             
             if df.empty:
                 logger.warning("No data found in database. Using sample data.")
@@ -64,6 +73,15 @@ class DashboardDataLoader:
             df = _self.db.get_historical_metrics(weeks=weeks)
             
             logger.info(f"Loaded {len(df)} historical rows")
+            
+            if not df.empty:
+                # Convert Week_Start from string to datetime
+                if 'Week_Start' in df.columns:
+                    df['Week_Start'] = pd.to_datetime(df['Week_Start'])
+                
+                # Convert Week to datetime if it's a string
+                if 'Week' in df.columns:
+                    df['Week'] = pd.to_datetime(df['Week'])
             
             if df.empty:
                 logger.warning("No historical data found")
