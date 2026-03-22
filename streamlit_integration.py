@@ -23,7 +23,6 @@ class DashboardDataLoader:
         """Initialize database connection"""
         self.db = MetricsDatabase(config.DB_PATH)
     
-    @st.cache_data(ttl=3600)
     def load_latest_metrics(_self) -> pd.DataFrame:
         """
         Load latest metrics for all pods
@@ -32,7 +31,12 @@ class DashboardDataLoader:
             DataFrame with latest metrics
         """
         try:
+            logger.info(f"Loading latest metrics from: {config.DB_PATH}")
             df = _self.db.get_latest_metrics()
+            
+            logger.info(f"Loaded {len(df)} rows from database")
+            if not df.empty:
+                logger.info(f"Teams found: {df['Team'].unique().tolist()}")
             
             if df.empty:
                 logger.warning("No data found in database. Using sample data.")
@@ -41,9 +45,10 @@ class DashboardDataLoader:
             return df
         except Exception as e:
             logger.error(f"Error loading latest metrics: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return _self._create_sample_data()
     
-    @st.cache_data(ttl=3600)
     def load_historical_metrics(_self, weeks: int = 12) -> pd.DataFrame:
         """
         Load historical metrics for trend analysis
@@ -55,7 +60,10 @@ class DashboardDataLoader:
             DataFrame with historical data
         """
         try:
+            logger.info(f"Loading historical metrics (last {weeks} weeks)")
             df = _self.db.get_historical_metrics(weeks=weeks)
+            
+            logger.info(f"Loaded {len(df)} historical rows")
             
             if df.empty:
                 logger.warning("No historical data found")
@@ -64,6 +72,8 @@ class DashboardDataLoader:
             return df
         except Exception as e:
             logger.error(f"Error loading historical metrics: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return pd.DataFrame()
     
     def _create_sample_data(self) -> pd.DataFrame:
