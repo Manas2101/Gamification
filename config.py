@@ -22,7 +22,15 @@ if BEARER_TOKEN and not DATASIGHT_BEARER_TOKEN:
     DATASIGHT_BEARER_TOKEN = BEARER_TOKEN
 
 # Database Configuration - Use absolute path to project root
-_PROJECT_ROOT = Path(__file__).resolve().parent
+# Find the actual project root (where config.py lives)
+_CONFIG_FILE = Path(__file__).resolve()
+_PROJECT_ROOT = _CONFIG_FILE.parent
+
+# If config.py is in automation_utilities or similar subfolder, go up one level
+# to find the main Gamification directory
+if _PROJECT_ROOT.name in ['automation_utilities', 'scripts', 'utils']:
+    _PROJECT_ROOT = _PROJECT_ROOT.parent
+
 _DEFAULT_DB_PATH = str(_PROJECT_ROOT / 'metrics.db')
 DB_PATH = os.getenv('DB_PATH', _DEFAULT_DB_PATH)
 

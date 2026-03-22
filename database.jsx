@@ -46,17 +46,33 @@ class MetricsDatabase:
         """
 
         import os
+        import logging
+        
+        logger = logging.getLogger(__name__)
         
         # Convert to absolute path
         self.db_path = os.path.abspath(db_path)
+        logger.info(f"Database path resolved to: {self.db_path}")
         
         # Ensure parent directory exists (not the db file itself)
         db_dir = os.path.dirname(self.db_path)
-        if db_dir and not os.path.exists(db_dir):
-            os.makedirs(db_dir, exist_ok=True)
+        logger.info(f"Database directory: {db_dir}")
+        
+        if db_dir:
+            if not os.path.exists(db_dir):
+                logger.info(f"Creating database directory: {db_dir}")
+                try:
+                    os.makedirs(db_dir, exist_ok=True)
+                except Exception as e:
+                    logger.error(f"Failed to create directory {db_dir}: {e}")
+                    raise
+            elif not os.access(db_dir, os.W_OK):
+                logger.error(f"No write permission for directory: {db_dir}")
+                raise PermissionError(f"No write permission for directory: {db_dir}")
         
         # If metrics.db exists as a directory (error case), remove it
         if os.path.isdir(self.db_path):
+            logger.warning(f"Database path {self.db_path} is a directory, removing it")
             import shutil
             shutil.rmtree(self.db_path)
 
