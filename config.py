@@ -21,18 +21,11 @@ if BEARER_TOKEN and not TEAMBOOK_BEARER_TOKEN:
 if BEARER_TOKEN and not DATASIGHT_BEARER_TOKEN:
     DATASIGHT_BEARER_TOKEN = BEARER_TOKEN
 
-# Database Configuration - Use absolute path
-# Database should be in the same directory as config.py
-_CONFIG_FILE = Path(__file__).resolve()
-_CONFIG_DIR = _CONFIG_FILE.parent
-
-_DEFAULT_DB_PATH = str(_CONFIG_DIR / 'metrics.db')
+# Database Configuration
+# Database is in the same directory as config.py
+_CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
+_DEFAULT_DB_PATH = os.path.join(_CONFIG_DIR, 'metrics.db')
 DB_PATH = os.getenv('DB_PATH', _DEFAULT_DB_PATH)
-
-# Ensure DB_PATH is absolute
-if not os.path.isabs(DB_PATH):
-    # If relative path, resolve it from config directory
-    DB_PATH = str(_CONFIG_DIR / DB_PATH)
 
 # Service Line Configuration
 SERVICE_LINE_ID = int(os.getenv('SERVICE_LINE_ID', '449'))
