@@ -2954,6 +2954,42 @@ with tab1:
  
 
     # top metrics for selected BU with animated cards
+    
+    # Re-inject critical CSS to ensure it's loaded (workaround for timing issues)
+    st.markdown("""
+    <style>
+    .metric-card {
+        background: rgba(45,55,72,0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(6,182,212,0.3);
+        border-color: rgba(6,182,212,0.5);
+    }
+    .metric-value {
+        font-size: 48px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #06b6d4, #3b82f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
+    }
+    .metric-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
  
 
