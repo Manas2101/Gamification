@@ -112,9 +112,11 @@ class DataFetcher:
         return self.db.get_historical_metrics(pod_id, weeks)
     
     def refresh_current_week(self):
-        """Refresh data for the current week"""
-        current_week = datetime.now().replace(day=1)
-        logger.info("Refreshing current week data...")
+        """Refresh data for the current week (current month)"""
+        # Use current date to ensure we fetch current month data
+        # DataSight API uses YYYY-MM format, so datetime.now() will give us current month
+        current_week = datetime.now()
+        logger.info(f"Refreshing data for current month: {current_week.strftime('%Y-%m')}")
         self.fetch_and_store_weekly_data(current_week)
     
     def backfill_historical_data(self, months: int = 3):
