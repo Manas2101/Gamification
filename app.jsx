@@ -3013,11 +3013,11 @@ with tab1:
 
         st.markdown(f"""
 
-        <div class='metric-card'>
+        <div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-            <div class='metric-value'>{avg_dpi_display}</div>
+            <div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_dpi_display}</div>
 
-            <div class='metric-label'>🎯 Avg DPI</div>
+            <div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>🎯 Avg DPI</div>
 
         </div>
 
@@ -3031,11 +3031,11 @@ with tab1:
 
         st.markdown(f"""
 
-        <div class='metric-card'>
+        <div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-            <div class='metric-value'>{avg_rf_display}</div>
+            <div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_rf_display}</div>
 
-            <div class='metric-label'>⚡ Avg RF</div>
+            <div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>⚡ Avg RF</div>
 
         </div>
 
@@ -3049,11 +3049,11 @@ with tab1:
 
         st.markdown(f"""
 
-        <div class='metric-card'>
+        <div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-            <div class='metric-value'>{avg_ltdd_display}</div>
+            <div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{avg_ltdd_display}</div>
 
-            <div class='metric-label'>⏱ Avg LTDD</div>
+            <div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>⏱ Avg LTDD</div>
 
         </div>
 
@@ -3065,11 +3065,11 @@ with tab1:
 
         st.markdown(f"""
 
-        <div class='metric-card'>
+        <div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
 
-            <div class='metric-value'>{pct:.0f}%</div>
+            <div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{pct:.0f}%</div>
 
-            <div class='metric-label'>🏆 Elite/Advanced</div>
+            <div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>🏆 Elite/Advanced</div>
 
         </div>
 
@@ -4149,25 +4149,24 @@ with tab4:
 
  
 
-        st.markdown("<h3 style='color:white; margin-top:30px;'>📊 Detailed Score Breakdown</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:white; margin-top:30px;'>📊 6-Pillar Score Breakdown</h3>", unsafe_allow_html=True)
 
  
 
+        # New 6-pillar scoring system
         scores_data = [
 
-            ('⚡ RF Score', t_latest.get('RF_Score', 0), 35, '#06b6d4'),
+            ('⚡ Velocity', t_latest.get('Velocity', 0), 100, '#06b6d4'),
 
-            ('💨 Flow Score', t_latest.get('Flow_Score', 0), 25, '#60a5fa'),
+            ('💨 Flow', t_latest.get('Flow', 0), 100, '#60a5fa'),
 
-            ('🛡️ CFR Score', t_latest.get('CFR_Score', 0), 7, '#f97316'),
+            ('🛡️ Stability', t_latest.get('Stability', 0), 100, '#ec4899'),
 
-            ('⏱️ MTTR Score', t_latest.get('MTTR_Score', 0), 7, '#f59e0b'),
+            ('🤖 Automation', t_latest.get('Automation', 0), 100, '#10b981'),
 
-            ('🔒 Priv Score', t_latest.get('Priv_Score', 0), 6, '#8b5cf6'),
+            ('🔒 Quality & Security', t_latest.get('Quality_Security', 0), 100, '#f97316'),
 
-            ('🔐 Stability Score', t_latest.get('Stability_Score', 0), 20, '#ec4899'),
-
-            ('🤖 Automation Score', t_latest.get('Automation_Score', 0), 20, '#10b981')
+            ('🤖 AI & Adoption', t_latest.get('AI_Adoption', 0), 100, '#8b5cf6')
 
         ]
 
