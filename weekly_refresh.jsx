@@ -97,15 +97,15 @@ def main():
 
         logger.info("Initializing data fetcher...")
 
-        logger.info(f"Using separate tokens for TeamBook and DataSight APIs")
+        logger.info(f"Using DataSight API token")
 
         fetcher = DataFetcher(
 
-            config.TEAMBOOK_BEARER_TOKEN,
+            datasight_token=config.DATASIGHT_BEARER_TOKEN,
 
-            config.DATASIGHT_BEARER_TOKEN,
+            db_path=config.DB_PATH,
 
-            config.DB_PATH
+            registry_dir=None
 
         )
 
