@@ -21,23 +21,18 @@ if BEARER_TOKEN and not TEAMBOOK_BEARER_TOKEN:
 if BEARER_TOKEN and not DATASIGHT_BEARER_TOKEN:
     DATASIGHT_BEARER_TOKEN = BEARER_TOKEN
 
-# Database Configuration - Use absolute path to project root
-# Find the actual project root (where config.py lives)
+# Database Configuration - Use absolute path
+# Database should be in the same directory as config.py
 _CONFIG_FILE = Path(__file__).resolve()
-_PROJECT_ROOT = _CONFIG_FILE.parent
+_CONFIG_DIR = _CONFIG_FILE.parent
 
-# If config.py is in automation_utilities or similar subfolder, go up one level
-# to find the main Gamification directory
-if _PROJECT_ROOT.name in ['automation_utilities', 'scripts', 'utils']:
-    _PROJECT_ROOT = _PROJECT_ROOT.parent
-
-_DEFAULT_DB_PATH = str(_PROJECT_ROOT / 'metrics.db')
+_DEFAULT_DB_PATH = str(_CONFIG_DIR / 'metrics.db')
 DB_PATH = os.getenv('DB_PATH', _DEFAULT_DB_PATH)
 
-# Ensure DB_PATH is absolute and resolve it relative to project root if needed
+# Ensure DB_PATH is absolute
 if not os.path.isabs(DB_PATH):
-    # If relative path, resolve it from project root, not current directory
-    DB_PATH = str(_PROJECT_ROOT / DB_PATH)
+    # If relative path, resolve it from config directory
+    DB_PATH = str(_CONFIG_DIR / DB_PATH)
 
 # Service Line Configuration
 SERVICE_LINE_ID = int(os.getenv('SERVICE_LINE_ID', '449'))
