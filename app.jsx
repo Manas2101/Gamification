@@ -3076,7 +3076,11 @@ with tab1:
 
  
 
-        trow = display_latest_df[display_latest_df['Team'] == team_choice].iloc[0]
+        team_data = display_latest_df[display_latest_df['Team'] == team_choice]
+        if team_data.empty:
+            st.error(f"⚠️ No data found for team '{team_choice}'. Please run the weekly refresh script to populate data.")
+            st.stop()
+        trow = team_data.iloc[0]
 
  
 
