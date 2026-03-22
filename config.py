@@ -4,6 +4,7 @@ Loads from .env file for security
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -20,8 +21,9 @@ if BEARER_TOKEN and not TEAMBOOK_BEARER_TOKEN:
 if BEARER_TOKEN and not DATASIGHT_BEARER_TOKEN:
     DATASIGHT_BEARER_TOKEN = BEARER_TOKEN
 
-# Database Configuration
-DB_PATH = os.getenv('DB_PATH', 'metrics.db')
+# Database Configuration - Use absolute path to project root
+_PROJECT_ROOT = Path(__file__).parent
+DB_PATH = os.getenv('DB_PATH', str(_PROJECT_ROOT / 'metrics.db'))
 
 # Service Line Configuration
 SERVICE_LINE_ID = int(os.getenv('SERVICE_LINE_ID', '449'))
