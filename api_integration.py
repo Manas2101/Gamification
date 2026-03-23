@@ -236,13 +236,22 @@ class MetricsCollector:
         Returns:
             Dict with score, critical_count, warning_count
         """
-        if not self.github_token or not app.repos:
-            # No GitHub token or no repos - return neutral score
+        if not self.github_token:
+            logger.warning(f"No GitHub token configured for {app.app_name} - returning default score 100")
             return {
-                'score': 50.0,
+                'score': 100.0,
                 'critical': 0,
                 'warnings': 0,
-                'note': 'No GitHub token configured or no repos defined'
+                'note': 'No GitHub token configured'
+            }
+        
+        if not app.repos:
+            logger.warning(f"No repos defined in YAML for {app.app_name} - returning default score 100")
+            return {
+                'score': 100.0,
+                'critical': 0,
+                'warnings': 0,
+                'note': 'No repos defined in YAML'
             }
         
         try:
@@ -251,18 +260,31 @@ class MetricsCollector:
             critical_count = 0
             warning_count = 0
             
+            # CORRECT GitHub API token format
             headers = {
-                'Authorization': f'Bearer {self.github_token}',
+                'Authorization': f'token {self.github_token}',
                 'Accept': 'application/vnd.github.v3+json'
             }
             
             # Check primary repo only (to keep it fast)
             primary_repo = app.primary_repo
             if not primary_repo:
-                return {'score': 50.0, 'critical': 0, 'warnings': 0}
+                logger.warning(f"No primary repo found for {app.app_name} - returning default score 100")
+                return {'score': 100.0, 'critical': 0, 'warnings': 0}
             
-            repo_full_name = f"{primary_repo.git_org}/{primary_repo.repo_name}"
-            base_url = f"https://api.github.com/repos/{repo_full_name}"
+            # Check if repo fields are actually filled
+            if not primary_repo.git_org or not primary_repo.repo_name:
+                logger.warning(f"Primary repo has empty git_org or repo_name for {app.app_name} - returning default score 100")
+                return {'score': 100.0, 'critical': 0, 'warnings': 0}
+            
+            # Use the repo's api_base_url property which automatically converts Git URL to API URL
+            base_url = primary_repo.api_base_url
+            repo_full_name = primary_repo.full_name
+            
+            logger.info(f"Checking Git hygiene for {app.app_name} repo: {repo_full_name}")
+            logger.debug(f"Using API URL: {base_url}")
+            if primary_repo.original_url:
+                logger.debug(f"Original Git URL: {primary_repo.original_url}")
             
             # Check 1: Stale branches (deduct 5 points per stale branch, max 3 checks)
             try:
@@ -284,8 +306,15 @@ class MetricsCollector:
                             if commit_date < cutoff_date:
                                 score -= 5
                                 warning_count += 1
+                                logger.info(f"  Found stale branch '{branch['name']}' (last commit: {commit_date_str})")
+                elif branches_resp.status_code == 404:
+                    logger.warning(f"Repository not found: {repo_full_name} - check git_org and repo_name in YAML")
+                elif branches_resp.status_code == 401:
+                    logger.error(f"GitHub authentication failed for {repo_full_name} - check GITHUB_TOKEN")
+                else:
+                    logger.warning(f"GitHub API error for {repo_full_name}: {branches_resp.status_code} - {branches_resp.text}")
             except Exception as e:
-                logger.debug(f"Error checking branches for {repo_full_name}: {e}")
+                logger.warning(f"Error checking branches for {repo_full_name}: {e}")
             
             # Check 2: Large/Unreviewed PRs (deduct 10 points per issue, max 2 checks)
             try:
@@ -295,9 +324,11 @@ class MetricsCollector:
                     
                     for pr in prs:
                         # Check PR size
-                        if pr.get('additions', 0) + pr.get('deletions', 0) > 500:
+                        pr_size = pr.get('additions', 0) + pr.get('deletions', 0)
+                        if pr_size > 500:
                             score -= 10
                             critical_count += 1
+                            logger.info(f"  Found large PR #{pr['number']} ({pr_size} lines changed)")
                         
                         # Check review status
                         created_at = datetime.strptime(pr['created_at'], '%Y-%m-%dT%H:%M:%SZ')
@@ -308,18 +339,22 @@ class MetricsCollector:
                             if reviews_resp.status_code == 200 and len(reviews_resp.json()) == 0:
                                 score -= 5
                                 warning_count += 1
+                                logger.info(f"  Found unreviewed PR #{pr['number']} (open for {age_hours:.1f} hours)")
             except Exception as e:
-                logger.debug(f"Error checking PRs for {repo_full_name}: {e}")
+                logger.warning(f"Error checking PRs for {repo_full_name}: {e}")
+            
+            final_score = max(0.0, score)
+            logger.info(f"  Final Git Hygiene score for {app.app_name}: {final_score:.1f}/100 (critical: {critical_count}, warnings: {warning_count})")
             
             return {
-                'score': max(0.0, score),
+                'score': final_score,
                 'critical': critical_count,
                 'warnings': warning_count
             }
             
         except Exception as e:
-            logger.warning(f"Error calculating hygiene for {app.app_name}: {e}")
-            return {'score': 50.0, 'critical': 0, 'warnings': 0}
+            logger.error(f"Error calculating hygiene for {app.app_name}: {e}")
+            return {'score': 100.0, 'critical': 0, 'warnings': 0}
     
     def collect_weekly_metrics(self, week_date: datetime) -> List[Dict]:
         """

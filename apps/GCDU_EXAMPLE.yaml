@@ -1,0 +1,79 @@
+# ============================================================
+# GCDU - Example YAML with URL-based repos format
+# ============================================================
+
+# ── IDENTITY ─────────────────────────────────────────────────
+app_name: "GCDU"
+eim: "GCDU123"  # Replace with actual EIM
+teambook_pods: ['GCDU']
+teambook_level: "4"
+
+# ── TEAM ─────────────────────────────────────────────────────
+itso: "Poluka Sreenivasulu Reddy"
+team_lead_email: "poluka.sreenivasulareddy@hsbc.co.in"
+release_champion: ["Poluka Sreenivasulu Reddy"]
+
+# ── APP CLASSIFICATION ────────────────────────────────────────
+app_type: "modern"
+stack: "mixed"
+in_production: true
+tier: 2
+
+# ── GIT REPOSITORIES ─────────────────────────────────────────
+# NEW FORMAT: List of URLs under a git_org
+# The system will automatically extract:
+#   - git_org from the URL (e.g., "GCDU-Repository")
+#   - repo_name from the URL (e.g., "gdt-mds-gcdu-101-acct-srch-pa")
+# The FIRST repo in the list becomes the primary repo for hygiene checks
+
+repos:
+  - git_org: "GCDU Organization"  # Human-readable org name (optional, extracted from URL)
+    repos:
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-101-acct-srch-pa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-201-acct-srch-sa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-104-gcd-pa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-206-trb-sa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-103-sabb-pa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-204-sabb-cust-info-sa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-105-mobilex-pa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-205-sabb-cust-identifer-sa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-107-gtff-pa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-207-gtff-sa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-106-p1pa-pa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-208-p1pa-sa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-209-Name-Search-sa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-210-delta-sa.git"
+      - "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-202-browser-sa.git"
+
+# ── PIPELINE FLAGS ────────────────────────────────────────────
+ci_automated: true
+cd_automated: true
+standard_pipeline_adopted: true
+pipeline_standard: "v2"
+git_hygiene_adopted: false
+cr_auto_creation: false
+zero_touch_deployment: false
+automated_rollback: true
+feature_flags_adopted: false
+approval_gate_count: 0
+
+# ── ACCESS & SECURITY ─────────────────────────────────────────
+priv_access_for_deploy: true
+priv_access_reviewed_date: ""
+sast_enabled: true
+data_classification: "internal"
+
+# ── COMPLIANCE ────────────────────────────────────────────────
+release_page_url: ""
+compliance_evidence_page: ""
+
+# ── AI & ADOPTION ─────────────────────────────────────────────
+copilot_enabled: false
+ai_tools_declared: []
+ai_test_generation: false
+apis_published: false
+catalog_url: ""
+api_count: 0
+
+# ── QUALITY & SECURITY ────────────────────────────────────────
+sonarqube_project: ""

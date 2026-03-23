@@ -19,10 +19,55 @@ class RepoConfig:
     repo_name: str
     role: str = "backend"
     is_primary: bool = False
+    original_url: str = ""  # Store the original Git URL for direct API calls
     
     @property
     def full_name(self) -> str:
         return f"{self.git_org}/{self.repo_name}"
+    
+    @property
+    def api_base_url(self) -> str:
+        """
+        Convert Git URL to API base URL
+        
+        Examples:
+            "https://alm-github.systems.uk.hsbc/GCDU-Repository/repo.git"
+            -> "https://alm-github.systems.uk.hsbc/api/v3/repos/GCDU-Repository/repo"
+            
+            "https://github.com/myorg/repo.git"
+            -> "https://api.github.com/repos/myorg/repo"
+        """
+        if not self.original_url:
+            # Fallback to constructed URL if no original_url
+            if 'hsbc' in self.git_org.lower() or 'alm-github' in self.git_org.lower():
+                return f"https://alm-github.systems.uk.hsbc/api/v3/repos/{self.git_org}/{self.repo_name}"
+            else:
+                return f"https://api.github.com/repos/{self.git_org}/{self.repo_name}"
+        
+        # Parse original URL to build API URL
+        url = self.original_url.rstrip('/')
+        if url.endswith('.git'):
+            url = url[:-4]
+        
+        # Detect GitHub instance type
+        if 'alm-github.systems.uk.hsbc' in url:
+            # Internal GitHub Enterprise
+            # Extract org and repo from URL path
+            parts = url.split('/')
+            if len(parts) >= 2:
+                org = parts[-2]
+                repo = parts[-1]
+                return f"https://alm-github.systems.uk.hsbc/api/v3/repos/{org}/{repo}"
+        elif 'github.com' in url:
+            # Public GitHub
+            parts = url.split('/')
+            if len(parts) >= 2:
+                org = parts[-2]
+                repo = parts[-1]
+                return f"https://api.github.com/repos/{org}/{repo}"
+        
+        # Fallback
+        return f"https://api.github.com/repos/{self.git_org}/{self.repo_name}"
 
 @dataclass
 class AppEntry:
@@ -126,13 +171,67 @@ class RegistryLoader:
     """Loads app configurations from YAML registry"""
     
     def __init__(self, registry_dir: str = None):
+        """Initialize registry loader"""
         if registry_dir is None:
+            # Default to apps/ directory relative to this file
             registry_dir = Path(__file__).parent / "apps"
         self.registry_dir = Path(registry_dir)
         
         if not self.registry_dir.exists():
             logger.warning(f"Registry directory not found: {self.registry_dir}")
             self.registry_dir.mkdir(parents=True, exist_ok=True)
+    
+    def _extract_repo_name_from_url(self, url: str) -> str:
+        """
+        Extract repository name from Git URL
+        
+        Examples:
+            "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-101-acct-srch-pa.git"
+            -> "gdt-mds-gcdu-101-acct-srch-pa"
+            
+            "https://github.com/myorg/my-repo.git"
+            -> "my-repo"
+        """
+        if not url:
+            return ""
+        
+        # Remove .git extension if present
+        url = url.rstrip('/')
+        if url.endswith('.git'):
+            url = url[:-4]
+        
+        # Extract last part of path (repo name)
+        parts = url.split('/')
+        if len(parts) >= 2:
+            return parts[-1]
+        
+        return ""
+    
+    def _extract_git_org_from_url(self, url: str) -> str:
+        """
+        Extract git organization from Git URL
+        
+        Examples:
+            "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-101-acct-srch-pa.git"
+            -> "GCDU-Repository"
+            
+            "https://github.com/myorg/my-repo.git"
+            -> "myorg"
+        """
+        if not url:
+            return ""
+        
+        # Remove .git extension if present
+        url = url.rstrip('/')
+        if url.endswith('.git'):
+            url = url[:-4]
+        
+        # Extract second-to-last part of path (org name)
+        parts = url.split('/')
+        if len(parts) >= 2:
+            return parts[-2]
+        
+        return ""
     
     def load_all(self) -> List[AppEntry]:
         """Load all app entries from registry"""
@@ -176,21 +275,60 @@ class RegistryLoader:
             # Extract EIM from filename (e.g., 9594666.yaml -> 9594666)
             eim_id = yaml_path.stem
             
-            # Parse repositories
+            # Parse repositories - support multiple formats
             repos = []
-            for repo_data in data.get("repos", []):
+            repos_data = data.get("repos", [])
+            
+            for idx, repo_data in enumerate(repos_data):
                 if isinstance(repo_data, dict):
-                    repo_name = repo_data.get("repo_name", "")
-                    # Handle both string and list format for repo_name
-                    if isinstance(repo_name, list):
-                        repo_name = repo_name[0] if repo_name else ""
+                    # Format 1: Dict with git_org and repo_name fields
+                    if "git_org" in repo_data and "repo_name" in repo_data:
+                        repo_name = repo_data.get("repo_name", "")
+                        # Handle both string and list format for repo_name
+                        if isinstance(repo_name, list):
+                            repo_name = repo_name[0] if repo_name else ""
+                        
+                        repos.append(RepoConfig(
+                            git_org=repo_data.get("git_org", ""),
+                            repo_name=str(repo_name),
+                            role=repo_data.get("role", "backend"),
+                            is_primary=repo_data.get("is_primary", False)
+                        ))
                     
-                    repos.append(RepoConfig(
-                        git_org=repo_data.get("git_org", ""),
-                        repo_name=str(repo_name),
-                        role=repo_data.get("role", "backend"),
-                        is_primary=repo_data.get("is_primary", False)
-                    ))
+                    # Format 2: Dict with git_org and list of URLs
+                    elif "git_org" in repo_data and "repos" in repo_data:
+                        git_org_name = repo_data.get("git_org", "")
+                        repo_urls = repo_data.get("repos", [])
+                        
+                        for url_idx, repo_url in enumerate(repo_urls):
+                            # Extract repo name from URL
+                            # e.g., "https://alm-github.systems.uk.hsbc/GCDU-Repository/gdt-mds-gcdu-101-acct-srch-pa.git"
+                            # -> git_org: "GCDU-Repository", repo_name: "gdt-mds-gcdu-101-acct-srch-pa"
+                            repo_name = self._extract_repo_name_from_url(repo_url)
+                            actual_git_org = self._extract_git_org_from_url(repo_url)
+                            
+                            if repo_name:
+                                repos.append(RepoConfig(
+                                    git_org=actual_git_org or git_org_name,
+                                    repo_name=repo_name,
+                                    role="backend",
+                                    is_primary=(idx == 0 and url_idx == 0),  # First repo is primary
+                                    original_url=repo_url  # Store original URL for direct API usage
+                                ))
+                
+                elif isinstance(repo_data, str):
+                    # Format 3: Direct URL string
+                    repo_name = self._extract_repo_name_from_url(repo_data)
+                    git_org = self._extract_git_org_from_url(repo_data)
+                    
+                    if repo_name:
+                        repos.append(RepoConfig(
+                            git_org=git_org or "unknown",
+                            repo_name=repo_name,
+                            role="backend",
+                            is_primary=(idx == 0),
+                            original_url=repo_data  # Store original URL for direct API usage
+                        ))
             
             # Parse release champion (can be string or list)
             release_champion = data.get("release_champion", [])
