@@ -3965,20 +3965,20 @@ with tab4:
 
  
 
-        # New 6-pillar scoring system
+        # New 6-pillar scoring system - use correct column names from database
         scores_data = [
 
-            ('⚡ Velocity', t_latest.get('Velocity', 0), 100, '#06b6d4'),
+            ('🚀 Release Velocity', t_latest.get('Release_Velocity_Score', 0), 100, '#06b6d4'),
 
-            ('💨 Flow', t_latest.get('Flow', 0), 100, '#60a5fa'),
+            ('🧹 Git Hygiene', t_latest.get('Git_Hygiene_Score', 0), 100, '#10b981'),
 
-            ('🛡️ Stability', t_latest.get('Stability', 0), 100, '#ec4899'),
+            ('⚙️ Pipeline Maturity', t_latest.get('Pipeline_Maturity_Score', 0), 100, '#60a5fa'),
 
-            ('🤖 Automation', t_latest.get('Automation', 0), 100, '#10b981'),
+            ('📋 Compliance', t_latest.get('Compliance_Score', 0), 100, '#ec4899'),
 
-            ('🔒 Quality & Security', t_latest.get('Quality_Security', 0), 100, '#f97316'),
+            ('🔒 Quality & Security', t_latest.get('Quality_Security_Score', 0), 100, '#f97316'),
 
-            ('🤖 AI & Adoption', t_latest.get('AI_Adoption', 0), 100, '#8b5cf6')
+            ('🎯 Adoption', t_latest.get('Adoption_Score', 0), 100, '#8b5cf6')
 
         ]
 
@@ -3986,7 +3986,12 @@ with tab4:
 
         for metric, value, max_val, color in scores_data:
 
-            pct = int((value/max_val)*100) if not pd.isna(value) else 0
+            # Fix -0 display issue by ensuring value is not None and handle negative zero
+            if value is None or pd.isna(value):
+                value = 0
+            value = abs(value) if value == 0 else value  # Convert -0 to 0
+            
+            pct = int((value/max_val)*100) if value is not None else 0
 
             st.markdown(f"""<div style='margin-bottom:15px;'>
 
