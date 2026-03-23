@@ -116,7 +116,7 @@ class MetricsDatabase:
 
        
 
-        # Weekly metrics table
+        # Weekly metrics table - NEW 6-PILLAR SYSTEM
 
         cursor.execute('''
 
@@ -130,6 +130,8 @@ class MetricsDatabase:
 
                 week_start DATE NOT NULL,
 
+                -- Core metrics from DataSight API
+
                 rf INTEGER,
 
                 lttd REAL,
@@ -140,7 +142,7 @@ class MetricsDatabase:
 
                 mttr REAL,
 
-                priv_access INTEGER DEFAULT 0,
+                -- Pipeline flags
 
                 ci BOOLEAN DEFAULT 0,
 
@@ -152,39 +154,59 @@ class MetricsDatabase:
 
                 self_service BOOLEAN DEFAULT 0,
 
-                cfr_reported BOOLEAN DEFAULT 1,
+                priv_access INTEGER DEFAULT 0,
 
-                automation_audited BOOLEAN DEFAULT 1,
+                -- NEW 6-Pillar Raw Scores (0-100)
 
-                critical_data_present BOOLEAN DEFAULT 1,
+                release_velocity_score REAL,
 
-                rf_score INTEGER,
+                git_hygiene_score REAL,
 
-                flow_score INTEGER,
+                pipeline_maturity_score REAL,
 
-                cfr_score INTEGER,
+                compliance_score REAL,
 
-                mttr_score INTEGER,
+                quality_security_score REAL,
 
-                priv_score INTEGER,
+                adoption_score REAL,
 
-                automation_score INTEGER,
+                -- NEW 6-Pillar Weighted Contributions
 
-                stability_score INTEGER,
+                release_velocity_weighted REAL,
 
-                dpi INTEGER,
+                git_hygiene_weighted REAL,
 
-                velocity REAL,
+                pipeline_maturity_weighted REAL,
 
-                flow REAL,
+                compliance_weighted REAL,
 
-                stability REAL,
+                quality_security_weighted REAL,
 
-                automation REAL,
+                adoption_weighted REAL,
 
-                quality_security REAL,
+                -- DPI (sum of weighted scores)
 
-                ai_adoption REAL,
+                dpi REAL,
+
+                -- New metrics for scoring
+
+                pipeline_standard TEXT,
+
+                feature_flags_adopted BOOLEAN DEFAULT 0,
+
+                has_release_page BOOLEAN DEFAULT 0,
+
+                has_compliance_evidence BOOLEAN DEFAULT 0,
+
+                apis_published BOOLEAN DEFAULT 0,
+
+                copilot_enabled BOOLEAN DEFAULT 0,
+
+                git_hygiene_violations_critical INTEGER DEFAULT 0,
+
+                git_hygiene_violations_warnings INTEGER DEFAULT 0,
+
+                -- Metadata
 
                 tier_name TEXT,
 
@@ -316,17 +338,7 @@ class MetricsDatabase:
 
                 pod_id, week_date, week_start, rf, lttd, ltdd_measurable, cfr, mttr,
 
-                priv_access, ci, cd, iac, rollback, self_service,
-
-                cfr_reported, automation_audited, critical_data_present,
-
-                rf_score, flow_score, cfr_score, mttr_score, priv_score,
-
-                automation_score, stability_score, dpi,
-
-                velocity, flow, stability, automation, quality_security, ai_adoption, tier_name,
-
-                data_quality_flags,
+                ci, cd, iac, rollback, self_service, priv_access,
 
                 release_velocity_score, git_hygiene_score, pipeline_maturity_score,
 
@@ -336,13 +348,15 @@ class MetricsDatabase:
 
                 compliance_weighted, quality_security_weighted, adoption_weighted,
 
-                pipeline_standard, feature_flags_adopted, has_release_page,
+                dpi, pipeline_standard, feature_flags_adopted, has_release_page,
 
                 has_compliance_evidence, apis_published, copilot_enabled,
 
-                git_hygiene_violations_critical, git_hygiene_violations_warnings
+                git_hygiene_violations_critical, git_hygiene_violations_warnings,
 
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                tier_name, data_quality_flags
+
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
             ON CONFLICT(pod_id, week_date) DO UPDATE SET
 
@@ -356,8 +370,6 @@ class MetricsDatabase:
 
                 mttr = excluded.mttr,
 
-                priv_access = excluded.priv_access,
-
                 ci = excluded.ci,
 
                 cd = excluded.cd,
@@ -368,43 +380,7 @@ class MetricsDatabase:
 
                 self_service = excluded.self_service,
 
-                cfr_reported = excluded.cfr_reported,
-
-                automation_audited = excluded.automation_audited,
-
-                critical_data_present = excluded.critical_data_present,
-
-                rf_score = excluded.rf_score,
-
-                flow_score = excluded.flow_score,
-
-                cfr_score = excluded.cfr_score,
-
-                mttr_score = excluded.mttr_score,
-
-                priv_score = excluded.priv_score,
-
-                automation_score = excluded.automation_score,
-
-                stability_score = excluded.stability_score,
-
-                dpi = excluded.dpi,
-
-                velocity = excluded.velocity,
-
-                flow = excluded.flow,
-
-                stability = excluded.stability,
-
-                automation = excluded.automation,
-
-                quality_security = excluded.quality_security,
-
-                ai_adoption = excluded.ai_adoption,
-
-                tier_name = excluded.tier_name,
-
-                data_quality_flags = excluded.data_quality_flags,
+                priv_access = excluded.priv_access,
 
                 release_velocity_score = excluded.release_velocity_score,
 
@@ -430,6 +406,8 @@ class MetricsDatabase:
 
                 adoption_weighted = excluded.adoption_weighted,
 
+                dpi = excluded.dpi,
+
                 pipeline_standard = excluded.pipeline_standard,
 
                 feature_flags_adopted = excluded.feature_flags_adopted,
@@ -444,7 +422,11 @@ class MetricsDatabase:
 
                 git_hygiene_violations_critical = excluded.git_hygiene_violations_critical,
 
-                git_hygiene_violations_warnings = excluded.git_hygiene_violations_warnings
+                git_hygiene_violations_warnings = excluded.git_hygiene_violations_warnings,
+
+                tier_name = excluded.tier_name,
+
+                data_quality_flags = excluded.data_quality_flags
 
         ''', (
 
@@ -464,8 +446,6 @@ class MetricsDatabase:
 
             metrics.get('mttr'),
 
-            metrics.get('priv_access', 0),
-
             metrics.get('ci', False),
 
             metrics.get('cd', False),
@@ -476,43 +456,7 @@ class MetricsDatabase:
 
             metrics.get('self_service', False),
 
-            metrics.get('cfr_reported', True),
-
-            metrics.get('automation_audited', True),
-
-            metrics.get('critical_data_present', True),
-
-            metrics.get('rf_score'),
-
-            metrics.get('flow_score'),
-
-            metrics.get('cfr_score'),
-
-            metrics.get('mttr_score'),
-
-            metrics.get('priv_score'),
-
-            metrics.get('automation_score'),
-
-            metrics.get('stability_score'),
-
-            metrics.get('dpi'),
-
-            metrics.get('velocity'),
-
-            metrics.get('flow'),
-
-            metrics.get('stability'),
-
-            metrics.get('automation'),
-
-            metrics.get('quality_security'),
-
-            metrics.get('ai_adoption'),
-
-            metrics.get('tier'),
-
-            metrics.get('data_quality_flags', ''),
+            metrics.get('priv_access', 0),
 
             metrics.get('release_velocity_score'),
 
@@ -538,6 +482,8 @@ class MetricsDatabase:
 
             metrics.get('adoption_weighted'),
 
+            metrics.get('dpi'),
+
             metrics.get('pipeline_standard', 'v1'),
 
             metrics.get('feature_flags_adopted', False),
@@ -552,7 +498,11 @@ class MetricsDatabase:
 
             metrics.get('git_hygiene_violations_critical', 0),
 
-            metrics.get('git_hygiene_violations_warnings', 0)
+            metrics.get('git_hygiene_violations_warnings', 0),
+
+            metrics.get('tier'),
+
+            metrics.get('data_quality_flags', '')
 
         ))
 
@@ -612,12 +562,6 @@ class MetricsDatabase:
 
                 wm.self_service as Self_Service,
 
-                wm.cfr_reported as CFR_Reported,
-
-                wm.automation_audited as Automation_Audited,
-
-                wm.critical_data_present as Critical_Data_Present,
-
                 p.stack as Stack,
 
                 p.business_unit as "Business Unit",
@@ -628,17 +572,45 @@ class MetricsDatabase:
 
                 wm.tier_name as Tier,
 
-                wm.velocity as Velocity,
+                wm.release_velocity_score as Release_Velocity_Score,
 
-                wm.flow as Flow,
+                wm.git_hygiene_score as Git_Hygiene_Score,
 
-                wm.stability as Stability,
+                wm.pipeline_maturity_score as Pipeline_Maturity_Score,
 
-                wm.automation as Automation,
+                wm.compliance_score as Compliance_Score,
 
-                wm.quality_security as Quality_Security,
+                wm.quality_security_score as Quality_Security_Score,
 
-                wm.ai_adoption as AI_Adoption,
+                wm.adoption_score as Adoption_Score,
+
+                wm.release_velocity_weighted as Release_Velocity_Weighted,
+
+                wm.git_hygiene_weighted as Git_Hygiene_Weighted,
+
+                wm.pipeline_maturity_weighted as Pipeline_Maturity_Weighted,
+
+                wm.compliance_weighted as Compliance_Weighted,
+
+                wm.quality_security_weighted as Quality_Security_Weighted,
+
+                wm.adoption_weighted as Adoption_Weighted,
+
+                wm.pipeline_standard as Pipeline_Standard,
+
+                wm.feature_flags_adopted as Feature_Flags_Adopted,
+
+                wm.has_release_page as Has_Release_Page,
+
+                wm.has_compliance_evidence as Has_Compliance_Evidence,
+
+                wm.apis_published as APIs_Published,
+
+                wm.copilot_enabled as Copilot_Enabled,
+
+                wm.git_hygiene_violations_critical as Git_Hygiene_Violations_Critical,
+
+                wm.git_hygiene_violations_warnings as Git_Hygiene_Violations_Warnings,
 
                 wm.data_quality_flags as Data_Quality_Flags
 
