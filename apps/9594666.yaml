@@ -66,6 +66,7 @@ repos:
 ci_automated: true              # Does CI trigger automatically on every push? Y/N
 cd_automated: true              # Does deployment trigger automatically after CI? Y/N
 standard_pipeline_adopted: true  # Are you on the org standard pipeline template? Y/N
+pipeline_standard: "v2"         # Which version? "v1" or "v2" (v2 = latest best practices)
 git_hygiene_adopted: false      # Has the team formally adopted git hygiene practices? Y/N
 cr_auto_creation: false         # Are change requests auto-raised in ServiceNow? Y/N
 zero_touch_deployment: false    # Can you deploy with NO human intervention? Y/N
@@ -104,6 +105,9 @@ ai_test_generation: false       # Using AI for test generation?
 apis_published: false           # Are this app's APIs in the org API catalog?
 catalog_url: ""                 # URL to API catalog entry
 api_count: 0                    # How many APIs does this app expose?
+
+# ── QUALITY & SECURITY ────────────────────────────────────────
+sonarqube_project: ""           # SonarQube project key (leave blank if not using SonarQube)
 
 # ── INTERVIEW NOTES (captured during champion 1:1 call) ───────
 # agreed_rf_target_per_month: 0
