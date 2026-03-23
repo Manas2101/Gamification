@@ -267,10 +267,12 @@ class MetricsCollector:
             else:
                 logger.warning(f"GitHub token is empty or None")
             
-            # CORRECT GitHub API token format
+            # CORRECT GitHub API token format with required headers
             headers = {
                 'Authorization': f'token {self.github_token}',
-                'Accept': 'application/vnd.github.v3+json'
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'dpi-gamification-hygiene-checker',
+                'X-GitHub-Api-Version': '2022-11-28'
             }
             
             # Check primary repo only (to keep it fast)

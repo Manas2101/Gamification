@@ -27,10 +27,12 @@ def test_github_token():
     print(f"✓ GitHub token found (length: {len(token)})")
     print(f"  Preview: {token[:4]}...{token[-4:] if len(token) > 8 else '***'}\n")
     
-    # Test headers
+    # Test headers (matching reference code requirements)
     headers = {
         'Authorization': f'token {token}',
-        'Accept': 'application/vnd.github.v3+json'
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'dpi-gamification-hygiene-checker',
+        'X-GitHub-Api-Version': '2022-11-28'
     }
     
     # Test 1: Public GitHub (if accessible)
