@@ -205,19 +205,121 @@ class DataSightAPI:
 class MetricsCollector:
     """Orchestrates data collection from YAML registry and DataSight API"""
     
-    def __init__(self, datasight_token: str, registry_dir: str = None):
+    def __init__(self, datasight_token: str, registry_dir: str = None, github_token: str = None):
         """
         Initialize metrics collector
         
         Args:
             datasight_token: Bearer token for DataSight API
             registry_dir: Path to YAML registry directory (optional)
+            github_token: GitHub token for hygiene checking (optional)
         """
         self.datasight = DataSightAPI(datasight_token)
+        self.github_token = github_token
         
         # Import here to avoid circular dependency
         from registry_loader import RegistryLoader
         self.registry = RegistryLoader(registry_dir)
+    
+    def _calculate_git_hygiene_score(self, app) -> Dict:
+        """
+        Calculate basic git hygiene score for an app
+        
+        Simple scoring based on:
+        - Stale branches (>30 days without commits)
+        - Large PRs (>500 lines)
+        - Unreviewed PRs (>24 hours)
+        
+        Args:
+            app: AppEntry object with repo information
+        
+        Returns:
+            Dict with score, critical_count, warning_count
+        """
+        if not self.github_token or not app.repos:
+            # No GitHub token or no repos - return neutral score
+            return {
+                'score': 50.0,
+                'critical': 0,
+                'warnings': 0,
+                'note': 'No GitHub token configured or no repos defined'
+            }
+        
+        try:
+            import requests
+            score = 100.0
+            critical_count = 0
+            warning_count = 0
+            
+            headers = {
+                'Authorization': f'Bearer {self.github_token}',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+            
+            # Check primary repo only (to keep it fast)
+            primary_repo = app.primary_repo
+            if not primary_repo:
+                return {'score': 50.0, 'critical': 0, 'warnings': 0}
+            
+            repo_full_name = f"{primary_repo.git_org}/{primary_repo.repo_name}"
+            base_url = f"https://api.github.com/repos/{repo_full_name}"
+            
+            # Check 1: Stale branches (deduct 5 points per stale branch, max 3 checks)
+            try:
+                branches_resp = requests.get(f"{base_url}/branches", headers=headers, timeout=10)
+                if branches_resp.status_code == 200:
+                    branches = branches_resp.json()[:3]  # Check only first 3 branches
+                    cutoff_date = datetime.now() - timedelta(days=30)
+                    
+                    for branch in branches:
+                        if branch['name'] in ['main', 'master']:
+                            continue
+                        
+                        # Get last commit date
+                        commit_resp = requests.get(f"{base_url}/commits/{branch['commit']['sha']}", headers=headers, timeout=10)
+                        if commit_resp.status_code == 200:
+                            commit_date_str = commit_resp.json()['commit']['committer']['date']
+                            commit_date = datetime.strptime(commit_date_str, '%Y-%m-%dT%H:%M:%SZ')
+                            
+                            if commit_date < cutoff_date:
+                                score -= 5
+                                warning_count += 1
+            except Exception as e:
+                logger.debug(f"Error checking branches for {repo_full_name}: {e}")
+            
+            # Check 2: Large/Unreviewed PRs (deduct 10 points per issue, max 2 checks)
+            try:
+                prs_resp = requests.get(f"{base_url}/pulls?state=open&per_page=2", headers=headers, timeout=10)
+                if prs_resp.status_code == 200:
+                    prs = prs_resp.json()
+                    
+                    for pr in prs:
+                        # Check PR size
+                        if pr.get('additions', 0) + pr.get('deletions', 0) > 500:
+                            score -= 10
+                            critical_count += 1
+                        
+                        # Check review status
+                        created_at = datetime.strptime(pr['created_at'], '%Y-%m-%dT%H:%M:%SZ')
+                        age_hours = (datetime.now() - created_at).total_seconds() / 3600
+                        
+                        if age_hours > 24:
+                            reviews_resp = requests.get(f"{base_url}/pulls/{pr['number']}/reviews", headers=headers, timeout=10)
+                            if reviews_resp.status_code == 200 and len(reviews_resp.json()) == 0:
+                                score -= 5
+                                warning_count += 1
+            except Exception as e:
+                logger.debug(f"Error checking PRs for {repo_full_name}: {e}")
+            
+            return {
+                'score': max(0.0, score),
+                'critical': critical_count,
+                'warnings': warning_count
+            }
+            
+        except Exception as e:
+            logger.warning(f"Error calculating hygiene for {app.app_name}: {e}")
+            return {'score': 50.0, 'critical': 0, 'warnings': 0}
     
     def collect_weekly_metrics(self, week_date: datetime) -> List[Dict]:
         """
@@ -243,7 +345,12 @@ class MetricsCollector:
             
             logger.info(f"Fetching metrics for app: {app.app_name} (EIM: {app.eim}, Pod: {teambook_name}, Level: {teambook_level})")
             
+            # Fetch DataSight metrics
             metrics = self.datasight.get_all_metrics(teambook_name, teambook_level, week_date, week_date)
+            
+            # Calculate git hygiene score
+            hygiene = self._calculate_git_hygiene_score(app)
+            logger.info(f"  Git hygiene score for {app.app_name}: {hygiene.get('score', 50.0):.1f}/100")
             
             metrics_data.append({
                 'pod_id': app.eim,  # Use EIM as pod_id
@@ -255,15 +362,34 @@ class MetricsCollector:
                 'lttd': metrics.get('lttd'),
                 'rf': metrics.get('rf'),
                 'cfr': metrics.get('cfr'),
+                # Git hygiene data
+                'git_hygiene_score': hygiene.get('score'),
+                'git_hygiene_violations_critical': hygiene.get('critical', 0),
+                'git_hygiene_violations_warnings': hygiene.get('warnings', 0),
                 # Include all YAML data for scoring
                 'stack': app.stack,
                 'business_unit': 'Default',  # Can be added to YAML if needed
                 'tier': app.tier,
+                'app_type': app.app_type,
                 'ci': app.ci_automated,
                 'cd': app.cd_automated,
                 'iac': False,  # Can be added to YAML if needed
                 'rollback': app.automated_rollback,
                 'self_service': app.zero_touch_deployment,
+                'zero_touch_deployment': app.zero_touch_deployment,
+                'cr_auto_creation': app.cr_auto_creation,
+                'feature_flags_adopted': app.feature_flags_adopted,
+                'pipeline_standard': app.pipeline_standard,
+                'sast_enabled': app.sast_enabled,
+                'data_classification': app.data_classification,
+                'release_page_url': app.release_page_url,
+                'compliance_evidence_page': app.compliance_evidence_page,
+                'priv_access_reviewed_date': app.priv_access_reviewed_date,
+                'is_priv_access_current': app.is_priv_access_current,
+                'apis_published': app.apis_published,
+                'ai_tools_declared': app.ai_tools_declared,
+                'copilot_enabled': app.copilot_enabled,
+                'sonarqube_project': app.sonarqube_project,
             })
         
         logger.info(f"Collected metrics for {len(metrics_data)} apps")

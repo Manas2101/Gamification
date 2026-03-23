@@ -4,8 +4,10 @@ Coordinates API calls, calculations, and database storage
 """
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict
+from pathlib import Path
 import logging
+import json
 
 from api_integration import MetricsCollector
 from database import MetricsDatabase
@@ -18,7 +20,8 @@ logger = logging.getLogger(__name__)
 class DataFetcher:
     """Orchestrates the complete data fetching and storage workflow"""
     
-    def __init__(self, datasight_token: str, db_path: str = "metrics.db", registry_dir: str = None):
+    def __init__(self, datasight_token: str, db_path: str = "metrics.db", 
+                 registry_dir: str = None, github_token: str = None):
         """
         Initialize data fetcher
         
@@ -26,8 +29,9 @@ class DataFetcher:
             datasight_token: Bearer token for DataSight API
             db_path: Path to SQLite database
             registry_dir: Path to YAML registry directory (optional)
+            github_token: GitHub token for hygiene checking (optional)
         """
-        self.collector = MetricsCollector(datasight_token, registry_dir)
+        self.collector = MetricsCollector(datasight_token, registry_dir, github_token)
         self.db = MetricsDatabase(db_path)
         self.calculator = MetricsCalculator()
     
@@ -53,11 +57,15 @@ class DataFetcher:
         # Process each app's metrics
         for app_metrics in raw_metrics:
             try:
-                # Use only YAML + API data (no random generation)
+                # Hygiene data is already included in app_metrics from api_integration.py
+                # Just add computed fields for scoring
                 complete_metrics = {
-                    **app_metrics,  # YAML + API data
+                    **app_metrics,  # Already includes YAML + API + Hygiene data
                     'week_date': week_date,
                     'week_start': week_date,
+                    # Add computed fields for scoring
+                    'has_release_page': bool(app_metrics.get('release_page_url', '').strip()),
+                    'has_compliance_evidence': bool(app_metrics.get('compliance_evidence_page', '').strip()),
                 }
                 
                 # Calculate DPI using new 6-pillar scoring system (0-100 scale)

@@ -99,13 +99,18 @@ def main():
 
         logger.info(f"Using DataSight API token")
 
+        # Get GitHub token from environment (optional - for hygiene checking)
+        github_token = os.getenv('GITHUB_TOKEN', '')
+
         fetcher = DataFetcher(
 
             datasight_token=config.DATASIGHT_BEARER_TOKEN,
 
             db_path=config.DB_PATH,
 
-            registry_dir=None
+            registry_dir=None,
+
+            github_token=github_token if github_token else None
 
         )
 

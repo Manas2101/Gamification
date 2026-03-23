@@ -326,9 +326,23 @@ class MetricsDatabase:
 
                 velocity, flow, stability, automation, quality_security, ai_adoption, tier_name,
 
-                data_quality_flags
+                data_quality_flags,
 
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                release_velocity_score, git_hygiene_score, pipeline_maturity_score,
+
+                compliance_score, quality_security_score, adoption_score,
+
+                release_velocity_weighted, git_hygiene_weighted, pipeline_maturity_weighted,
+
+                compliance_weighted, quality_security_weighted, adoption_weighted,
+
+                pipeline_standard, feature_flags_adopted, has_release_page,
+
+                has_compliance_evidence, apis_published, copilot_enabled,
+
+                git_hygiene_violations_critical, git_hygiene_violations_warnings
+
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
             ON CONFLICT(pod_id, week_date) DO UPDATE SET
 
@@ -390,7 +404,47 @@ class MetricsDatabase:
 
                 tier_name = excluded.tier_name,
 
-                data_quality_flags = excluded.data_quality_flags
+                data_quality_flags = excluded.data_quality_flags,
+
+                release_velocity_score = excluded.release_velocity_score,
+
+                git_hygiene_score = excluded.git_hygiene_score,
+
+                pipeline_maturity_score = excluded.pipeline_maturity_score,
+
+                compliance_score = excluded.compliance_score,
+
+                quality_security_score = excluded.quality_security_score,
+
+                adoption_score = excluded.adoption_score,
+
+                release_velocity_weighted = excluded.release_velocity_weighted,
+
+                git_hygiene_weighted = excluded.git_hygiene_weighted,
+
+                pipeline_maturity_weighted = excluded.pipeline_maturity_weighted,
+
+                compliance_weighted = excluded.compliance_weighted,
+
+                quality_security_weighted = excluded.quality_security_weighted,
+
+                adoption_weighted = excluded.adoption_weighted,
+
+                pipeline_standard = excluded.pipeline_standard,
+
+                feature_flags_adopted = excluded.feature_flags_adopted,
+
+                has_release_page = excluded.has_release_page,
+
+                has_compliance_evidence = excluded.has_compliance_evidence,
+
+                apis_published = excluded.apis_published,
+
+                copilot_enabled = excluded.copilot_enabled,
+
+                git_hygiene_violations_critical = excluded.git_hygiene_violations_critical,
+
+                git_hygiene_violations_warnings = excluded.git_hygiene_violations_warnings
 
         ''', (
 
@@ -458,7 +512,47 @@ class MetricsDatabase:
 
             metrics.get('tier'),
 
-            metrics.get('data_quality_flags', '')
+            metrics.get('data_quality_flags', ''),
+
+            metrics.get('release_velocity_score'),
+
+            metrics.get('git_hygiene_score'),
+
+            metrics.get('pipeline_maturity_score'),
+
+            metrics.get('compliance_score'),
+
+            metrics.get('quality_security_score'),
+
+            metrics.get('adoption_score'),
+
+            metrics.get('release_velocity_weighted'),
+
+            metrics.get('git_hygiene_weighted'),
+
+            metrics.get('pipeline_maturity_weighted'),
+
+            metrics.get('compliance_weighted'),
+
+            metrics.get('quality_security_weighted'),
+
+            metrics.get('adoption_weighted'),
+
+            metrics.get('pipeline_standard', 'v1'),
+
+            metrics.get('feature_flags_adopted', False),
+
+            metrics.get('has_release_page', False),
+
+            metrics.get('has_compliance_evidence', False),
+
+            metrics.get('apis_published', False),
+
+            metrics.get('copilot_enabled', False),
+
+            metrics.get('git_hygiene_violations_critical', 0),
+
+            metrics.get('git_hygiene_violations_warnings', 0)
 
         ))
 

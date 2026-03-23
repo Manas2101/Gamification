@@ -3109,136 +3109,96 @@ with tab1:
 
  
 
-        cols = st.columns(2)
+        # NEW 6-PILLAR SYSTEM
+        st.markdown("<div style='color:white; font-size:18px; font-weight:600; margin-bottom:15px;'>📊 6-Pillar Breakdown</div>", unsafe_allow_html=True)
+        
+        cols = st.columns(3)
 
- 
-
+        # Row 1: Top 3 pillars (highest weights)
         with cols[0]:
-
-            # New 6-pillar scoring: Velocity (0-100)
-
-            velocity = trow.get('Velocity', 0)
-
-            velocity_pct = int(velocity) if velocity is not None and not pd.isna(velocity) else 0
-
-            velocity_display = f"{velocity:.1f}" if velocity is not None and not pd.isna(velocity) else 'N/A'
-
+            # Release Velocity (30%)
+            release_velocity = trow.get('Release_Velocity_Score', 0)
+            rv_pct = int(release_velocity) if release_velocity is not None and not pd.isna(release_velocity) else 0
+            rv_display = f"{release_velocity:.1f}" if release_velocity is not None and not pd.isna(release_velocity) else 'N/A'
             st.markdown(f"""<div style='margin-bottom:20px;'>
-
-<div style='color:white; font-weight:600; margin-bottom:8px;'>⚡ Velocity (Release Frequency)</div>
-
+<div style='color:white; font-weight:600; margin-bottom:8px;'>🚀 Release Velocity <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(30%)</span></div>
 <div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{velocity_pct}%; background:#06b6d4;'></div>
-
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{rv_pct}%; background:#06b6d4;'></div>
 </div>
-
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{velocity_display} / 100</div>
-
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{rv_display} / 100</div>
 </div>
-
             """, unsafe_allow_html=True)
-
- 
-
-            flow = trow.get('Flow', 0)
-
-            flow_pct = int(flow) if flow is not None and not pd.isna(flow) else 0
-
-            flow_display = f"{flow:.1f}" if flow is not None and not pd.isna(flow) else "N/A"
-
-            st.markdown(f"""<div style='margin-bottom:20px;'>
-
-<div style='color:white; font-weight:600; margin-bottom:8px;'>💨 Flow (Lead Time)</div>
-
-<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{flow_pct}%; background:#60a5fa;'></div>
-
-</div>
-
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{flow_display} / 100</div>
-
-</div>
-
-            """, unsafe_allow_html=True)
-
- 
 
         with cols[1]:
-
-            stability = trow.get('Stability', 0)
-
-            stab_pct = int(stability) if stability is not None and not pd.isna(stability) else 0
-
-            stab_display = f"{stability:.1f}" if stability is not None and not pd.isna(stability) else "N/A"
-
+            # Git Hygiene (20%)
+            git_hygiene = trow.get('Git_Hygiene_Score', 0)
+            gh_pct = int(git_hygiene) if git_hygiene is not None and not pd.isna(git_hygiene) else 0
+            gh_display = f"{git_hygiene:.1f}" if git_hygiene is not None and not pd.isna(git_hygiene) else "N/A"
             st.markdown(f"""<div style='margin-bottom:20px;'>
-
-<div style='color:white; font-weight:600; margin-bottom:8px;'>🛡️ Stability (CFR + MTTR)</div>
-
+<div style='color:white; font-weight:600; margin-bottom:8px;'>🧹 Git Hygiene <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(20%)</span></div>
 <div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{stab_pct}%; background:#ec4899;'></div>
-
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{gh_pct}%; background:#10b981;'></div>
 </div>
-
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{stab_display} / 100</div>
-
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{gh_display} / 100</div>
 </div>
-
             """, unsafe_allow_html=True)
 
- 
-
-            automation = trow.get('Automation', 0)
-
-            auto_pct = int(automation) if automation is not None and not pd.isna(automation) else 0
-
-            auto_display = f"{automation:.1f}" if automation is not None and not pd.isna(automation) else "N/A"
-
+        with cols[2]:
+            # Pipeline Maturity (20%)
+            pipeline_maturity = trow.get('Pipeline_Maturity_Score', 0)
+            pm_pct = int(pipeline_maturity) if pipeline_maturity is not None and not pd.isna(pipeline_maturity) else 0
+            pm_display = f"{pipeline_maturity:.1f}" if pipeline_maturity is not None and not pd.isna(pipeline_maturity) else "N/A"
             st.markdown(f"""<div style='margin-bottom:20px;'>
-
-<div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 Automation (CI/CD Maturity)</div>
-
+<div style='color:white; font-weight:600; margin-bottom:8px;'>⚙️ Pipeline Maturity <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(20%)</span></div>
 <div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{auto_pct}%; background:#10b981;'></div>
-
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{pm_pct}%; background:#60a5fa;'></div>
 </div>
-
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{auto_display} / 100</div>
-
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{pm_display} / 100</div>
 </div>
-
             """, unsafe_allow_html=True)
 
-        # Add second row for remaining pillars
-        cols2 = st.columns(2)
+        # Row 2: Bottom 3 pillars (lower weights)
+        cols2 = st.columns(3)
         
         with cols2[0]:
-            quality_security = trow.get('Quality_Security', 0)
-            quality_pct = int(quality_security) if quality_security is not None and not pd.isna(quality_security) else 0
-            quality_display = f"{quality_security:.1f}" if quality_security is not None and not pd.isna(quality_security) else "N/A"
+            # Compliance (15%)
+            compliance = trow.get('Compliance_Score', 0)
+            comp_pct = int(compliance) if compliance is not None and not pd.isna(compliance) else 0
+            comp_display = f"{compliance:.1f}" if compliance is not None and not pd.isna(compliance) else "N/A"
             st.markdown(f"""<div style='margin-bottom:20px;'>
-<div style='color:white; font-weight:600; margin-bottom:8px;'>🔒 Quality & Security</div>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>📋 Compliance <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(15%)</span></div>
 <div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{quality_pct}%; background:#f97316;'></div>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{comp_pct}%; background:#ec4899;'></div>
 </div>
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{quality_display} / 100</div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{comp_display} / 100</div>
 </div>
             """, unsafe_allow_html=True)
         
         with cols2[1]:
-            ai_adoption = trow.get('AI_Adoption', 0)
-            ai_pct = int(ai_adoption) if ai_adoption is not None and not pd.isna(ai_adoption) else 0
-            ai_display = f"{ai_adoption:.1f}" if ai_adoption is not None and not pd.isna(ai_adoption) else "N/A"
+            # Quality & Security (10%)
+            quality_security = trow.get('Quality_Security_Score', 0)
+            qs_pct = int(quality_security) if quality_security is not None and not pd.isna(quality_security) else 0
+            qs_display = f"{quality_security:.1f}" if quality_security is not None and not pd.isna(quality_security) else "N/A"
             st.markdown(f"""<div style='margin-bottom:20px;'>
-<div style='color:white; font-weight:600; margin-bottom:8px;'>🤖 AI & Adoption</div>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>🔒 Quality & Security <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(10%)</span></div>
 <div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{ai_pct}%; background:#8b5cf6;'></div>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{qs_pct}%; background:#f97316;'></div>
 </div>
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{ai_display} / 100</div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{qs_display} / 100</div>
+</div>
+            """, unsafe_allow_html=True)
+        
+        with cols2[2]:
+            # Adoption (5%)
+            adoption = trow.get('Adoption_Score', 0)
+            adopt_pct = int(adoption) if adoption is not None and not pd.isna(adoption) else 0
+            adopt_display = f"{adoption:.1f}" if adoption is not None and not pd.isna(adoption) else "N/A"
+            st.markdown(f"""<div style='margin-bottom:20px;'>
+<div style='color:white; font-weight:600; margin-bottom:8px;'>🎯 Adoption <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(5%)</span></div>
+<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
+<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{adopt_pct}%; background:#8b5cf6;'></div>
+</div>
+<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{adopt_display} / 100</div>
 </div>
             """, unsafe_allow_html=True)
 
