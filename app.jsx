@@ -2440,65 +2440,37 @@ def compute_badges(df_row):
 
  
 
-    # NEW 6-PILLAR BADGE SYSTEM - Professional corporate badges
+    # 6-PILLAR BADGE SYSTEM - One badge per pillar (≥70 threshold)
     
     # 1. Release Velocity (30%)
     release_velocity = df_row.get('Release_Velocity_Score', 0)
-    if release_velocity is not None and release_velocity >= 85:
-        badges.append('Velocity Excellence')
-    elif release_velocity is not None and release_velocity >= 70:
-        badges.append('Delivery Leader')
+    if release_velocity is not None and release_velocity >= 70:
+        badges.append('Velocity Champion')
     
     # 2. Git Hygiene (20%)
     git_hygiene = df_row.get('Git_Hygiene_Score', 0)
-    if git_hygiene is not None and git_hygiene >= 85:
-        badges.append('Code Quality Champion')
-    elif git_hygiene is not None and git_hygiene >= 70:
-        badges.append('Clean Code')
+    if git_hygiene is not None and git_hygiene >= 70:
+        badges.append('Code Quality')
     
     # 3. Pipeline Maturity (20%)
     pipeline_maturity = df_row.get('Pipeline_Maturity_Score', 0)
-    if pipeline_maturity is not None and pipeline_maturity >= 85:
-        badges.append('Automation Excellence')
-    elif pipeline_maturity is not None and pipeline_maturity >= 70:
-        badges.append('Pipeline Pro')
+    if pipeline_maturity is not None and pipeline_maturity >= 70:
+        badges.append('Automation Pro')
     
     # 4. Compliance (15%)
     compliance = df_row.get('Compliance_Score', 0)
-    if compliance is not None and compliance >= 85:
-        badges.append('Governance Gold')
-    elif compliance is not None and compliance >= 70:
-        badges.append('Compliance Ready')
+    if compliance is not None and compliance >= 70:
+        badges.append('Governance')
     
     # 5. Quality & Security (10%)
     quality_security = df_row.get('Quality_Security_Score', 0)
-    if quality_security is not None and quality_security >= 85:
-        badges.append('Security Champion')
-    elif quality_security is not None and quality_security >= 70:
-        badges.append('Quality Assured')
+    if quality_security is not None and quality_security >= 70:
+        badges.append('Security Shield')
     
     # 6. Adoption (5%)
     adoption = df_row.get('Adoption_Score', 0)
-    if adoption is not None and adoption >= 85:
-        badges.append('Innovation Leader')
-    elif adoption is not None and adoption >= 70:
-        badges.append('Early Adopter')
-    
-    # Special Combined Badges
-    dpi = df_row.get('DPI', 0)
-    if dpi is not None and dpi >= 85:
-        badges.append('Elite Performer')
-    elif dpi is not None and dpi >= 75:
-        badges.append('High Achiever')
-    
-    # Balanced Excellence - All pillars above 70
-    if (release_velocity and release_velocity >= 70 and
-        git_hygiene and git_hygiene >= 70 and
-        pipeline_maturity and pipeline_maturity >= 70 and
-        compliance and compliance >= 70 and
-        quality_security and quality_security >= 70 and
-        adoption and adoption >= 70):
-        badges.append('Balanced Excellence')
+    if adoption is not None and adoption >= 70:
+        badges.append('Innovation')
 
  
 
@@ -3630,31 +3602,17 @@ with tab3:
 
 <div style='font-size:11px; line-height:1.6; color:rgba(255,255,255,0.9);'>
 
-<div style='margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1);'><strong style='color:#fbbf24;'>Excellence Tier (≥85)</strong></div>
+<div style='margin-bottom:8px;'><strong>🚀 Velocity Champion</strong> <span style='opacity:0.6; cursor:help;' title='High release frequency and fast delivery'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Release Velocity ≥ 70</span></div>
 
-<div style='margin-bottom:6px;'><strong>🚀 Velocity Excellence</strong> <span style='opacity:0.6;' title='High release frequency and deployment speed'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Release Velocity ≥ 85 • Frequent deployments & fast delivery</span></div>
+<div style='margin-bottom:8px;'><strong>🧹 Code Quality</strong> <span style='opacity:0.6; cursor:help;' title='Clean repositories with good hygiene practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Git Hygiene ≥ 70</span></div>
 
-<div style='margin-bottom:6px;'><strong>🧹 Code Quality Champion</strong> <span style='opacity:0.6;' title='Clean repositories with good hygiene practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Git Hygiene ≥ 85 • No stale branches, small PRs, timely reviews</span></div>
+<div style='margin-bottom:8px;'><strong>⚙️ Automation Pro</strong> <span style='opacity:0.6; cursor:help;' title='Mature CI/CD pipeline with automation'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Pipeline Maturity ≥ 70</span></div>
 
-<div style='margin-bottom:6px;'><strong>⚙️ Automation Excellence</strong> <span style='opacity:0.6;' title='Fully automated CI/CD pipeline'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Pipeline Maturity ≥ 85 • CI/CD, zero-touch deployment, rollback</span></div>
+<div style='margin-bottom:8px;'><strong>� Governance</strong> <span style='opacity:0.6; cursor:help;' title='Strong compliance and governance practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Compliance ≥ 70</span></div>
 
-<div style='margin-bottom:6px;'><strong>📋 Governance Gold</strong> <span style='opacity:0.6;' title='Strong compliance and governance practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Compliance ≥ 85 • Release docs, evidence, access reviews</span></div>
+<div style='margin-bottom:8px;'><strong>🛡️ Security Shield</strong> <span style='opacity:0.6; cursor:help;' title='Excellent security and quality standards'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Quality & Security ≥ 70</span></div>
 
-<div style='margin-bottom:6px;'><strong>🛡️ Security Champion</strong> <span style='opacity:0.6;' title='Excellent security and quality standards'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Quality & Security ≥ 85 • SAST/DAST, no priv access needed</span></div>
-
-<div style='margin-bottom:10px;'><strong>🎯 Innovation Leader</strong> <span style='opacity:0.6;' title='Early adopter of new tools and practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Adoption ≥ 85 • Copilot, API catalog, AI tools</span></div>
-
-<div style='margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1);'><strong style='color:#93c5fd;'>Professional Tier (≥70)</strong></div>
-
-<div style='margin-bottom:6px;'><strong>Delivery Leader</strong> <span style='opacity:0.6;' title='Good release velocity'>ℹ️</span> • <strong>Clean Code</strong> <span style='opacity:0.6;' title='Good git hygiene'>ℹ️</span></div>
-<div style='margin-bottom:6px;'><strong>Pipeline Pro</strong> <span style='opacity:0.6;' title='Good automation'>ℹ️</span> • <strong>Compliance Ready</strong> <span style='opacity:0.6;' title='Good governance'>ℹ️</span></div>
-<div style='margin-bottom:10px;'><strong>Quality Assured</strong> <span style='opacity:0.6;' title='Good security'>ℹ️</span> • <strong>Early Adopter</strong> <span style='opacity:0.6;' title='Good tool adoption'>ℹ️</span></div>
-
-<div style='margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1);'><strong style='color:#a78bfa;'>Special Badges</strong></div>
-
-<div style='margin-bottom:6px;'><strong>🏆 Elite Performer</strong> <span style='opacity:0.6;' title='Overall excellence across all areas'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>DPI ≥ 85 • Top-tier DevOps performance</span></div>
-
-<div style='margin-bottom:6px;'><strong>⚖️ Balanced Excellence</strong> <span style='opacity:0.6;' title='Strong performance across all 6 pillars'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>All 6 pillars ≥ 70 • Well-rounded team</span></div>
+<div style='margin-bottom:8px;'><strong>🎯 Innovation</strong> <span style='opacity:0.6; cursor:help;' title='Adopting new tools and practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Adoption ≥ 70</span></div>
 
 </div>
 
@@ -3666,27 +3624,22 @@ with tab3:
 
     with content_col:
 
-        # Group teams by badges they've earned - NEW 6-PILLAR BADGES
+        # Group teams by badges they've earned - 6 PILLAR BADGES
 
         badge_groups = {
-            # Tier 1 - Excellence badges (≥85)
-            'Velocity Excellence': [],
-            'Code Quality Champion': [],
-            'Automation Excellence': [],
-            'Governance Gold': [],
-            'Security Champion': [],
-            'Innovation Leader': [],
-            # Tier 2 - Professional badges (≥70)
-            'Delivery Leader': [],
-            'Clean Code': [],
-            'Pipeline Pro': [],
-            'Compliance Ready': [],
-            'Quality Assured': [],
-            'Early Adopter': [],
-            # Special Combined Badges
-            'Elite Performer': [],
-            'High Achiever': [],
-            'Balanced Excellence': []
+
+            'Velocity Champion': [],
+
+            'Code Quality': [],
+
+            'Automation Pro': [],
+
+            'Governance': [],
+
+            'Security Shield': [],
+
+            'Innovation': []
+
         }
 
        
@@ -3727,20 +3680,19 @@ with tab3:
 
        
 
-        # Top 6 badges to display in stats row (one per pillar - Excellence tier)
         badge_configs = [
 
-            ('Velocity Excellence', '🚀', 'rgba(6,182,212,0.15)', 'Release_Velocity_Score'),
+            ('Velocity Champion', '🚀', 'rgba(6,182,212,0.15)', 'Release_Velocity_Score'),
 
-            ('Code Quality Champion', '🧹', 'rgba(16,185,129,0.15)', 'Git_Hygiene_Score'),
+            ('Code Quality', '🧹', 'rgba(16,185,129,0.15)', 'Git_Hygiene_Score'),
 
-            ('Automation Excellence', '⚙️', 'rgba(96,165,250,0.15)', 'Pipeline_Maturity_Score'),
+            ('Automation Pro', '⚙️', 'rgba(96,165,250,0.15)', 'Pipeline_Maturity_Score'),
 
-            ('Governance Gold', '�', 'rgba(236,72,153,0.15)', 'Compliance_Score'),
+            ('Governance', '📋', 'rgba(236,72,153,0.15)', 'Compliance_Score'),
 
-            ('Security Champion', '🛡️', 'rgba(249,115,22,0.15)', 'Quality_Security_Score'),
+            ('Security Shield', '🛡️', 'rgba(249,115,22,0.15)', 'Quality_Security_Score'),
 
-            ('Innovation Leader', '🎯', 'rgba(139,92,246,0.15)', 'Adoption_Score')
+            ('Innovation', '🎯', 'rgba(139,92,246,0.15)', 'Adoption_Score')
 
         ]
 
@@ -3748,7 +3700,7 @@ with tab3:
 
         # Display badge statistics first
 
-        stat_cols = st.columns(5)
+        stat_cols = st.columns(6)
 
         for idx, (badge_name, icon, _, _) in enumerate(badge_configs):
 
