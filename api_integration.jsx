@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 import logging
 import urllib3
 
-# Disable SSL warnings
+# Disable SSL warnings when verify=False is used
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logging.basicConfig(level=logging.INFO)
@@ -288,7 +288,7 @@ class MetricsCollector:
             
             # Check 1: Stale branches (deduct 5 points per stale branch, max 3 checks)
             try:
-                branches_resp = requests.get(f"{base_url}/branches", headers=headers, timeout=10)
+                branches_resp = requests.get(f"{base_url}/branches", headers=headers, timeout=10, verify=False)
                 if branches_resp.status_code == 200:
                     branches = branches_resp.json()[:3]  # Check only first 3 branches
                     cutoff_date = datetime.now() - timedelta(days=30)
@@ -298,7 +298,7 @@ class MetricsCollector:
                             continue
                         
                         # Get last commit date
-                        commit_resp = requests.get(f"{base_url}/commits/{branch['commit']['sha']}", headers=headers, timeout=10)
+                        commit_resp = requests.get(f"{base_url}/commits/{branch['commit']['sha']}", headers=headers, timeout=10, verify=False)
                         if commit_resp.status_code == 200:
                             commit_date_str = commit_resp.json()['commit']['committer']['date']
                             commit_date = datetime.strptime(commit_date_str, '%Y-%m-%dT%H:%M:%SZ')
@@ -318,7 +318,7 @@ class MetricsCollector:
             
             # Check 2: Large/Unreviewed PRs (deduct 10 points per issue, max 2 checks)
             try:
-                prs_resp = requests.get(f"{base_url}/pulls?state=open&per_page=2", headers=headers, timeout=10)
+                prs_resp = requests.get(f"{base_url}/pulls?state=open&per_page=2", headers=headers, timeout=10, verify=False)
                 if prs_resp.status_code == 200:
                     prs = prs_resp.json()
                     
@@ -335,7 +335,7 @@ class MetricsCollector:
                         age_hours = (datetime.now() - created_at).total_seconds() / 3600
                         
                         if age_hours > 24:
-                            reviews_resp = requests.get(f"{base_url}/pulls/{pr['number']}/reviews", headers=headers, timeout=10)
+                            reviews_resp = requests.get(f"{base_url}/pulls/{pr['number']}/reviews", headers=headers, timeout=10, verify=False)
                             if reviews_resp.status_code == 200 and len(reviews_resp.json()) == 0:
                                 score -= 5
                                 warning_count += 1
