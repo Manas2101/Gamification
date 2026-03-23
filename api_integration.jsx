@@ -260,6 +260,13 @@ class MetricsCollector:
             critical_count = 0
             warning_count = 0
             
+            # Debug: Show token configuration (first/last 4 chars only for security)
+            if self.github_token:
+                token_preview = f"{self.github_token[:4]}...{self.github_token[-4:]}" if len(self.github_token) > 8 else "***"
+                logger.debug(f"GitHub token configured: {token_preview} (length: {len(self.github_token)})")
+            else:
+                logger.warning(f"GitHub token is empty or None")
+            
             # CORRECT GitHub API token format
             headers = {
                 'Authorization': f'token {self.github_token}',
@@ -310,7 +317,12 @@ class MetricsCollector:
                 elif branches_resp.status_code == 404:
                     logger.warning(f"Repository not found: {repo_full_name} - check git_org and repo_name in YAML")
                 elif branches_resp.status_code == 401:
-                    logger.error(f"GitHub authentication failed for {repo_full_name} - check GITHUB_TOKEN")
+                    logger.error(f"GitHub authentication failed (401) for {repo_full_name}")
+                    logger.error(f"  API URL: {base_url}/branches")
+                    logger.error(f"  Token present: {bool(self.github_token)}")
+                    logger.error(f"  Token length: {len(self.github_token) if self.github_token else 0}")
+                    logger.error(f"  Response: {branches_resp.text}")
+                    logger.error(f"  Headers sent: Authorization=token ***{self.github_token[-4:] if self.github_token and len(self.github_token) > 4 else '****'}")
                 else:
                     logger.warning(f"GitHub API error for {repo_full_name}: {branches_resp.status_code} - {branches_resp.text}")
             except Exception as e:
