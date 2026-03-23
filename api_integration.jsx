@@ -275,95 +275,111 @@ class MetricsCollector:
                 'X-GitHub-Api-Version': '2022-11-28'
             }
             
-            # Check primary repo only (to keep it fast)
-            primary_repo = app.primary_repo
-            if not primary_repo:
-                logger.warning(f"No primary repo found for {app.app_name} - returning default score 100")
-                return {'score': 100.0, 'critical': 0, 'warnings': 0}
+            # Check ALL repos for this app and calculate average score
+            logger.info(f"Checking Git hygiene for {app.app_name} ({len(app.repos)} repos)")
             
-            # Check if repo fields are actually filled
-            if not primary_repo.git_org or not primary_repo.repo_name:
-                logger.warning(f"Primary repo has empty git_org or repo_name for {app.app_name} - returning default score 100")
-                return {'score': 100.0, 'critical': 0, 'warnings': 0}
+            repo_scores = []
+            total_critical = 0
+            total_warnings = 0
             
-            # Use the repo's api_base_url property which automatically converts Git URL to API URL
-            base_url = primary_repo.api_base_url
-            repo_full_name = primary_repo.full_name
-            
-            logger.info(f"Checking Git hygiene for {app.app_name} repo: {repo_full_name}")
-            logger.debug(f"Using API URL: {base_url}")
-            if primary_repo.original_url:
-                logger.debug(f"Original Git URL: {primary_repo.original_url}")
-            
-            # Check 1: Stale branches (deduct 5 points per stale branch, max 3 checks)
-            try:
-                branches_resp = requests.get(f"{base_url}/branches", headers=headers, timeout=10, verify=False)
-                if branches_resp.status_code == 200:
-                    branches = branches_resp.json()[:3]  # Check only first 3 branches
-                    cutoff_date = datetime.now() - timedelta(days=30)
-                    
-                    for branch in branches:
-                        if branch['name'] in ['main', 'master']:
-                            continue
+            for repo in app.repos:
+                # Skip repos with empty fields
+                if not repo.git_org or not repo.repo_name:
+                    logger.debug(f"  Skipping repo with empty git_org or repo_name")
+                    continue
+                
+                # Use the repo's api_base_url property which automatically converts Git URL to API URL
+                base_url = repo.api_base_url
+                repo_full_name = repo.full_name
+                
+                logger.info(f"  Checking repo: {repo_full_name}")
+                logger.debug(f"    API URL: {base_url}")
+                if repo.original_url:
+                    logger.debug(f"    Git URL: {repo.original_url}")
+                
+                # Start with perfect score for this repo
+                repo_score = 100.0
+                repo_critical = 0
+                repo_warnings = 0
+                
+                # Check 1: Stale branches (deduct 5 points per stale branch, max 3 checks)
+                try:
+                    branches_resp = requests.get(f"{base_url}/branches", headers=headers, timeout=10, verify=False)
+                    if branches_resp.status_code == 200:
+                        branches = branches_resp.json()[:3]  # Check only first 3 branches
+                        cutoff_date = datetime.now() - timedelta(days=30)
                         
-                        # Get last commit date
-                        commit_resp = requests.get(f"{base_url}/commits/{branch['commit']['sha']}", headers=headers, timeout=10, verify=False)
-                        if commit_resp.status_code == 200:
-                            commit_date_str = commit_resp.json()['commit']['committer']['date']
-                            commit_date = datetime.strptime(commit_date_str, '%Y-%m-%dT%H:%M:%SZ')
+                        for branch in branches:
+                            if branch['name'] in ['main', 'master']:
+                                continue
                             
-                            if commit_date < cutoff_date:
-                                score -= 5
-                                warning_count += 1
-                                logger.info(f"  Found stale branch '{branch['name']}' (last commit: {commit_date_str})")
-                elif branches_resp.status_code == 404:
-                    logger.warning(f"Repository not found: {repo_full_name} - check git_org and repo_name in YAML")
-                elif branches_resp.status_code == 401:
-                    logger.error(f"GitHub authentication failed (401) for {repo_full_name}")
-                    logger.error(f"  API URL: {base_url}/branches")
-                    logger.error(f"  Token present: {bool(self.github_token)}")
-                    logger.error(f"  Token length: {len(self.github_token) if self.github_token else 0}")
-                    logger.error(f"  Response: {branches_resp.text}")
-                    logger.error(f"  Headers sent: Authorization=token ***{self.github_token[-4:] if self.github_token and len(self.github_token) > 4 else '****'}")
-                else:
-                    logger.warning(f"GitHub API error for {repo_full_name}: {branches_resp.status_code} - {branches_resp.text}")
-            except Exception as e:
-                logger.warning(f"Error checking branches for {repo_full_name}: {e}")
-            
-            # Check 2: Large/Unreviewed PRs (deduct 10 points per issue, max 2 checks)
-            try:
-                prs_resp = requests.get(f"{base_url}/pulls?state=open&per_page=2", headers=headers, timeout=10, verify=False)
-                if prs_resp.status_code == 200:
-                    prs = prs_resp.json()
-                    
-                    for pr in prs:
-                        # Check PR size
-                        pr_size = pr.get('additions', 0) + pr.get('deletions', 0)
-                        if pr_size > 500:
-                            score -= 10
-                            critical_count += 1
-                            logger.info(f"  Found large PR #{pr['number']} ({pr_size} lines changed)")
+                            # Get last commit date
+                            commit_resp = requests.get(f"{base_url}/commits/{branch['commit']['sha']}", headers=headers, timeout=10, verify=False)
+                            if commit_resp.status_code == 200:
+                                commit_date_str = commit_resp.json()['commit']['committer']['date']
+                                commit_date = datetime.strptime(commit_date_str, '%Y-%m-%dT%H:%M:%SZ')
+                                
+                                if commit_date < cutoff_date:
+                                    repo_score -= 5
+                                    repo_warnings += 1
+                                    logger.info(f"    Found stale branch '{branch['name']}' (last commit: {commit_date_str})")
+                    elif branches_resp.status_code == 404:
+                        logger.warning(f"    Repository not found: {repo_full_name} - check git_org and repo_name in YAML")
+                    elif branches_resp.status_code == 401:
+                        logger.error(f"    GitHub authentication failed (401) for {repo_full_name}")
+                        logger.error(f"      API URL: {base_url}/branches")
+                        logger.error(f"      Response: {branches_resp.text}")
+                    else:
+                        logger.warning(f"    GitHub API error for {repo_full_name}: {branches_resp.status_code}")
+                except Exception as e:
+                    logger.warning(f"    Error checking branches for {repo_full_name}: {e}")
+                
+                # Check 2: Large/Unreviewed PRs (deduct 10 points per issue, max 2 checks)
+                try:
+                    prs_resp = requests.get(f"{base_url}/pulls?state=open&per_page=2", headers=headers, timeout=10, verify=False)
+                    if prs_resp.status_code == 200:
+                        prs = prs_resp.json()
                         
-                        # Check review status
-                        created_at = datetime.strptime(pr['created_at'], '%Y-%m-%dT%H:%M:%SZ')
-                        age_hours = (datetime.now() - created_at).total_seconds() / 3600
-                        
-                        if age_hours > 24:
-                            reviews_resp = requests.get(f"{base_url}/pulls/{pr['number']}/reviews", headers=headers, timeout=10, verify=False)
-                            if reviews_resp.status_code == 200 and len(reviews_resp.json()) == 0:
-                                score -= 5
-                                warning_count += 1
-                                logger.info(f"  Found unreviewed PR #{pr['number']} (open for {age_hours:.1f} hours)")
-            except Exception as e:
-                logger.warning(f"Error checking PRs for {repo_full_name}: {e}")
+                        for pr in prs:
+                            # Check PR size
+                            pr_size = pr.get('additions', 0) + pr.get('deletions', 0)
+                            if pr_size > 500:
+                                repo_score -= 10
+                                repo_critical += 1
+                                logger.info(f"    Found large PR #{pr['number']} ({pr_size} lines changed)")
+                            
+                            # Check review status
+                            created_at = datetime.strptime(pr['created_at'], '%Y-%m-%dT%H:%M:%SZ')
+                            age_hours = (datetime.now() - created_at).total_seconds() / 3600
+                            
+                            if age_hours > 24:
+                                reviews_resp = requests.get(f"{base_url}/pulls/{pr['number']}/reviews", headers=headers, timeout=10, verify=False)
+                                if reviews_resp.status_code == 200 and len(reviews_resp.json()) == 0:
+                                    repo_score -= 5
+                                    repo_warnings += 1
+                                    logger.info(f"    Found unreviewed PR #{pr['number']} (open for {age_hours:.1f} hours)")
+                except Exception as e:
+                    logger.warning(f"    Error checking PRs for {repo_full_name}: {e}")
+                
+                # Store this repo's score
+                repo_score = max(0.0, repo_score)
+                repo_scores.append(repo_score)
+                total_critical += repo_critical
+                total_warnings += repo_warnings
+                logger.info(f"    Repo score: {repo_score:.1f}/100 (critical: {repo_critical}, warnings: {repo_warnings})")
             
-            final_score = max(0.0, score)
-            logger.info(f"  Final Git Hygiene score for {app.app_name}: {final_score:.1f}/100 (critical: {critical_count}, warnings: {warning_count})")
+            # Calculate average score across all repos
+            if repo_scores:
+                final_score = sum(repo_scores) / len(repo_scores)
+                logger.info(f"  Final Git Hygiene score for {app.app_name}: {final_score:.1f}/100 (avg of {len(repo_scores)} repos, total critical: {total_critical}, total warnings: {total_warnings})")
+            else:
+                final_score = 100.0
+                logger.warning(f"  No valid repos checked for {app.app_name} - returning default score 100")
             
             return {
                 'score': final_score,
-                'critical': critical_count,
-                'warnings': warning_count
+                'critical': total_critical,
+                'warnings': total_warnings
             }
             
         except Exception as e:
