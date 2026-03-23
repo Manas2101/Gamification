@@ -51,6 +51,7 @@ class AppEntry:
     ci_automated: bool = False
     cd_automated: bool = False
     standard_pipeline_adopted: bool = False
+    pipeline_standard: str = "v1"  # "v1" or "v2"
     git_hygiene_adopted: bool = False
     cr_auto_creation: bool = False
     zero_touch_deployment: bool = False
@@ -75,6 +76,9 @@ class AppEntry:
     apis_published: bool = False
     catalog_url: str = ""
     api_count: int = 0
+    
+    # Quality & Security
+    sonarqube_project: str = ""
     
     # Interview notes
     improvement_action_1: str = ""
