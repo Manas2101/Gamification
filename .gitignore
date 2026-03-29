@@ -1,9 +1,12 @@
 # Environment variables
 .env
+.env.local
 
 # Database
 *.db
 *.db-journal
+*.sqlite
+*.sqlite3
 
 # Python
 __pycache__/
@@ -17,16 +20,47 @@ ENV/
 build/
 dist/
 *.egg-info/
+.eggs/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
 Thumbs.db
+*.bak
 
 # Logs
 *.log
+logs/
+
+# Generated files
+generated_docs/
+*.csv
+reports/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Documentation builds
+docs/_build/
+site/

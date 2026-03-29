@@ -144,10 +144,16 @@ schedule:
 
  
 
+# Documentation Generation
+docs_generation:
+  enabled: false                    # Set to true to enable automatic docs generation during hygiene checks
+  llm_gateway_url: "[FILL THIS] e.g. https://your-llm-gateway.com/v1/chat/completions"
+  llm_model: "Qwen3-32B-AWQ"       # LLM model to use for docs generation
+  token_env: "AM_TOKEN"             # Environment variable for LLM gateway token
+  output_dir: "generated_docs"      # Directory to save generated documentation
+  skip_if_exists: true              # Skip repos that already have README and docs/ folder
+
 # Output
-
 reporting:
-
   output_dir: "reports"
-
   leaderboard_top_n: 70
