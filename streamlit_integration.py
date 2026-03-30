@@ -43,6 +43,14 @@ class DashboardDataLoader:
         except Exception as e:
             logger.error(f"Error loading leaderboard: {e}")
             return pd.DataFrame()
+    
+    def load_all_history(self) -> pd.DataFrame:
+        """Load all historical metrics for all pods"""
+        try:
+            return self.db.get_all_history()
+        except Exception as e:
+            logger.error(f"Error loading history: {e}")
+            return pd.DataFrame()
 
 
 def load_dashboard_data():
@@ -50,10 +58,14 @@ def load_dashboard_data():
     Load all dashboard data - main entry point for app.py
     
     Returns:
-        DataFrame with latest metrics for all pods
+        Tuple of (latest_df, history_df):
+            - latest_df: DataFrame with latest metrics for all pods
+            - history_df: DataFrame with all historical metrics
     """
     loader = DashboardDataLoader()
-    return loader.load_latest_data()
+    latest_df = loader.load_latest_data()
+    history_df = loader.load_all_history()
+    return latest_df, history_df
 
 
 def show_data_refresh_section():

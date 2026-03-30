@@ -407,6 +407,53 @@ class Database:
         conn.close()
         logger.info(f"Deleted pod: {pod_id}")
     
+    def get_all_history(self) -> pd.DataFrame:
+        """
+        Get all historical metrics for all pods.
+        
+        Returns:
+            DataFrame with all historical metrics.
+        """
+        conn = self._get_connection()
+        
+        query = '''
+            SELECT 
+                p.pod_id,
+                p.pod_name AS Team,
+                p.stack AS Stack,
+                p.business_unit AS "Business Unit",
+                p.tier AS Tier,
+                m.week_date AS Week,
+                m.week_start AS Week_Start,
+                m.mttr AS MTTR,
+                m.lttd AS LTDD,
+                m.rf AS RF,
+                m.cfr AS CFR,
+                m.git_hygiene_score,
+                m.release_velocity_score AS Release_Velocity_Score,
+                m.git_hygiene_pillar_score AS Git_Hygiene_Score,
+                m.pipeline_maturity_score AS Pipeline_Maturity_Score,
+                m.compliance_score AS Compliance_Score,
+                m.quality_security_score AS Quality_Security_Score,
+                m.adoption_score AS Adoption_Score,
+                m.dpi AS DPI
+            FROM pods p
+            JOIN weekly_metrics m ON p.pod_id = m.pod_id
+            ORDER BY m.week_date DESC, m.dpi DESC
+        '''
+        
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        
+        # Ensure Week_Start is datetime
+        if 'Week_Start' in df.columns:
+            df['Week_Start'] = pd.to_datetime(df['Week_Start'])
+        elif 'Week' in df.columns:
+            df['Week_Start'] = pd.to_datetime(df['Week']).dt.to_period('W').apply(lambda r: r.start_time)
+        
+        logger.debug(f"Retrieved {len(df)} historical records")
+        return df
+    
     def get_statistics(self) -> Dict:
         """
         Get database statistics.
