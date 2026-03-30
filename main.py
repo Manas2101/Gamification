@@ -137,12 +137,18 @@ def run_weekly_refresh(config: Config):
                 total_critical = 0
                 total_warnings = 0
                 
+                logger.info(f"  Checking hygiene for {len(app.repos)} repositories")
                 for repo in app.repos:
                     try:
-                        hygiene = github_client.calculate_hygiene_score(repo.full_name)
+                        # Pass full_url for enterprise GitHub support
+                        hygiene = github_client.calculate_hygiene_score(
+                            repo.full_name, 
+                            full_url=repo.full_url
+                        )
                         total_hygiene += hygiene['score']
                         total_critical += hygiene['critical']
                         total_warnings += hygiene['warnings']
+                        logger.info(f"    {repo.full_name}: score={hygiene['score']}")
                     except Exception as e:
                         logger.warning(f"  Hygiene check failed for {repo.full_name}: {e}")
                 

@@ -37,10 +37,12 @@ class RepoInfo:
     Attributes:
         git_org: GitHub organization name
         repo_name: Repository name
+        full_url: Original full URL (if provided)
         full_name: Full repository path (org/repo)
     """
     git_org: str
     repo_name: str
+    full_url: str = ""
     
     @property
     def full_name(self) -> str:
@@ -113,12 +115,56 @@ class RegistryLoader:
         self.registry_dir = os.path.abspath(registry_dir)
         logger.info(f"Registry loader initialized: {self.registry_dir}")
     
+    def _parse_repo_url(self, url: str) -> Optional[RepoInfo]:
+        """
+        Parse a full GitHub URL into RepoInfo.
+        
+        Handles URLs like:
+            - https://alm-github.systems.uk.hsbc/GCDU-Repository/repo-name.git
+            - https://github.com/org/repo
+            - git@github.com:org/repo.git
+        
+        Args:
+            url: Full repository URL.
+            
+        Returns:
+            RepoInfo object or None if parsing fails.
+        """
+        import re
+        
+        # Remove .git suffix if present
+        url = url.rstrip('.git')
+        
+        # Try HTTPS URL pattern: https://host/org/repo
+        https_match = re.match(r'https?://[^/]+/([^/]+)/([^/]+)/?$', url)
+        if https_match:
+            git_org = https_match.group(1)
+            repo_name = https_match.group(2)
+            logger.debug(f"Parsed URL {url} -> org={git_org}, repo={repo_name}")
+            return RepoInfo(git_org=git_org, repo_name=repo_name, full_url=url)
+        
+        # Try SSH URL pattern: git@host:org/repo
+        ssh_match = re.match(r'git@[^:]+:([^/]+)/([^/]+)/?$', url)
+        if ssh_match:
+            git_org = ssh_match.group(1)
+            repo_name = ssh_match.group(2)
+            logger.debug(f"Parsed SSH URL {url} -> org={git_org}, repo={repo_name}")
+            return RepoInfo(git_org=git_org, repo_name=repo_name, full_url=url)
+        
+        logger.warning(f"Could not parse repo URL: {url}")
+        return None
+    
     def _parse_repos(self, repos_data: List) -> List[RepoInfo]:
         """
         Parse repository list from YAML data.
         
+        Supports multiple formats:
+        1. Old format: [{git_org: "org", repo_name: "repo"}]
+        2. New format: [{git_org: "org", repos: ["url1", "url2"]}]
+        3. Simple URL list: ["url1", "url2"]
+        
         Args:
-            repos_data: List of repo dictionaries from YAML.
+            repos_data: List of repo dictionaries or URLs from YAML.
             
         Returns:
             List of RepoInfo objects.
@@ -128,17 +174,37 @@ class RegistryLoader:
         if not repos_data:
             return repos
         
-        for repo in repos_data:
-            if isinstance(repo, dict):
-                git_org = repo.get('git_org', '')
-                repo_name = repo.get('repo_name', '')
+        for item in repos_data:
+            # Handle string URLs directly
+            if isinstance(item, str):
+                repo_info = self._parse_repo_url(item)
+                if repo_info:
+                    repos.append(repo_info)
+                continue
+            
+            if isinstance(item, dict):
+                # Check for nested repos array (new format)
+                nested_repos = item.get('repos', [])
+                if nested_repos and isinstance(nested_repos, list):
+                    for url in nested_repos:
+                        if isinstance(url, str):
+                            repo_info = self._parse_repo_url(url)
+                            if repo_info:
+                                repos.append(repo_info)
+                    continue
+                
+                # Old format: git_org + repo_name
+                git_org = item.get('git_org', '')
+                repo_name = item.get('repo_name', '')
                 
                 if git_org and repo_name:
                     repos.append(RepoInfo(
                         git_org=git_org,
-                        repo_name=repo_name
+                        repo_name=repo_name,
+                        full_url=''
                     ))
         
+        logger.info(f"Parsed {len(repos)} repositories")
         return repos
     
     def _parse_app_entry(self, data: Dict, file_path: str) -> Optional[AppEntry]:

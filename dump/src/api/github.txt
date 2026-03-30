@@ -40,8 +40,10 @@ class GitHubClient:
     Provides methods for repository analysis, hygiene scoring, and
     evidence collection for documentation generation.
     
+    Supports both public GitHub and enterprise GitHub instances.
+    
     Attributes:
-        BASE_URL (str): GitHub API base URL
+        DEFAULT_BASE_URL (str): Default GitHub API base URL
         STALE_BRANCH_DAYS (int): Days after which a branch is considered stale
         LARGE_PR_LINES (int): Line count threshold for large PRs
         UNREVIEWED_PR_HOURS (int): Hours threshold for unreviewed PRs
@@ -52,7 +54,8 @@ class GitHubClient:
     """
     
     # Configuration Constants
-    BASE_URL = "https://api.github.com"
+    DEFAULT_BASE_URL = "https://api.github.com"
+    ENTERPRISE_API_SUFFIX = "/api/v3"  # Enterprise GitHub API path
     STALE_BRANCH_DAYS = 30
     LARGE_PR_LINES = 500
     UNREVIEWED_PR_HOURS = 24
@@ -62,13 +65,15 @@ class GitHubClient:
     PENALTY_LARGE_PR = 10
     PENALTY_UNREVIEWED_PR = 15
     
-    def __init__(self, token: str):
+    def __init__(self, token: str, base_url: str = None):
         """
         Initialize GitHub API client.
         
         Args:
             token: GitHub personal access token or app token.
                   Requires repo read permissions.
+            base_url: Optional base URL for enterprise GitHub.
+                     e.g., "https://alm-github.systems.uk.hsbc"
         
         Raises:
             ValueError: If token is empty or None.
@@ -77,18 +82,45 @@ class GitHubClient:
             raise ValueError("GitHub token is required")
             
         self.token = token
+        self.base_url = base_url or self.DEFAULT_BASE_URL
         self.headers = {
             'Authorization': f'token {token}',
             'Accept': 'application/vnd.github.v3+json',
             'User-Agent': 'dpi-gamification-hygiene-checker',
             'X-GitHub-Api-Version': '2022-11-28'
         }
-        logger.info("GitHub client initialized successfully")
+        logger.info(f"GitHub client initialized with base URL: {self.base_url}")
+    
+    def _get_api_url(self, repo_full_name: str = None, full_url: str = None) -> str:
+        """
+        Determine the correct API base URL for a repository.
+        
+        Args:
+            repo_full_name: Full repository name (org/repo).
+            full_url: Original full URL from registry (if available).
+            
+        Returns:
+            API base URL to use for requests.
+        """
+        # If we have a full URL, extract the host and build API URL
+        if full_url:
+            import re
+            match = re.match(r'https?://([^/]+)', full_url)
+            if match:
+                host = match.group(1)
+                # Check if it's enterprise GitHub (not github.com)
+                if 'github.com' not in host:
+                    api_url = f"https://{host}{self.ENTERPRISE_API_SUFFIX}"
+                    logger.debug(f"Using enterprise API URL: {api_url}")
+                    return api_url
+        
+        return self.base_url
     
     def _make_request(
         self, 
         endpoint: str, 
-        params: Dict = None
+        params: Dict = None,
+        api_base: str = None
     ) -> Tuple[int, Dict]:
         """
         Make authenticated API request with error handling.
@@ -96,12 +128,15 @@ class GitHubClient:
         Args:
             endpoint: API endpoint path (without base URL).
             params: Optional query parameters.
+            api_base: Optional API base URL (for enterprise GitHub).
             
         Returns:
             Tuple of (status_code, response_data).
         """
+        base = api_base or self.base_url
         try:
-            url = f"{self.BASE_URL}/{endpoint}"
+            url = f"{base}/{endpoint}"
+            logger.debug(f"GitHub API request: GET {url}")
             response = requests.get(
                 url,
                 headers=self.headers,
@@ -109,10 +144,11 @@ class GitHubClient:
                 verify=False,
                 timeout=30
             )
+            logger.debug(f"GitHub API response: {response.status_code}")
             return response.status_code, response.json() if response.ok else {}
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"GitHub API request failed: {e}")
+            logger.error(f"GitHub API request failed for {url}: {e}")
             return 500, {}
     
     def get_repository_info(self, repo_full_name: str) -> Optional[Dict]:
@@ -133,44 +169,50 @@ class GitHubClient:
         logger.warning(f"Could not fetch repo info for {repo_full_name}: {status}")
         return None
     
-    def get_branches(self, repo_full_name: str) -> List[Dict]:
+    def get_branches(self, repo_full_name: str, api_base: str = None) -> List[Dict]:
         """
         Get all branches for a repository.
         
         Args:
             repo_full_name: Full repository name (org/repo).
+            api_base: Optional API base URL for enterprise GitHub.
             
         Returns:
             List of branch dictionaries.
         """
         status, data = self._make_request(
             f"repos/{repo_full_name}/branches",
-            params={'per_page': 100}
+            params={'per_page': 100},
+            api_base=api_base
         )
         
         if status == 200 and isinstance(data, list):
             return data
         
+        logger.warning(f"[HYGIENE] Failed to get branches for {repo_full_name}: status={status}")
         return []
     
-    def get_open_pull_requests(self, repo_full_name: str) -> List[Dict]:
+    def get_open_pull_requests(self, repo_full_name: str, api_base: str = None) -> List[Dict]:
         """
         Get all open pull requests for a repository.
         
         Args:
             repo_full_name: Full repository name (org/repo).
+            api_base: Optional API base URL for enterprise GitHub.
             
         Returns:
             List of PR dictionaries.
         """
         status, data = self._make_request(
             f"repos/{repo_full_name}/pulls",
-            params={'state': 'open', 'per_page': 100}
+            params={'state': 'open', 'per_page': 100},
+            api_base=api_base
         )
         
         if status == 200 and isinstance(data, list):
             return data
         
+        logger.warning(f"[HYGIENE] Failed to get PRs for {repo_full_name}: status={status}")
         return []
     
     def get_repository_tree(
@@ -233,7 +275,7 @@ class GitHubClient:
         
         return None
     
-    def count_stale_branches(self, repo_full_name: str) -> int:
+    def count_stale_branches(self, repo_full_name: str, api_base: str = None) -> int:
         """
         Count branches with no recent commits.
         
@@ -242,20 +284,25 @@ class GitHubClient:
         
         Args:
             repo_full_name: Full repository name (org/repo).
+            api_base: Optional API base URL for enterprise GitHub.
             
         Returns:
             Count of stale branches.
         """
-        branches = self.get_branches(repo_full_name)
+        logger.info(f"[HYGIENE] Counting stale branches for {repo_full_name}")
+        branches = self.get_branches(repo_full_name, api_base)
         stale_count = 0
         cutoff_date = datetime.now() - timedelta(days=self.STALE_BRANCH_DAYS)
+        
+        logger.info(f"[HYGIENE] Found {len(branches)} total branches in {repo_full_name}")
         
         for branch in branches:
             # Get last commit date for branch
             branch_name = branch.get('name', '')
             status, commit_data = self._make_request(
                 f"repos/{repo_full_name}/commits",
-                params={'sha': branch_name, 'per_page': 1}
+                params={'sha': branch_name, 'per_page': 1},
+                api_base=api_base
             )
             
             if status == 200 and commit_data:
@@ -265,12 +312,14 @@ class GitHubClient:
                         commit_date = datetime.fromisoformat(commit_date_str.replace('Z', '+00:00'))
                         if commit_date.replace(tzinfo=None) < cutoff_date:
                             stale_count += 1
+                            logger.debug(f"[HYGIENE] Stale branch: {branch_name} (last commit: {commit_date_str})")
                     except ValueError:
                         pass
         
+        logger.info(f"[HYGIENE] Stale branches in {repo_full_name}: {stale_count}")
         return stale_count
     
-    def count_large_prs(self, repo_full_name: str) -> int:
+    def count_large_prs(self, repo_full_name: str, api_base: str = None) -> int:
         """
         Count PRs exceeding the line change threshold.
         
@@ -278,12 +327,16 @@ class GitHubClient:
         
         Args:
             repo_full_name: Full repository name (org/repo).
+            api_base: Optional API base URL for enterprise GitHub.
             
         Returns:
             Count of large PRs.
         """
-        prs = self.get_open_pull_requests(repo_full_name)
+        logger.info(f"[HYGIENE] Counting large PRs for {repo_full_name}")
+        prs = self.get_open_pull_requests(repo_full_name, api_base)
         large_count = 0
+        
+        logger.info(f"[HYGIENE] Found {len(prs)} open PRs in {repo_full_name}")
         
         for pr in prs:
             additions = pr.get('additions', 0) or 0
@@ -292,10 +345,12 @@ class GitHubClient:
             
             if total_changes > self.LARGE_PR_LINES:
                 large_count += 1
+                logger.debug(f"[HYGIENE] Large PR #{pr.get('number')}: {total_changes} lines changed")
         
+        logger.info(f"[HYGIENE] Large PRs in {repo_full_name}: {large_count}")
         return large_count
     
-    def count_unreviewed_prs(self, repo_full_name: str) -> int:
+    def count_unreviewed_prs(self, repo_full_name: str, api_base: str = None) -> int:
         """
         Count PRs without reviews past the threshold.
         
@@ -303,11 +358,13 @@ class GitHubClient:
         
         Args:
             repo_full_name: Full repository name (org/repo).
+            api_base: Optional API base URL for enterprise GitHub.
             
         Returns:
             Count of unreviewed PRs.
         """
-        prs = self.get_open_pull_requests(repo_full_name)
+        logger.info(f"[HYGIENE] Counting unreviewed PRs for {repo_full_name}")
+        prs = self.get_open_pull_requests(repo_full_name, api_base)
         unreviewed_count = 0
         cutoff_time = datetime.now() - timedelta(hours=self.UNREVIEWED_PR_HOURS)
         
@@ -320,16 +377,19 @@ class GitHubClient:
                         # Check if PR has reviews
                         pr_number = pr.get('number')
                         status, reviews = self._make_request(
-                            f"repos/{repo_full_name}/pulls/{pr_number}/reviews"
+                            f"repos/{repo_full_name}/pulls/{pr_number}/reviews",
+                            api_base=api_base
                         )
                         if status == 200 and len(reviews) == 0:
                             unreviewed_count += 1
+                            logger.debug(f"[HYGIENE] Unreviewed PR #{pr_number} (created: {created_at_str})")
                 except ValueError:
                     pass
         
+        logger.info(f"[HYGIENE] Unreviewed PRs in {repo_full_name}: {unreviewed_count}")
         return unreviewed_count
     
-    def calculate_hygiene_score(self, repo_full_name: str) -> Dict:
+    def calculate_hygiene_score(self, repo_full_name: str, full_url: str = None) -> Dict:
         """
         Calculate overall Git hygiene score for a repository.
         
@@ -340,6 +400,7 @@ class GitHubClient:
         
         Args:
             repo_full_name: Full repository name (org/repo).
+            full_url: Optional full URL from registry (for enterprise GitHub).
             
         Returns:
             Dictionary with score and violation counts:
@@ -350,12 +411,20 @@ class GitHubClient:
                 'details': dict      # Breakdown of issues
             }
         """
-        logger.info(f"Calculating hygiene score for: {repo_full_name}")
+        logger.info("=" * 60)
+        logger.info(f"[HYGIENE] Starting hygiene score calculation")
+        logger.info(f"[HYGIENE] Repository: {repo_full_name}")
+        if full_url:
+            logger.info(f"[HYGIENE] Full URL: {full_url}")
+        
+        # Determine API base URL (handles enterprise GitHub)
+        api_base = self._get_api_url(repo_full_name, full_url)
+        logger.info(f"[HYGIENE] Using API base: {api_base}")
         
         # Count violations
-        stale_branches = self.count_stale_branches(repo_full_name)
-        large_prs = self.count_large_prs(repo_full_name)
-        unreviewed_prs = self.count_unreviewed_prs(repo_full_name)
+        stale_branches = self.count_stale_branches(repo_full_name, api_base)
+        large_prs = self.count_large_prs(repo_full_name, api_base)
+        unreviewed_prs = self.count_unreviewed_prs(repo_full_name, api_base)
         
         # Calculate score
         score = 100.0
@@ -381,7 +450,13 @@ class GitHubClient:
             }
         }
         
-        logger.info(f"Hygiene score for {repo_full_name}: {score}")
+        logger.info(f"[HYGIENE] === SCORE SUMMARY for {repo_full_name} ===")
+        logger.info(f"[HYGIENE]   Stale branches: {stale_branches} (penalty: -{stale_branches * self.PENALTY_STALE_BRANCH})")
+        logger.info(f"[HYGIENE]   Large PRs: {large_prs} (penalty: -{large_prs * self.PENALTY_LARGE_PR})")
+        logger.info(f"[HYGIENE]   Unreviewed PRs: {unreviewed_prs} (penalty: -{unreviewed_prs * self.PENALTY_UNREVIEWED_PR})")
+        logger.info(f"[HYGIENE]   FINAL SCORE: {score}")
+        logger.info("=" * 60)
+        
         return result
     
     def analyze_docs_state(self, tree_paths: List[str]) -> Dict:
