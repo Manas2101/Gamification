@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""
+Database Test File
+==================
+
+This script helps you:
+1. Populate the database with sample/test data
+2. Inspect what's currently in the database
+3. Clear the database for fresh start
+
+Usage:
+    python tests/test_database.py populate   # Add sample data
+    python tests/test_database.py inspect    # View current data
+    python tests/test_database.py clear      # Clear all data
+    python tests/test_database.py schema     # Show table schemas
+"""
+
+import sys
+import os
+
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.data.database import Database
+import random
+from datetime import datetime, timedelta
+import pandas as pd
+
+
+def show_schema():
+    """Display database table schemas."""
+    db = Database()
+    conn = db._get_connection()
+    cursor = conn.cursor()
+    
+    print("\n" + "=" * 60)
+    print("DATABASE SCHEMA")
+    print("=" * 60)
+    
+    # Get all tables
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    tables = cursor.fetchall()
+    
+    for (table_name,) in tables:
+        print(f"\n📋 Table: {table_name}")
+        print("-" * 40)
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        columns = cursor.fetchall()
+        for col in columns:
+            col_id, name, col_type, not_null, default, pk = col
+            pk_marker = " 🔑 PRIMARY KEY" if pk else ""
+            null_marker = " NOT NULL" if not_null else ""
+            print(f"  {name}: {col_type}{null_marker}{pk_marker}")
+    
+    conn.close()
+
+
+def inspect_database():
+    """Show current database contents."""
+    db = Database()
+    
+    print("\n" + "=" * 60)
+    print("DATABASE CONTENTS")
+    print("=" * 60)
+    
+    # Get statistics
+    stats = db.get_statistics()
+    print(f"\n📊 Statistics:")
+    print(f"   Total pods: {stats['total_pods']}")
+    print(f"   Total metrics records: {stats['total_metrics_records']}")
+    print(f"   Date range: {stats['earliest_week']} to {stats['latest_week']}")
+    print(f"   Average DPI: {stats['average_dpi']}")
+    
+    # Show pods
+    print("\n📦 Pods Table:")
+    print("-" * 40)
+    pods_df = db.get_all_pods()
+    if pods_df.empty:
+        print("   (empty)")
+    else:
+        print(pods_df.to_string(index=False))
+    
+    # Show latest metrics
+    print("\n📈 Latest Metrics:")
+    print("-" * 40)
+    latest_df = db.get_latest_metrics()
+    if latest_df.empty:
+        print("   (empty)")
+    else:
+        # Select key columns for display
+        display_cols = ['Team', 'Stack', 'Tier', 'RF', 'LTDD', 'DPI']
+        available_cols = [c for c in display_cols if c in latest_df.columns]
+        print(latest_df[available_cols].to_string(index=False))
+    
+    # Show all history summary
+    print("\n📜 Historical Data Summary:")
+    print("-" * 40)
+    history_df = db.get_all_history()
+    if history_df.empty:
+        print("   (empty)")
+    else:
+        print(f"   Total records: {len(history_df)}")
+        print(f"   Unique teams: {history_df['Team'].nunique()}")
+        print(f"   Weeks covered: {history_df['Week'].nunique()}")
+        print(f"\n   Weeks in database:")
+        for week in sorted(history_df['Week'].unique(), reverse=True):
+            count = len(history_df[history_df['Week'] == week])
+            print(f"      {week}: {count} records")
+
+
+def clear_database():
+    """Clear all data from database."""
+    db = Database()
+    conn = db._get_connection()
+    cursor = conn.cursor()
+    
+    print("\n⚠️  Clearing database...")
+    cursor.execute("DELETE FROM weekly_metrics")
+    cursor.execute("DELETE FROM pods")
+    conn.commit()
+    conn.close()
+    
+    print("✅ Database cleared!")
+
+
+def populate_sample_data():
+    """Populate database with realistic sample data."""
+    db = Database()
+    
+    print("\n🔄 Populating database with sample data...")
+    
+    # Sample teams with varied characteristics
+    teams = [
+        # (pod_id, pod_name, stack, business_unit, tier)
+        ("app_001", "Payments API", "java-spring", "Payments", "Tier 1"),
+        ("app_002", "Customer Portal", "node", "Digital", "Tier 1"),
+        ("app_003", "Risk Engine", "python", "Risk", "Tier 1"),
+        ("app_004", "Reporting Service", "dotnet", "Finance", "Tier 2"),
+        ("app_005", "Auth Gateway", "java-spring", "Security", "Tier 1"),
+        ("app_006", "Notification Hub", "node", "Digital", "Tier 2"),
+        ("app_007", "Data Pipeline", "python", "Analytics", "Tier 2"),
+        ("app_008", "Mobile Backend", "java-spring", "Digital", "Tier 1"),
+        ("app_009", "Legacy Adapter", "dotnet", "Integration", "Tier 3"),
+        ("app_010", "Config Service", "node", "Platform", "Tier 2"),
+    ]
+    
+    # Insert pods
+    for pod_id, pod_name, stack, bu, tier in teams:
+        db.upsert_pod(pod_id, pod_name, stack, bu, tier)
+        print(f"   ✓ Added pod: {pod_name}")
+    
+    # Generate 5 weeks of historical data
+    today = datetime.now()
+    weeks = []
+    for i in range(5):
+        week_start = today - timedelta(weeks=i)
+        week_date = week_start.strftime("%Y-%m-%d")
+        weeks.append(week_date)
+    
+    print(f"\n   Generating metrics for {len(weeks)} weeks...")
+    
+    for week_date in weeks:
+        for pod_id, pod_name, stack, bu, tier in teams:
+            # Generate realistic metrics based on tier
+            tier_multiplier = 1.2 if tier == "Tier 1" else 1.0 if tier == "Tier 2" else 0.8
+            
+            # DORA Metrics
+            rf = int(random.randint(50, 300) * tier_multiplier)
+            lttd = round(random.uniform(1.0, 10.0) / tier_multiplier, 1)
+            cfr = round(random.uniform(0.02, 0.20) / tier_multiplier, 2)
+            mttr = round(random.uniform(0.5, 3.0) / tier_multiplier, 1)
+            
+            # Git Hygiene (0-100)
+            git_hygiene = round(random.uniform(60, 98) * tier_multiplier, 1)
+            git_hygiene = min(100, git_hygiene)
+            
+            # 6-Pillar Scores (0-100)
+            release_velocity = round(random.uniform(50, 95) * tier_multiplier, 1)
+            release_velocity = min(100, release_velocity)
+            
+            git_hygiene_pillar = git_hygiene
+            
+            pipeline_maturity = round(random.uniform(55, 90) * tier_multiplier, 1)
+            pipeline_maturity = min(100, pipeline_maturity)
+            
+            compliance = round(random.uniform(65, 100) * tier_multiplier, 1)
+            compliance = min(100, compliance)
+            
+            quality_security = round(random.uniform(60, 95) * tier_multiplier, 1)
+            quality_security = min(100, quality_security)
+            
+            adoption = round(random.uniform(40, 85) * tier_multiplier, 1)
+            adoption = min(100, adoption)
+            
+            # Calculate DPI (weighted average of 6 pillars)
+            dpi = round(
+                release_velocity * 0.30 +
+                git_hygiene_pillar * 0.20 +
+                pipeline_maturity * 0.20 +
+                compliance * 0.15 +
+                quality_security * 0.10 +
+                adoption * 0.05,
+                1
+            )
+            
+            # Insert metrics
+            db.insert_weekly_metrics({
+                'pod_id': pod_id,
+                'week_date': week_date,
+                'mttr': mttr,
+                'lttd': lttd,
+                'rf': rf,
+                'cfr': cfr,
+                'git_hygiene_score': git_hygiene,
+                'Release_Velocity_Score': release_velocity,
+                'Git_Hygiene_Score': git_hygiene_pillar,
+                'Pipeline_Maturity_Score': pipeline_maturity,
+                'Compliance_Score': compliance,
+                'Quality_Security_Score': quality_security,
+                'Adoption_Score': adoption,
+                'dpi': dpi
+            })
+    
+    print(f"\n✅ Database populated!")
+    print(f"   Teams: {len(teams)}")
+    print(f"   Weeks: {len(weeks)}")
+    print(f"   Total records: {len(teams) * len(weeks)}")
+    
+    # Show summary
+    stats = db.get_statistics()
+    print(f"\n📊 Database Statistics:")
+    print(f"   Average DPI: {stats['average_dpi']}")
+
+
+def main():
+    """Main entry point."""
+    if len(sys.argv) < 2:
+        print(__doc__)
+        print("\nCurrent database status:")
+        inspect_database()
+        return
+    
+    command = sys.argv[1].lower()
+    
+    if command == 'populate':
+        populate_sample_data()
+    elif command == 'inspect':
+        inspect_database()
+    elif command == 'clear':
+        confirm = input("Are you sure you want to clear all data? (yes/no): ")
+        if confirm.lower() == 'yes':
+            clear_database()
+        else:
+            print("Cancelled.")
+    elif command == 'schema':
+        show_schema()
+    else:
+        print(f"Unknown command: {command}")
+        print(__doc__)
+
+
+if __name__ == "__main__":
+    main()

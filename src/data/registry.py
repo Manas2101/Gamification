@@ -165,13 +165,13 @@ class RegistryLoader:
             # Parse repositories
             repos = self._parse_repos(data.get('repos', []))
             
-            # Extract configuration flags
+            # Extract configuration flags (map YAML field names to internal names)
             config = {
-                'ci': data.get('ci', False),
-                'cd': data.get('cd', False),
-                'rollback': data.get('rollback', False),
+                'ci': data.get('ci_automated', data.get('ci', False)),
+                'cd': data.get('cd_automated', data.get('cd', False)),
+                'rollback': data.get('automated_rollback', data.get('rollback', False)),
                 'self_service': data.get('self_service', False),
-                'pipeline_standard': data.get('pipeline_standard', False),
+                'pipeline_standard': data.get('standard_pipeline_adopted', data.get('pipeline_standard', False)),
                 'sast_enabled': data.get('sast_enabled', False),
                 'sonarqube_project': data.get('sonarqube_project', ''),
                 'data_classification': data.get('data_classification', ''),
@@ -181,16 +181,20 @@ class RegistryLoader:
                 'feature_flags_adopted': data.get('feature_flags_adopted', False),
                 'release_page_url': data.get('release_page_url', ''),
                 'compliance_evidence_page': data.get('compliance_evidence_page', ''),
-                'is_priv_access_current': data.get('is_priv_access_current', False),
+                'is_priv_access_current': not data.get('priv_access_for_deploy', True),  # Inverted logic
                 'cr_auto_creation': data.get('cr_auto_creation', False),
                 'zero_touch_deployment': data.get('zero_touch_deployment', False)
             }
             
+            # Extract pod name from teambook_pods array or pod_name field
+            teambook_pods = data.get('teambook_pods', [])
+            pod_name = teambook_pods[0] if teambook_pods else data.get('pod_name', '')
+            
             return AppEntry(
                 app_id=str(app_id),
                 app_name=app_name,
-                pod_name=data.get('pod_name', ''),
-                pod_level=str(data.get('pod_level', '5')),
+                pod_name=pod_name,
+                pod_level=str(data.get('teambook_level', data.get('pod_level', '5'))),
                 repos=repos,
                 stack=data.get('stack', ''),
                 tier=data.get('tier', ''),
