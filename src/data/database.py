@@ -265,15 +265,15 @@ class Database:
         query = '''
             SELECT 
                 p.pod_id,
-                p.pod_name,
-                p.stack,
-                p.business_unit,
-                p.tier,
-                m.week_date,
-                m.mttr,
-                m.lttd,
-                m.rf,
-                m.cfr,
+                p.pod_name AS Team,
+                p.stack AS Stack,
+                p.business_unit AS "Business Unit",
+                p.tier AS Tier,
+                m.week_date AS Week,
+                m.mttr AS MTTR,
+                m.lttd AS LTDD,
+                m.rf AS RF,
+                m.cfr AS CFR,
                 m.git_hygiene_score,
                 m.release_velocity_score AS Release_Velocity_Score,
                 m.git_hygiene_pillar_score AS Git_Hygiene_Score,
@@ -281,7 +281,7 @@ class Database:
                 m.compliance_score AS Compliance_Score,
                 m.quality_security_score AS Quality_Security_Score,
                 m.adoption_score AS Adoption_Score,
-                m.dpi
+                m.dpi AS DPI
             FROM pods p
             JOIN weekly_metrics m ON p.pod_id = m.pod_id
             WHERE m.week_date = (
@@ -424,7 +424,6 @@ class Database:
                 p.business_unit AS "Business Unit",
                 p.tier AS Tier,
                 m.week_date AS Week,
-                m.week_start AS Week_Start,
                 m.mttr AS MTTR,
                 m.lttd AS LTDD,
                 m.rf AS RF,
@@ -445,11 +444,12 @@ class Database:
         df = pd.read_sql_query(query, conn)
         conn.close()
         
-        # Ensure Week_Start is datetime
-        if 'Week_Start' in df.columns:
-            df['Week_Start'] = pd.to_datetime(df['Week_Start'])
-        elif 'Week' in df.columns:
-            df['Week_Start'] = pd.to_datetime(df['Week']).dt.to_period('W').apply(lambda r: r.start_time)
+        # Compute Week_Start from Week (start of ISO week)
+        if 'Week' in df.columns and len(df) > 0:
+            df['Week'] = pd.to_datetime(df['Week'])
+            df['Week_Start'] = df['Week'].dt.to_period('W').apply(lambda r: r.start_time)
+        else:
+            df['Week_Start'] = pd.NaT
         
         logger.debug(f"Retrieved {len(df)} historical records")
         return df
