@@ -145,7 +145,18 @@ class GitHubClient:
                 timeout=30
             )
             logger.debug(f"GitHub API response: {response.status_code}")
-            return response.status_code, response.json() if response.ok else {}
+            
+            if response.ok:
+                return response.status_code, response.json()
+            else:
+                # Log error response for debugging
+                logger.warning(f"GitHub API error {response.status_code} for {endpoint}")
+                try:
+                    error_body = response.json()
+                    logger.warning(f"GitHub API error body: {error_body}")
+                except:
+                    pass
+                return response.status_code, {}
             
         except requests.exceptions.RequestException as e:
             logger.error(f"GitHub API request failed for {url}: {e}")
@@ -290,33 +301,63 @@ class GitHubClient:
             Count of stale branches.
         """
         logger.info(f"[HYGIENE] Counting stale branches for {repo_full_name}")
+        logger.info(f"[HYGIENE] Cutoff: branches with no commits in last {self.STALE_BRANCH_DAYS} days")
+        
         branches = self.get_branches(repo_full_name, api_base)
         stale_count = 0
+        active_count = 0
+        error_count = 0
         cutoff_date = datetime.now() - timedelta(days=self.STALE_BRANCH_DAYS)
         
         logger.info(f"[HYGIENE] Found {len(branches)} total branches in {repo_full_name}")
+        logger.info(f"[HYGIENE] Cutoff date: {cutoff_date.strftime('%Y-%m-%d')}")
         
         for branch in branches:
-            # Get last commit date for branch
             branch_name = branch.get('name', '')
+            if not branch_name:
+                continue
+            
+            # Get last commit date for branch
             status, commit_data = self._make_request(
                 f"repos/{repo_full_name}/commits",
                 params={'sha': branch_name, 'per_page': 1},
                 api_base=api_base
             )
             
-            if status == 200 and commit_data:
-                commit_date_str = commit_data[0].get('commit', {}).get('committer', {}).get('date', '')
-                if commit_date_str:
-                    try:
-                        commit_date = datetime.fromisoformat(commit_date_str.replace('Z', '+00:00'))
-                        if commit_date.replace(tzinfo=None) < cutoff_date:
-                            stale_count += 1
-                            logger.debug(f"[HYGIENE] Stale branch: {branch_name} (last commit: {commit_date_str})")
-                    except ValueError:
-                        pass
+            # Check if we got valid commit data (must be a non-empty list)
+            if status != 200 or not isinstance(commit_data, list) or len(commit_data) == 0:
+                logger.warning(f"[HYGIENE] Could not get commits for branch '{branch_name}': status={status}")
+                error_count += 1
+                continue
+            
+            # Extract commit date
+            commit_date_str = commit_data[0].get('commit', {}).get('committer', {}).get('date', '')
+            if not commit_date_str:
+                logger.warning(f"[HYGIENE] No commit date found for branch '{branch_name}'")
+                error_count += 1
+                continue
+            
+            try:
+                # Parse the ISO format date
+                commit_date = datetime.fromisoformat(commit_date_str.replace('Z', '+00:00'))
+                commit_date_naive = commit_date.replace(tzinfo=None)
+                
+                if commit_date_naive < cutoff_date:
+                    stale_count += 1
+                    logger.debug(f"[HYGIENE] STALE branch: '{branch_name}' (last commit: {commit_date_str})")
+                else:
+                    active_count += 1
+                    logger.debug(f"[HYGIENE] ACTIVE branch: '{branch_name}' (last commit: {commit_date_str})")
+                    
+            except ValueError as e:
+                logger.warning(f"[HYGIENE] Could not parse date '{commit_date_str}' for branch '{branch_name}': {e}")
+                error_count += 1
         
-        logger.info(f"[HYGIENE] Stale branches in {repo_full_name}: {stale_count}")
+        logger.info(f"[HYGIENE] Branch summary for {repo_full_name}:")
+        logger.info(f"[HYGIENE]   Active (recent commits): {active_count}")
+        logger.info(f"[HYGIENE]   Stale (no commits in {self.STALE_BRANCH_DAYS} days): {stale_count}")
+        logger.info(f"[HYGIENE]   Errors (could not check): {error_count}")
+        
         return stale_count
     
     def count_large_prs(self, repo_full_name: str, api_base: str = None) -> int:
