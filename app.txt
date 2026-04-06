@@ -4020,23 +4020,31 @@ with tab4:
 
  
 
-                '⚡ RF': t_latest['RF'] - prev_row['RF'],
+                '🚀 Release Velocity': (t_latest.get('Release_Velocity_Score', 0) or 0) - (prev_row.get('Release_Velocity_Score', 0) or 0),
 
  
 
-                '⏱️ LTTD': prev_row['LTTD'] - t_latest['LTTD'],
+                '🧹 Git Hygiene': (t_latest.get('Git_Hygiene_Score', 0) or 0) - (prev_row.get('Git_Hygiene_Score', 0) or 0),
 
  
 
-                '🛡️ CFR': prev_row['CFR'] - t_latest['CFR'],
+                '⚙️ Pipeline Maturity': (t_latest.get('Pipeline_Maturity_Score', 0) or 0) - (prev_row.get('Pipeline_Maturity_Score', 0) or 0),
 
  
 
-                '⏰ MTTR': (prev_row.get('MTTR', 0) or 0) - (t_latest.get('MTTR', 0) or 0),
+                '� Compliance': (t_latest.get('Compliance_Score', 0) or 0) - (prev_row.get('Compliance_Score', 0) or 0),
 
  
 
-                '🎯 DPI': (t_latest.get('DPI', 0) or 0) - (prev_row.get('DPI', 0) or 0)
+                '🔒 Quality & Security': (t_latest.get('Quality_Security_Score', 0) or 0) - (prev_row.get('Quality_Security_Score', 0) or 0),
+
+ 
+
+                '🎯 Adoption': (t_latest.get('Adoption_Score', 0) or 0) - (prev_row.get('Adoption_Score', 0) or 0),
+
+ 
+
+                '📊 DPI': (t_latest.get('DPI', 0) or 0) - (prev_row.get('DPI', 0) or 0)
 
  
 
