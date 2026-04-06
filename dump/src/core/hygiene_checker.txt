@@ -453,11 +453,12 @@ class HygieneChecker:
                 if not branch_exists:
                     continue
 
-                # Check protection status
+                # Check protection status (404 is expected if no protection exists)
                 protection_url = f"repos/{owner}/{repo}/branches/{branch_name}/protection"
                 status, protection = self.gh._make_request(protection_url, api_base=api_base)
                 
-                if status != 200 or not protection or "message" in protection:
+                # 404 means no protection rules exist - this is a critical violation
+                if status == 404 or status != 200 or not protection or "message" in protection:
                     result.add(Violation(
                         repo=f"{owner}/{repo}",
                         check="branch_protection",

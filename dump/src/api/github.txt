@@ -149,13 +149,22 @@ class GitHubClient:
             if response.ok:
                 return response.status_code, response.json()
             else:
-                # Log error response for debugging
-                logger.warning(f"GitHub API error {response.status_code} for {endpoint}")
-                try:
-                    error_body = response.json()
-                    logger.warning(f"GitHub API error body: {error_body}")
-                except:
-                    pass
+                # 404 on branch protection is expected when no protection exists - don't spam logs
+                is_branch_protection_check = "branches/" in endpoint and "/protection" in endpoint
+                if response.status_code == 404 and is_branch_protection_check:
+                    logger.debug(f"GitHub API 404 for {endpoint} (no branch protection configured)")
+                    try:
+                        return response.status_code, response.json()
+                    except:
+                        return response.status_code, {}
+                else:
+                    # Log other errors for debugging
+                    logger.warning(f"GitHub API error {response.status_code} for {endpoint}")
+                    try:
+                        error_body = response.json()
+                        logger.warning(f"GitHub API error body: {error_body}")
+                    except:
+                        pass
                 return response.status_code, {}
             
         except requests.exceptions.RequestException as e:
