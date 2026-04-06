@@ -83,19 +83,18 @@ class MetricsCalculator:
         Calculate Release Velocity pillar score (0-100).
         
         Components:
-            - Release Frequency (RF): 40% weight
-            - Lead Time to Deploy (LTTD): 40% weight
-            - CI/CD Automation: 20% weight
+            - Release Frequency (RF): 50% weight
+            - Lead Time to Deploy (LTTD): 50% weight
         
         Args:
-            metrics: Dictionary containing rf, lttd, ci, cd, zero_touch_deployment.
+            metrics: Dictionary containing rf, lttd.
             
         Returns:
             Release Velocity score (0-100).
         """
         score = 0.0
         
-        # Release Frequency component (40%)
+        # Release Frequency component (50%)
         rf = self._safe_get(metrics, 'rf', 0)
         if rf >= self.RF_EXCELLENT:
             rf_score = 100
@@ -105,9 +104,9 @@ class MetricsCalculator:
             rf_score = rf * 7
         else:
             rf_score = 0
-        score += rf_score * 0.4
+        score += rf_score * 0.5
         
-        # Lead Time to Deploy component (40%)
+        # Lead Time to Deploy component (50%)
         lttd = self._safe_get(metrics, 'lttd', 0)
         if lttd <= 0:
             lttd_score = 50  # No data - neutral score
@@ -117,21 +116,7 @@ class MetricsCalculator:
             lttd_score = 100 - (lttd - self.LTTD_EXCELLENT) * 15
         else:
             lttd_score = max(0, 70 - (lttd - self.LTTD_GOOD) * 10)
-        score += lttd_score * 0.4
-        
-        # CI/CD Automation component (20%)
-        ci = self._safe_get(metrics, 'ci', False)
-        cd = self._safe_get(metrics, 'cd', False)
-        zero_touch = self._safe_get(metrics, 'zero_touch_deployment', False)
-        
-        automation_score = 0
-        if ci:
-            automation_score += 40
-        if cd:
-            automation_score += 40
-        if zero_touch:
-            automation_score += 20
-        score += automation_score * 0.2
+        score += lttd_score * 0.5
         
         return round(min(100, max(0, score)), 2)
     
