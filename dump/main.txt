@@ -268,12 +268,20 @@ def run_weekly_refresh(config: Config, generate_docs: bool = False):
                         total_critical += result.critical_count
                         total_warnings += result.warning_count
                         
-                        status = "✓" if result.passed else "✗"
-                        logger.info(f"    {status} {repo.full_name}: score={score}/100 ({result.critical_count} critical, {result.warning_count} warnings)")
+                        # Count violations by check type
+                        check_counts = {}
+                        for v in result.violations:
+                            check_counts[v.check] = check_counts.get(v.check, 0) + 1
                         
-                        # Log violations for visibility
-                        for violation in result.violations[:3]:  # Show first 3
-                            logger.debug(f"      - [{violation.severity.upper()}] {violation.title}")
+                        # Build minimal violation summary
+                        violation_parts = []
+                        for check, count in sorted(check_counts.items()):
+                            if check != "api_error":
+                                violation_parts.append(f"{check}:{count}")
+                        violation_summary = " | ".join(violation_parts) if violation_parts else "none"
+                        
+                        status = "✓" if result.passed else "✗"
+                        logger.info(f"    {status} {repo.full_name}: {score}/100 [{violation_summary}]")
                             
                     except Exception as e:
                         logger.warning(f"  Hygiene check failed for {repo.full_name}: {e}")
