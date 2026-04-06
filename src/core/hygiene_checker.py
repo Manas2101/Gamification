@@ -249,13 +249,16 @@ class HygieneChecker:
         Args:
             owner: Repository owner/org
             repo: Repository name
-            full_url: Full URL for enterprise GitHub
+            full_url: Full URL for enterprise GitHub (e.g., https://github.enterprise.com/org/repo)
             
         Returns:
             RepoHygieneResult with score and violations
         """
         full_name = f"{owner}/{repo}"
         result = RepoHygieneResult(repo_full_name=full_name)
+
+        # Extract API base URL from full_url if provided
+        api_base = self._get_api_base(full_url) if full_url else None
 
         checks = (
             self._check_stale_branches,
@@ -266,7 +269,7 @@ class HygieneChecker:
         
         for check in checks:
             try:
-                check(owner, repo, result, full_url)
+                check(owner, repo, result, api_base)
             except Exception as exc:
                 logger.warning(f"Check failed for {full_name}: {exc}")
                 result.mark_api_error(str(exc))
@@ -274,14 +277,33 @@ class HygieneChecker:
 
         return result
 
-    def _check_stale_branches(self, owner: str, repo: str, result: RepoHygieneResult, full_url: str = None):
+    def _get_api_base(self, full_url: str) -> str:
+        """
+        Extract API base URL from full repository URL.
+        
+        Args:
+            full_url: Full URL like https://github.enterprise.com/org/repo
+            
+        Returns:
+            API base URL like https://github.enterprise.com/api/v3
+        """
+        import re
+        match = re.match(r'(https?://[^/]+)', full_url)
+        if match:
+            host_url = match.group(1)
+            # Check if it's enterprise GitHub (not github.com)
+            if 'github.com' not in host_url:
+                return f"{host_url}/api/v3"
+        return None
+
+    def _check_stale_branches(self, owner: str, repo: str, result: RepoHygieneResult, api_base: str = None):
         """Check for stale branches that haven't been updated recently."""
         max_age = self.config.get("max_branch_age_days", 30)
         protected = self.config.get("protected_branches", ["main", "master"])
         now = datetime.now(timezone.utc)
         cutoff = now - timedelta(days=max_age)
 
-        branches = self.gh.get_branches(f"{owner}/{repo}", full_url=full_url)
+        branches = self.gh.get_branches(f"{owner}/{repo}", api_base=api_base)
         
         for branch in branches:
             name = branch.get("name", "")
@@ -300,10 +322,10 @@ class HygieneChecker:
                     continue
                     
                 # Get commit details to find date
-                commit_url = f"/repos/{owner}/{repo}/commits/{commit_sha}"
-                commit_data = self.gh._make_request("GET", commit_url, full_url=full_url)
+                commit_url = f"repos/{owner}/{repo}/commits/{commit_sha}"
+                status, commit_data = self.gh._make_request(commit_url, api_base=api_base)
                 
-                if not commit_data or "commit" not in commit_data:
+                if status != 200 or not commit_data or "commit" not in commit_data:
                     continue
                     
                 date_str = commit_data["commit"]["committer"]["date"]
@@ -329,7 +351,7 @@ class HygieneChecker:
                     metadata={"branch": name, "age_days": age_days},
                 ))
 
-    def _check_open_prs(self, owner: str, repo: str, result: RepoHygieneResult, full_url: str = None):
+    def _check_open_prs(self, owner: str, repo: str, result: RepoHygieneResult, api_base: str = None):
         """Check open PRs for size, review SLA, and title format."""
         max_lines = self.config.get("max_pr_lines_changed", 400)
         max_review_hours = self.config.get("max_pr_review_hours", 24)
@@ -340,7 +362,7 @@ class HygieneChecker:
         pr_title_pattern = re.compile(pr_title_pattern_str)
         now = datetime.now(timezone.utc)
 
-        prs = self.gh.get_open_pull_requests(f"{owner}/{repo}", full_url=full_url)
+        prs = self.gh.get_open_pull_requests(f"{owner}/{repo}", api_base=api_base)
         
         for pr in prs:
             pr_num = pr.get("number")
@@ -377,11 +399,11 @@ class HygieneChecker:
 
             # Review SLA check
             try:
-                reviews_url = f"/repos/{owner}/{repo}/pulls/{pr_num}/reviews"
-                reviews = self.gh._make_request("GET", reviews_url, full_url=full_url)
+                reviews_url = f"repos/{owner}/{repo}/pulls/{pr_num}/reviews"
+                status, reviews = self.gh._make_request(reviews_url, api_base=api_base)
                 
                 has_review = False
-                if isinstance(reviews, list):
+                if status == 200 and isinstance(reviews, list):
                     has_review = any(
                         r.get("state") in ("APPROVED", "CHANGES_REQUESTED", "COMMENTED")
                         for r in reviews
@@ -418,24 +440,24 @@ class HygieneChecker:
                     metadata={"pr_number": pr_num, "author": author, "title": pr_title},
                 ))
 
-    def _check_branch_protection(self, owner: str, repo: str, result: RepoHygieneResult, full_url: str = None):
+    def _check_branch_protection(self, owner: str, repo: str, result: RepoHygieneResult, api_base: str = None):
         """Check if main/master branches have protection rules enabled."""
         protected = ["main", "master"]
         
         for branch_name in protected:
             try:
                 # Check if branch exists
-                branches = self.gh.get_branches(f"{owner}/{repo}", full_url=full_url)
+                branches = self.gh.get_branches(f"{owner}/{repo}", api_base=api_base)
                 branch_exists = any(b.get("name") == branch_name for b in branches)
                 
                 if not branch_exists:
                     continue
 
                 # Check protection status
-                protection_url = f"/repos/{owner}/{repo}/branches/{branch_name}/protection"
-                protection = self.gh._make_request("GET", protection_url, full_url=full_url)
+                protection_url = f"repos/{owner}/{repo}/branches/{branch_name}/protection"
+                status, protection = self.gh._make_request(protection_url, api_base=api_base)
                 
-                if not protection or "message" in protection:
+                if status != 200 or not protection or "message" in protection:
                     result.add(Violation(
                         repo=f"{owner}/{repo}",
                         check="branch_protection",
@@ -451,7 +473,7 @@ class HygieneChecker:
             except Exception as e:
                 logger.debug(f"Could not check branch protection for {branch_name}: {e}")
 
-    def _check_direct_pushes(self, owner: str, repo: str, result: RepoHygieneResult, full_url: str = None):
+    def _check_direct_pushes(self, owner: str, repo: str, result: RepoHygieneResult, api_base: str = None):
         """Detect recent direct commits to main/master (not via PR)."""
         if self.config.get("allow_direct_push_to_main", False):
             return
@@ -459,10 +481,10 @@ class HygieneChecker:
         protected = ["main", "master"]
         
         try:
-            events_url = f"/repos/{owner}/{repo}/events"
-            events = self.gh._make_request("GET", events_url, full_url=full_url)
+            events_url = f"repos/{owner}/{repo}/events"
+            status, events = self.gh._make_request(events_url, api_base=api_base)
             
-            if not isinstance(events, list):
+            if status != 200 or not isinstance(events, list):
                 return
                 
             cutoff = datetime.now(timezone.utc) - timedelta(days=7)
