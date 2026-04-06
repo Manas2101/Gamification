@@ -241,6 +241,18 @@ class Config:
         """Get logging level."""
         return self.get("LOG_LEVEL", "INFO")
     
+    @property
+    def hygiene_config(self) -> Dict:
+        """Get hygiene configuration from settings.yaml."""
+        return self.settings.get("hygiene", {
+            "max_branch_age_days": 30,
+            "max_pr_lines_changed": 400,
+            "max_pr_review_hours": 24,
+            "required_pr_pattern": r"^(feat|fix|chore|docs|refactor|test|ci)(\(.*\))?: .{10,}",
+            "protected_branches": ["main", "master", "release/*"],
+            "allow_direct_push_to_main": False
+        })
+    
     def validate(self) -> Dict[str, bool]:
         """
         Validate required configuration.

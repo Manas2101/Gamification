@@ -132,6 +132,18 @@ scoring:
 
  
 
+# Git hygiene thresholds (all enforced by the checker)
+hygiene:
+  max_branch_age_days: 30              # Branches older than this are flagged
+  max_pr_lines_changed: 400            # PRs larger than this are flagged
+  max_pr_review_hours: 24              # PRs open without review beyond this are flagged
+  required_pr_pattern: "^(feat|fix|chore|docs|refactor|test|ci)(\\(.*\\))?: .{10,}"
+  protected_branches:
+    - main
+    - master
+    - release/*
+  allow_direct_push_to_main: false
+
 # Scheduling (for scheduler.py — Phase 2 feature)
 
 schedule:

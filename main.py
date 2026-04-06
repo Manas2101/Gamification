@@ -38,6 +38,7 @@ from src.api.github import GitHubClient
 from src.api.llm import LLMClient
 from src.core.calculator import MetricsCalculator
 from src.core.badges import BadgeEngine
+from src.core.hygiene_checker import HygieneChecker
 from pathlib import Path
 
 # Configure logging
@@ -186,11 +187,13 @@ def run_weekly_refresh(config: Config, generate_docs: bool = False):
     calculator = MetricsCalculator()
     badge_engine = BadgeEngine()
     
-    # Initialize GitHub client if token available
+    # Initialize GitHub client and hygiene checker if token available
     github_client = None
+    hygiene_checker = None
     if config.github_token:
         github_client = GitHubClient(config.github_token)
-        logger.info("GitHub hygiene checking ENABLED")
+        hygiene_checker = HygieneChecker(github_client, config.hygiene_config)
+        logger.info("GitHub hygiene checking ENABLED (6 comprehensive checks)")
     else:
         logger.warning("No GITHUB_TOKEN - hygiene checks will be skipped")
     
@@ -240,24 +243,38 @@ def run_weekly_refresh(config: Config, generate_docs: bool = False):
             # Add app configuration to metrics
             metrics.update(app.config)
             
-            # Calculate Git hygiene if GitHub client available
-            if github_client and app.repos:
+            # Calculate Git hygiene using comprehensive checker
+            if hygiene_checker and app.repos:
                 total_hygiene = 0
                 total_critical = 0
                 total_warnings = 0
                 
-                logger.info(f"  Checking hygiene for {len(app.repos)} repositories")
+                logger.info(f"  Running comprehensive hygiene checks for {len(app.repos)} repositories")
                 for repo in app.repos:
                     try:
-                        # Pass full_url for enterprise GitHub support
-                        hygiene = github_client.calculate_hygiene_score(
-                            repo.full_name, 
-                            full_url=repo.full_url
-                        )
-                        total_hygiene += hygiene['score']
-                        total_critical += hygiene['critical']
-                        total_warnings += hygiene['warnings']
-                        logger.info(f"    {repo.full_name}: score={hygiene['score']}")
+                        # Parse owner/repo from full_name
+                        parts = repo.full_name.split('/')
+                        if len(parts) != 2:
+                            logger.warning(f"  Invalid repo format: {repo.full_name}")
+                            continue
+                        
+                        owner, repo_name = parts
+                        
+                        # Run all 6 hygiene checks
+                        result = hygiene_checker.check_repo(owner, repo_name, full_url=repo.full_url)
+                        
+                        score = result.score if result.score is not None else 0
+                        total_hygiene += score
+                        total_critical += result.critical_count
+                        total_warnings += result.warning_count
+                        
+                        status = "✓" if result.passed else "✗"
+                        logger.info(f"    {status} {repo.full_name}: score={score}/100 ({result.critical_count} critical, {result.warning_count} warnings)")
+                        
+                        # Log violations for visibility
+                        for violation in result.violations[:3]:  # Show first 3
+                            logger.debug(f"      - [{violation.severity.upper()}] {violation.title}")
+                            
                     except Exception as e:
                         logger.warning(f"  Hygiene check failed for {repo.full_name}: {e}")
                 
@@ -265,6 +282,7 @@ def run_weekly_refresh(config: Config, generate_docs: bool = False):
                     metrics['git_hygiene_score'] = total_hygiene / len(app.repos)
                     metrics['git_hygiene_violations_critical'] = total_critical
                     metrics['git_hygiene_violations_warnings'] = total_warnings
+                    logger.info(f"  Average hygiene score: {metrics['git_hygiene_score']:.1f}/100")
             
             # Calculate pillar scores
             scores = calculator.calculate_all_scores(metrics)
