@@ -149,6 +149,23 @@ The platform uses `src/utils/config.py` for configuration management. Default se
 
 ## Usage
 
+### Quick Start
+
+1. **Setup database**:
+   ```bash
+   python main.py setup
+   ```
+
+2. **Load data** (run weekly refresh):
+   ```bash
+   python main.py refresh
+   ```
+
+3. **Launch dashboard**:
+   ```bash
+   streamlit run app.py
+   ```
+
 ### Database Setup
 
 Initialize the database before first use:
@@ -167,7 +184,7 @@ python main.py setup
 
 ### Weekly Refresh
 
-Collect metrics and calculate scores:
+Collect metrics and calculate scores (this loads data into the database):
 
 ```bash
 # Basic refresh (metrics + hygiene)
@@ -239,7 +256,7 @@ Starting Documentation Generation
 Launch the interactive Streamlit dashboard:
 
 ```bash
-python main.py dashboard
+streamlit run app.py
 ```
 
 **Access at:** http://localhost:8501
@@ -566,11 +583,11 @@ open htmlcov/index.html
 # Initialize database
 python main.py setup
 
-# Run weekly refresh
+# Run weekly refresh (loads data into database)
 python main.py refresh
 
 # Launch dashboard
-python main.py dashboard
+streamlit run app.py
 
 # Run tests
 python main.py test
