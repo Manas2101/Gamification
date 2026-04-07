@@ -242,11 +242,18 @@ class RegistryLoader:
                 'sonarqube_project': data.get('sonarqube_project', ''),
                 'data_classification': data.get('data_classification', ''),
                 'copilot_enabled': data.get('copilot_enabled', False),
-                'ai_tools_declared': data.get('ai_tools_declared', False),
+                # ai_tools_declared: handle both boolean and array formats
+                'ai_tools_declared': bool(data.get('ai_tools_declared', False)),
+                'ai_devops_onboarded': data.get('ai_devops_onboarded', False),
+                # New API fields - split into IADP and APIX
+                'apis_published_iadp': int(data.get('apis_published_iadp', 0) or 0),
+                'apis_published_apix': int(data.get('apis_published_apix', 0) or 0),
+                # Legacy field for backward compatibility
                 'apis_published': data.get('apis_published', 0),
                 'feature_flags_adopted': data.get('feature_flags_adopted', False),
                 'release_page_url': data.get('release_page_url', ''),
                 'compliance_evidence_page': data.get('compliance_evidence_page', ''),
+                'repo_docs': data.get('repo_docs', ''),
                 'is_priv_access_current': not data.get('priv_access_for_deploy', True),  # Inverted logic
                 'cr_auto_creation': data.get('cr_auto_creation', False),
                 'zero_touch_deployment': data.get('zero_touch_deployment', False)

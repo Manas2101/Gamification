@@ -180,31 +180,35 @@ class MetricsCalculator:
         Calculate Compliance pillar score (0-100).
         
         Components:
-            - Release page URL documented: 25%
-            - Compliance evidence page: 25%
-            - Privileged access current: 25%
-            - CR auto-creation enabled: 25%
+            - Release page URL documented: 20%
+            - Compliance evidence page: 20%
+            - Repo documentation present (repo_docs): 20%
+            - Privileged access current: 20%
+            - CR auto-creation enabled: 20%
         
         Args:
             metrics: Dictionary containing release_page_url, compliance_evidence_page,
-                    is_priv_access_current, cr_auto_creation.
+                    repo_docs, is_priv_access_current, cr_auto_creation.
             
         Returns:
             Compliance score (0-100).
         """
         score = 0.0
         
-        # Each component worth 25 points
+        # Each component now worth 20 points (5 components)
         if self._safe_get(metrics, 'release_page_url'):
-            score += 25
+            score += 20
         if self._safe_get(metrics, 'compliance_evidence_page'):
-            score += 25
+            score += 20
+        # repo_docs may be a boolean or URL/path; treat truthy as present
+        if self._safe_get(metrics, 'repo_docs'):
+            score += 20
         if self._safe_get(metrics, 'is_priv_access_current', False):
-            score += 25
+            score += 20
         if self._safe_get(metrics, 'cr_auto_creation', False):
-            score += 25
+            score += 20
         
-        return round(score, 2)
+        return round(min(100, score), 2)
     
     def calculate_quality_security(self, metrics: Dict) -> float:
         """
@@ -242,13 +246,15 @@ class MetricsCalculator:
         
         Components:
             - Copilot enabled: 30%
-            - AI tools declared: 25%
-            - APIs published: 25%
-            - Feature flags adopted: 20%
+            - AI tools declared: 10%
+            - APIs published (IADP): up to 20%
+            - APIs published (APIX): up to 20%
+            - AI DevOps onboarding completed (ai_devops_onboarded): 20%
+            # Feature flags currently omitted/commented out
         
         Args:
             metrics: Dictionary containing copilot_enabled, ai_tools_declared,
-                    apis_published, feature_flags_adopted.
+                    apis_published_iadp, apis_published_apix, ai_devops_onboarded.
             
         Returns:
             Adoption score (0-100).
@@ -258,16 +264,27 @@ class MetricsCalculator:
         if self._safe_get(metrics, 'copilot_enabled', False):
             score += 30
         
+        # AI tools declared is now worth 10 points
         if self._safe_get(metrics, 'ai_tools_declared', False):
-            score += 25
+            score += 10
         
-        apis = self._safe_get(metrics, 'apis_published', 0)
-        if apis and apis > 0:
-            # Scale: 1 API = 10 points, max 25 points
-            score += min(25, apis * 10)
+        # New API scoring: split into two categories with separate caps
+        iadp_apis = int(self._safe_get(metrics, 'apis_published_iadp', 0) or 0)
+        apix_apis = int(self._safe_get(metrics, 'apis_published_apix', 0) or 0)
         
-        if self._safe_get(metrics, 'feature_flags_adopted', False):
+        # IADP: 1 API = 10 points, cap 20 points
+        if iadp_apis > 0:
+            score += min(20, iadp_apis * 10)
+        
+        # APIX: 1 API = 10 points, cap 20 points
+        if apix_apis > 0:
+            score += min(20, apix_apis * 10)
+        
+        # AI DevOps onboarding: boolean flag worth 20 points
+        if self._safe_get(metrics, 'ai_devops_onboarded', False):
             score += 20
+        
+        # feature_flags_adopted intentionally omitted (commented out)
         
         return round(min(100, score), 2)
     
