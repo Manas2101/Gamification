@@ -9,6 +9,15 @@ from datetime import datetime
 import logging
 
 from src.data.database import Database
+from src.utils.config import Config
+
+# MongoDB support
+try:
+    from src.data.mongodb import MongoDatabase
+    MONGODB_AVAILABLE = True
+except ImportError:
+    MONGODB_AVAILABLE = False
+    MongoDatabase = None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +27,35 @@ class DashboardDataLoader:
     """Handles data loading for Streamlit dashboard"""
     
     def __init__(self):
-        self.db = Database()
+        """Initialize database connection (MongoDB or SQLite)"""
+        config = Config()
+        
+        # Use MongoDB if configured, otherwise SQLite
+        if config.use_mongodb:
+            if not MONGODB_AVAILABLE:
+                logger.error("MongoDB configured but pymongo not installed!")
+                st.error("❌ MongoDB configured but pymongo not installed. Install with: pip install pymongo")
+                self.db = Database()  # Fallback to SQLite
+            else:
+                logger.info(f"Dashboard using MongoDB: {config.mongodb_database}")
+                # Use URI if provided, otherwise use individual parameters
+                if config.mongodb_uri:
+                    self.db = MongoDatabase(
+                        connection_string=config.mongodb_uri,
+                        database_name=config.mongodb_database
+                    )
+                else:
+                    self.db = MongoDatabase(
+                        host=config.mongodb_host,
+                        port=config.mongodb_port,
+                        username=config.mongodb_username,
+                        password=config.mongodb_password,
+                        auth_source=config.mongodb_auth_source,
+                        database_name=config.mongodb_database
+                    )
+        else:
+            logger.info(f"Dashboard using SQLite: {config.db_path}")
+            self.db = Database(config.db_path)
     
     def load_latest_data(self) -> pd.DataFrame:
         """Load latest metrics for all pods"""
