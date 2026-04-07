@@ -60,8 +60,8 @@ copilot_enabled: false
 ai_tools_declared: false  # Boolean: true if AI tools are declared/tracked
 ai_devops_onboarded: false  # Boolean: true if team completed AI DevOps onboarding
 ai_test_generation: false
-apis_published_iadp: 0  # Number of APIs published in IADP (max 2 for full score)
-apis_published_apix: 0  # Number of APIs published in APIX (max 2 for full score)
+apis_published_iadp: false  # Boolean: true if APIs published in IADP (20 points)
+apis_published_apix: false  # Boolean: true if APIs published in APIX (20 points)
 catalog_url: ""
 feature_flags_adopted: false  # Currently not used in scoring
 ```
@@ -80,8 +80,8 @@ feature_flags_adopted: false  # Currently not used in scoring
 ### Adoption Pillar (100 max)
 - ✅ Copilot enabled: 30 points
 - ✅ AI tools declared: 10 points (was 25)
-- ✅ **APIs published (IADP)**: up to 20 points ← NEW (1 API = 10 pts, max 2)
-- ✅ **APIs published (APIX)**: up to 20 points ← NEW (1 API = 10 pts, max 2)
+- ✅ **APIs published in IADP**: 20 points ← NEW (boolean flag)
+- ✅ **APIs published in APIX**: 20 points ← NEW (boolean flag)
 - ✅ **AI DevOps onboarded**: 20 points ← NEW
 - ❌ Feature flags: 0 points (removed from scoring)
 

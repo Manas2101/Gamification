@@ -253,6 +253,21 @@ class Config:
             "allow_direct_push_to_main": False
         })
     
+    @property
+    def mongodb_uri(self) -> str:
+        """Get MongoDB connection URI."""
+        return self.get("MONGODB_URI", "")
+    
+    @property
+    def mongodb_database(self) -> str:
+        """Get MongoDB database name."""
+        return self.get("MONGODB_DATABASE", "devops_metrics")
+    
+    @property
+    def use_mongodb(self) -> bool:
+        """Check if MongoDB should be used instead of SQLite."""
+        return bool(self.mongodb_uri)
+    
     def validate(self) -> Dict[str, bool]:
         """
         Validate required configuration.

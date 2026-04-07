@@ -247,9 +247,9 @@ class MetricsCalculator:
         Components:
             - Copilot enabled: 30%
             - AI tools declared: 10%
-            - APIs published (IADP): up to 20%
-            - APIs published (APIX): up to 20%
-            - AI DevOps onboarding completed (ai_devops_onboarded): 20%
+            - APIs published in IADP: 20%
+            - APIs published in APIX: 20%
+            - AI DevOps onboarding completed: 20%
             # Feature flags currently omitted/commented out
         
         Args:
@@ -264,21 +264,18 @@ class MetricsCalculator:
         if self._safe_get(metrics, 'copilot_enabled', False):
             score += 30
         
-        # AI tools declared is now worth 10 points
+        # AI tools declared is worth 10 points
         if self._safe_get(metrics, 'ai_tools_declared', False):
             score += 10
         
-        # New API scoring: split into two categories with separate caps
-        iadp_apis = int(self._safe_get(metrics, 'apis_published_iadp', 0) or 0)
-        apix_apis = int(self._safe_get(metrics, 'apis_published_apix', 0) or 0)
+        # API scoring: boolean flags for IADP and APIX
+        # IADP: 20 points if true
+        if self._safe_get(metrics, 'apis_published_iadp', False):
+            score += 20
         
-        # IADP: 1 API = 10 points, cap 20 points
-        if iadp_apis > 0:
-            score += min(20, iadp_apis * 10)
-        
-        # APIX: 1 API = 10 points, cap 20 points
-        if apix_apis > 0:
-            score += min(20, apix_apis * 10)
+        # APIX: 20 points if true
+        if self._safe_get(metrics, 'apis_published_apix', False):
+            score += 20
         
         # AI DevOps onboarding: boolean flag worth 20 points
         if self._safe_get(metrics, 'ai_devops_onboarded', False):

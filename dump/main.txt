@@ -41,6 +41,14 @@ from src.core.badges import BadgeEngine
 from src.core.hygiene_checker import HygieneChecker
 from pathlib import Path
 
+# MongoDB support
+try:
+    from src.data.mongodb import MongoDatabase
+    MONGODB_AVAILABLE = True
+except ImportError:
+    MONGODB_AVAILABLE = False
+    MongoDatabase = None
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -180,8 +188,19 @@ def run_weekly_refresh(config: Config, generate_docs: bool = False):
         print("   Please set it in your .env file or environment")
         return
     
-    # Initialize components
-    db = Database(config.db_path)
+    # Initialize database (MongoDB or SQLite)
+    if config.use_mongodb:
+        if not MONGODB_AVAILABLE:
+            logger.error("MongoDB configuration found but pymongo not installed!")
+            print("\n❌ Error: pymongo not installed")
+            print("   Install it with: pip install pymongo")
+            return
+        logger.info(f"Using MongoDB: {config.mongodb_database}")
+        db = MongoDatabase(config.mongodb_uri, config.mongodb_database)
+    else:
+        logger.info(f"Using SQLite: {config.db_path}")
+        db = Database(config.db_path)
+    
     registry = RegistryLoader(config.registry_dir)
     datasight = DataSightClient(config.datasight_token)
     calculator = MetricsCalculator()

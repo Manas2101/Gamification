@@ -73,8 +73,8 @@ copilot_enabled: false
 ai_tools_declared: false  # Boolean: true if AI tools are declared/tracked
 ai_devops_onboarded: false  # Boolean: true if team completed AI DevOps onboarding
 ai_test_generation: false
-apis_published_iadp: 0  # Number of APIs published in IADP (max 2 for full score)
-apis_published_apix: 0  # Number of APIs published in APIX (max 2 for full score)
+apis_published_iadp: false  # Boolean: true if APIs published in IADP (20 points)
+apis_published_apix: false  # Boolean: true if APIs published in APIX (20 points)
 catalog_url: ""
 feature_flags_adopted: false  # Currently not used in scoring
 

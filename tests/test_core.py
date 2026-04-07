@@ -101,10 +101,11 @@ class TestMetricsCalculator:
         assert score == 40.0
     
     def test_calculate_compliance_perfect(self, calculator):
-        """Test Compliance with all requirements"""
+        """Test Compliance with all requirements (5 components @ 20 pts each)"""
         metrics = {
             'release_page_url': 'https://example.com',
             'compliance_evidence_page': 'https://example.com',
+            'repo_docs': 'https://docs.example.com',
             'is_priv_access_current': True,
             'cr_auto_creation': True
         }
@@ -112,6 +113,20 @@ class TestMetricsCalculator:
         score = calculator.calculate_compliance(metrics)
         
         assert score == 100.0
+    
+    def test_calculate_compliance_partial(self, calculator):
+        """Test Compliance with partial requirements"""
+        metrics = {
+            'release_page_url': 'https://example.com',
+            'compliance_evidence_page': '',
+            'repo_docs': 'https://docs.example.com',
+            'is_priv_access_current': False,
+            'cr_auto_creation': True
+        }
+        
+        score = calculator.calculate_compliance(metrics)
+        
+        assert score == 60.0  # 3 out of 5 = 60 points
     
     def test_calculate_quality_security_perfect(self, calculator):
         """Test Quality & Security with all features"""
@@ -126,30 +141,61 @@ class TestMetricsCalculator:
         assert score == 100.0
     
     def test_calculate_adoption_perfect(self, calculator):
-        """Test Adoption with all features"""
+        """Test Adoption with all features (boolean IADP/APIX)"""
         metrics = {
             'copilot_enabled': True,
             'ai_tools_declared': True,
-            'apis_published': 3,
-            'feature_flags_adopted': True
+            'apis_published_iadp': True,
+            'apis_published_apix': True,
+            'ai_devops_onboarded': True
         }
         
         score = calculator.calculate_adoption(metrics)
         
-        assert score == 100.0
+        assert score == 100.0  # 30 + 10 + 20 + 20 + 20 = 100
+    
+    def test_calculate_adoption_partial(self, calculator):
+        """Test Adoption with partial features"""
+        metrics = {
+            'copilot_enabled': True,
+            'ai_tools_declared': False,
+            'apis_published_iadp': True,
+            'apis_published_apix': False,
+            'ai_devops_onboarded': False
+        }
+        
+        score = calculator.calculate_adoption(metrics)
+        
+        assert score == 50.0  # 30 + 0 + 20 + 0 + 0 = 50
+    
+    def test_calculate_adoption_only_apis(self, calculator):
+        """Test Adoption with only API flags"""
+        metrics = {
+            'copilot_enabled': False,
+            'ai_tools_declared': False,
+            'apis_published_iadp': True,
+            'apis_published_apix': True,
+            'ai_devops_onboarded': False
+        }
+        
+        score = calculator.calculate_adoption(metrics)
+        
+        assert score == 40.0  # 0 + 0 + 20 + 20 + 0 = 40
     
     def test_calculate_all_scores(self, calculator):
-        """Test complete scoring calculation"""
+        """Test complete scoring calculation with new fields"""
         metrics = {
             'rf': 15, 'lttd': 1.0, 'ci': True, 'cd': True,
             'git_hygiene_score': 85.0,
-            'rollback': True, 'self_service': True, 'pipeline_standard': True,
+            'rollback': True, 'zero_touch_deployment': True, 'pipeline_standard': True,
             'release_page_url': 'url', 'compliance_evidence_page': 'url',
+            'repo_docs': 'https://docs.example.com',
             'is_priv_access_current': True, 'cr_auto_creation': True,
             'sast_enabled': True, 'sonarqube_project': 'proj',
             'data_classification': 'Confidential',
             'copilot_enabled': True, 'ai_tools_declared': True,
-            'apis_published': 2, 'feature_flags_adopted': True
+            'apis_published_iadp': True, 'apis_published_apix': True,
+            'ai_devops_onboarded': True
         }
         
         result = calculator.calculate_all_scores(metrics)
@@ -165,6 +211,153 @@ class TestMetricsCalculator:
         # All scores should be 0-100
         for key, value in result.items():
             assert 0 <= value <= 100, f"{key} out of range: {value}"
+    
+    def test_sample_scoring_team_a_excellent(self, calculator):
+        """
+        Sample Scoring: Team A - Excellent Performance
+        
+        Team Profile:
+        - High deployment frequency (280/year)
+        - Fast lead time (1.8 days)
+        - Full CI/CD automation
+        - Strong hygiene (95/100)
+        - All compliance requirements met
+        - Full adoption of modern practices
+        """
+        metrics = {
+            # Release Velocity
+            'rf': 280, 'lttd': 1.8,
+            # Pipeline Maturity
+            'ci': True, 'cd': True, 'rollback': True,
+            'zero_touch_deployment': True, 'pipeline_standard': True,
+            # Git Hygiene
+            'git_hygiene_score': 95.0,
+            # Compliance
+            'release_page_url': 'https://releases.example.com',
+            'compliance_evidence_page': 'https://compliance.example.com',
+            'repo_docs': 'https://docs.example.com',
+            'is_priv_access_current': True,
+            'cr_auto_creation': True,
+            # Quality & Security
+            'sast_enabled': True,
+            'sonarqube_project': 'team-a-project',
+            'data_classification': 'Confidential',
+            # Adoption
+            'copilot_enabled': True,
+            'ai_tools_declared': True,
+            'apis_published_iadp': True,
+            'apis_published_apix': True,
+            'ai_devops_onboarded': True
+        }
+        
+        result = calculator.calculate_all_scores(metrics)
+        
+        # Expected scores
+        assert result['Release_Velocity_Score'] == 100.0  # RF=280 (100) + LTTD=1.8 (100)
+        assert result['Git_Hygiene_Score'] == 95.0
+        assert result['Pipeline_Maturity_Score'] == 100.0  # All 5 components
+        assert result['Compliance_Score'] == 100.0  # All 5 components
+        assert result['Quality_Security_Score'] == 100.0  # All 3 components
+        assert result['Adoption_Score'] == 100.0  # All 5 components
+        assert result['dpi'] >= 98.0  # Weighted average should be ~99
+    
+    def test_sample_scoring_team_b_good(self, calculator):
+        """
+        Sample Scoring: Team B - Good Performance
+        
+        Team Profile:
+        - Moderate deployment frequency (140/year)
+        - Acceptable lead time (5 days)
+        - Partial automation
+        - Good hygiene (75/100)
+        - Some compliance gaps
+        - Partial adoption
+        """
+        metrics = {
+            # Release Velocity
+            'rf': 140, 'lttd': 5.0,
+            # Pipeline Maturity
+            'ci': True, 'cd': True, 'rollback': False,
+            'zero_touch_deployment': False, 'pipeline_standard': True,
+            # Git Hygiene
+            'git_hygiene_score': 75.0,
+            # Compliance
+            'release_page_url': 'https://releases.example.com',
+            'compliance_evidence_page': '',
+            'repo_docs': 'https://docs.example.com',
+            'is_priv_access_current': True,
+            'cr_auto_creation': False,
+            # Quality & Security
+            'sast_enabled': True,
+            'sonarqube_project': 'team-b-project',
+            'data_classification': 'Internal',
+            # Adoption
+            'copilot_enabled': True,
+            'ai_tools_declared': False,
+            'apis_published_iadp': True,
+            'apis_published_apix': False,
+            'ai_devops_onboarded': False
+        }
+        
+        result = calculator.calculate_all_scores(metrics)
+        
+        # Expected scores
+        assert result['Release_Velocity_Score'] == pytest.approx(75.0, abs=5)  # RF=140 (70) + LTTD=5 (80)
+        assert result['Git_Hygiene_Score'] == 75.0
+        assert result['Pipeline_Maturity_Score'] == 60.0  # 3 out of 5
+        assert result['Compliance_Score'] == 60.0  # 3 out of 5
+        assert result['Quality_Security_Score'] == 100.0  # All 3 components
+        assert result['Adoption_Score'] == 50.0  # Copilot (30) + IADP (20)
+        assert 65.0 <= result['dpi'] <= 75.0  # Weighted average
+    
+    def test_sample_scoring_team_c_needs_improvement(self, calculator):
+        """
+        Sample Scoring: Team C - Needs Improvement
+        
+        Team Profile:
+        - Low deployment frequency (20/year)
+        - Slow lead time (15 days)
+        - Manual processes
+        - Poor hygiene (40/100)
+        - Compliance gaps
+        - Limited adoption
+        """
+        metrics = {
+            # Release Velocity
+            'rf': 20, 'lttd': 15.0,
+            # Pipeline Maturity
+            'ci': True, 'cd': False, 'rollback': False,
+            'zero_touch_deployment': False, 'pipeline_standard': False,
+            # Git Hygiene
+            'git_hygiene_score': 40.0,
+            # Compliance
+            'release_page_url': '',
+            'compliance_evidence_page': '',
+            'repo_docs': '',
+            'is_priv_access_current': False,
+            'cr_auto_creation': False,
+            # Quality & Security
+            'sast_enabled': False,
+            'sonarqube_project': '',
+            'data_classification': 'Public',
+            # Adoption
+            'copilot_enabled': False,
+            'ai_tools_declared': False,
+            'apis_published_iadp': False,
+            'apis_published_apix': False,
+            'ai_devops_onboarded': False
+        }
+        
+        result = calculator.calculate_all_scores(metrics)
+        
+        # Expected scores
+        assert result['Release_Velocity_Score'] <= 30.0  # Low RF + slow LTTD
+        assert result['Git_Hygiene_Score'] == 40.0
+        assert result['Pipeline_Maturity_Score'] == 20.0  # Only CI
+        assert result['Compliance_Score'] == 0.0  # None met
+        assert result['Quality_Security_Score'] == 0.0  # None met
+        assert result['Adoption_Score'] == 0.0  # None met
+        assert result['dpi'] <= 25.0  # Very low overall
     
     def test_dpi_weighted_calculation(self, calculator):
         """Test DPI is correctly weighted"""

@@ -245,9 +245,9 @@ class RegistryLoader:
                 # ai_tools_declared: handle both boolean and array formats
                 'ai_tools_declared': bool(data.get('ai_tools_declared', False)),
                 'ai_devops_onboarded': data.get('ai_devops_onboarded', False),
-                # New API fields - split into IADP and APIX
-                'apis_published_iadp': int(data.get('apis_published_iadp', 0) or 0),
-                'apis_published_apix': int(data.get('apis_published_apix', 0) or 0),
+                # New API fields - boolean flags for IADP and APIX
+                'apis_published_iadp': bool(data.get('apis_published_iadp', False)),
+                'apis_published_apix': bool(data.get('apis_published_apix', False)),
                 # Legacy field for backward compatibility
                 'apis_published': data.get('apis_published', 0),
                 'feature_flags_adopted': data.get('feature_flags_adopted', False),
