@@ -256,17 +256,43 @@ class Config:
     @property
     def mongodb_uri(self) -> str:
         """Get MongoDB connection URI."""
-        return self.get("MONGODB_URI", "")
+        return self.get("MONGO_URI", "")
+    
+    @property
+    def mongodb_host(self) -> str:
+        """Get MongoDB host."""
+        return self.get("MONGO_HOST", "")
+    
+    @property
+    def mongodb_port(self) -> int:
+        """Get MongoDB port."""
+        port = self.get("MONGO_PORT", "27017")
+        return int(port) if port else 27017
+    
+    @property
+    def mongodb_username(self) -> str:
+        """Get MongoDB username."""
+        return self.get("MONGO_USERNAME", "")
+    
+    @property
+    def mongodb_password(self) -> str:
+        """Get MongoDB password."""
+        return self.get("MONGO_PASSWORD", "")
+    
+    @property
+    def mongodb_auth_source(self) -> str:
+        """Get MongoDB authentication source."""
+        return self.get("MONGO_AUTHSOURCE", "admin")
     
     @property
     def mongodb_database(self) -> str:
         """Get MongoDB database name."""
-        return self.get("MONGODB_DATABASE", "devops_metrics")
+        return self.get("MONGO_DB_NAME", "devops_metrics")
     
     @property
     def use_mongodb(self) -> bool:
         """Check if MongoDB should be used instead of SQLite."""
-        return bool(self.mongodb_uri)
+        return bool(self.mongodb_uri or self.mongodb_host)
     
     def validate(self) -> Dict[str, bool]:
         """

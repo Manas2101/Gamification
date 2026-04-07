@@ -51,13 +51,27 @@ class MongoDatabase:
         >>> df = db.get_latest_metrics()
     """
     
-    def __init__(self, connection_string: str = None, database_name: str = "devops_metrics"):
+    def __init__(
+        self, 
+        connection_string: str = None, 
+        database_name: str = "devops_metrics",
+        host: str = None,
+        port: int = None,
+        username: str = None,
+        password: str = None,
+        auth_source: str = None
+    ):
         """
         Initialize MongoDB connection.
         
         Args:
-            connection_string: MongoDB connection URI
+            connection_string: MongoDB connection URI (if provided, other params ignored)
             database_name: Name of the database to use
+            host: MongoDB host (alternative to connection_string)
+            port: MongoDB port (alternative to connection_string)
+            username: MongoDB username (alternative to connection_string)
+            password: MongoDB password (alternative to connection_string)
+            auth_source: Authentication database (alternative to connection_string)
             
         Raises:
             ImportError: If pymongo is not installed
@@ -68,14 +82,33 @@ class MongoDatabase:
                 "pymongo is not installed. Install it with: pip install pymongo"
             )
         
-        if not connection_string:
-            connection_string = "mongodb://localhost:27017"
-        
-        self.connection_string = connection_string
         self.database_name = database_name
         
         try:
-            self.client = MongoClient(connection_string, serverSelectionTimeoutMS=5000)
+            # Use connection string if provided
+            if connection_string:
+                self.client = MongoClient(connection_string, serverSelectionTimeoutMS=5000)
+                self.connection_string = connection_string
+            # Otherwise use individual parameters
+            else:
+                host = host or "localhost"
+                port = port or 27017
+                
+                if username and password:
+                    auth_source = auth_source or "admin"
+                    self.client = MongoClient(
+                        host=host,
+                        port=port,
+                        username=username,
+                        password=password,
+                        authSource=auth_source,
+                        serverSelectionTimeoutMS=5000
+                    )
+                    self.connection_string = f"mongodb://{username}:***@{host}:{port}/?authSource={auth_source}"
+                else:
+                    self.client = MongoClient(host=host, port=port, serverSelectionTimeoutMS=5000)
+                    self.connection_string = f"mongodb://{host}:{port}"
+            
             # Test connection
             self.client.admin.command('ping')
             self.db = self.client[database_name]

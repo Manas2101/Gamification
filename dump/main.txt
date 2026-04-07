@@ -196,7 +196,22 @@ def run_weekly_refresh(config: Config, generate_docs: bool = False):
             print("   Install it with: pip install pymongo")
             return
         logger.info(f"Using MongoDB: {config.mongodb_database}")
-        db = MongoDatabase(config.mongodb_uri, config.mongodb_database)
+        
+        # Use URI if provided, otherwise use individual parameters
+        if config.mongodb_uri:
+            db = MongoDatabase(
+                connection_string=config.mongodb_uri,
+                database_name=config.mongodb_database
+            )
+        else:
+            db = MongoDatabase(
+                host=config.mongodb_host,
+                port=config.mongodb_port,
+                username=config.mongodb_username,
+                password=config.mongodb_password,
+                auth_source=config.mongodb_auth_source,
+                database_name=config.mongodb_database
+            )
     else:
         logger.info(f"Using SQLite: {config.db_path}")
         db = Database(config.db_path)
