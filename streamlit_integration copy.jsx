@@ -60,7 +60,23 @@ class DashboardDataLoader:
     def load_latest_data(self) -> pd.DataFrame:
         """Load latest metrics for all pods"""
         try:
-            return self.db.get_latest_metrics()
+            df = self.db.get_latest_metrics()
+            
+            # Transform MongoDB column names to match app.py expectations
+            if not df.empty:
+                # Map pod_id to Team if needed
+                if 'pod_id' in df.columns and 'Team' not in df.columns:
+                    df['Team'] = df['pod_id']
+                
+                # Map week_date to Week if needed
+                if 'week_date' in df.columns and 'Week' not in df.columns:
+                    df['Week'] = pd.to_datetime(df['week_date'])
+                
+                # Ensure DPI column exists (might be lowercase 'dpi')
+                if 'dpi' in df.columns and 'DPI' not in df.columns:
+                    df['DPI'] = df['dpi']
+            
+            return df
         except Exception as e:
             logger.error(f"Error loading latest data: {e}")
             return pd.DataFrame()
@@ -84,9 +100,31 @@ class DashboardDataLoader:
     def load_all_history(self) -> pd.DataFrame:
         """Load all historical metrics for all pods"""
         try:
-            return self.db.get_all_history()
+            df = self.db.get_all_history()
+            
+            # Transform MongoDB column names to match app.py expectations
+            if not df.empty:
+                logger.info(f"MongoDB columns: {list(df.columns)}")
+                
+                # Map pod_id to Team if needed
+                if 'pod_id' in df.columns and 'Team' not in df.columns:
+                    df['Team'] = df['pod_id']
+                
+                # Map week_date to Week if needed
+                if 'week_date' in df.columns and 'Week' not in df.columns:
+                    df['Week'] = pd.to_datetime(df['week_date'])
+                
+                # Ensure DPI column exists (might be lowercase 'dpi')
+                if 'dpi' in df.columns and 'DPI' not in df.columns:
+                    df['DPI'] = df['dpi']
+                
+                logger.info(f"After mapping - columns: {list(df.columns)}")
+            
+            return df
         except Exception as e:
             logger.error(f"Error loading history: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return pd.DataFrame()
 
 
