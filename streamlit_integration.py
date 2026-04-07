@@ -95,6 +95,19 @@ class DashboardDataLoader:
                 # Map business_unit to Business_Unit
                 if 'business_unit' in df.columns and 'Business_Unit' not in df.columns:
                     df['Business_Unit'] = df['business_unit']
+                
+                # Add default values for missing columns that app.py expects
+                if 'Tier' not in df.columns:
+                    logger.warning("Tier column missing in latest data - adding default values")
+                    df['Tier'] = 'Unknown'
+                
+                if 'Stack' not in df.columns:
+                    logger.warning("Stack column missing in latest data - adding default values")
+                    df['Stack'] = 'Unknown'
+                
+                if 'Business_Unit' not in df.columns:
+                    logger.warning("Business_Unit column missing in latest data - adding default values")
+                    df['Business_Unit'] = 'Unknown'
             
             return df
         except Exception as e:
@@ -125,6 +138,7 @@ class DashboardDataLoader:
             # Transform MongoDB column names to match app.py expectations
             if not df.empty:
                 logger.info(f"MongoDB columns: {list(df.columns)}")
+                logger.info(f"Sample row data: {df.iloc[0].to_dict() if len(df) > 0 else 'No data'}")
                 
                 # Map pod_id to Team if needed
                 if 'pod_id' in df.columns and 'Team' not in df.columns:
@@ -158,7 +172,21 @@ class DashboardDataLoader:
                 if 'business_unit' in df.columns and 'Business_Unit' not in df.columns:
                     df['Business_Unit'] = df['business_unit']
                 
+                # Add default values for missing columns that app.py expects
+                if 'Tier' not in df.columns:
+                    logger.warning("Tier column missing - adding default values")
+                    df['Tier'] = 'Unknown'
+                
+                if 'Stack' not in df.columns:
+                    logger.warning("Stack column missing - adding default values")
+                    df['Stack'] = 'Unknown'
+                
+                if 'Business_Unit' not in df.columns:
+                    logger.warning("Business_Unit column missing - adding default values")
+                    df['Business_Unit'] = 'Unknown'
+                
                 logger.info(f"After mapping - columns: {list(df.columns)}")
+                logger.info(f"Tier values: {df['Tier'].unique() if 'Tier' in df.columns else 'No Tier column'}")
             
             return df
         except Exception as e:
