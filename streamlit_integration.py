@@ -147,6 +147,14 @@ class DashboardDataLoader:
                 logger.info(f"MongoDB columns: {list(df.columns)}")
                 logger.info(f"Sample row data: {df.iloc[0].to_dict() if len(df) > 0 else 'No data'}")
                 
+                # Debug: Check what dates we're getting from MongoDB
+                if 'week_date' in df.columns:
+                    unique_dates = df['week_date'].unique()
+                    logger.info(f"MongoDB week_dates found: {sorted(unique_dates)}")
+                if 'created_at' in df.columns:
+                    latest_created = df['created_at'].max() if not df['created_at'].isna().all() else 'No created_at'
+                    logger.info(f"Latest created_at in MongoDB: {latest_created}")
+                
                 # Map pod_name to Team if available, otherwise use pod_id
                 if 'pod_name' in df.columns and 'Team' not in df.columns:
                     # Use pod_name if it exists and is not null/empty, otherwise use pod_id

@@ -195,8 +195,8 @@ class MongoDatabase:
         try:
             # First try the aggregation pipeline with join
             pipeline = [
-                # Get latest metrics for each pod
-                {"$sort": {"created_at": -1}},
+                # Get latest metrics for each pod - sort by week_date first, then created_at
+                {"$sort": {"week_date": -1, "created_at": -1}},
                 {"$group": {
                     "_id": "$pod_id",
                     "latest": {"$first": "$$ROOT"}
@@ -241,6 +241,12 @@ class MongoDatabase:
                 df = df.drop('_id', axis=1)
             
             logger.info(f"Successfully joined {len(df)} records with pod metadata")
+            
+            # Debug: Log the dates we're returning
+            if 'week_date' in df.columns:
+                unique_dates = df['week_date'].unique()
+                logger.info(f"Returning latest metrics with week_dates: {sorted(unique_dates)}")
+            
             return df
             
         except Exception as e:
@@ -254,7 +260,7 @@ class MongoDatabase:
         try:
             # Get latest metrics without join
             pipeline = [
-                {"$sort": {"created_at": -1}},
+                {"$sort": {"week_date": -1, "created_at": -1}},
                 {"$group": {
                     "_id": "$pod_id",
                     "latest": {"$first": "$$ROOT"}
