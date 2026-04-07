@@ -64,8 +64,11 @@ class DashboardDataLoader:
             
             # Transform MongoDB column names to match app.py expectations
             if not df.empty:
-                # Map pod_id to Team if needed
-                if 'pod_id' in df.columns and 'Team' not in df.columns:
+                # Map pod_name to Team if available, otherwise use pod_id
+                if 'pod_name' in df.columns and 'Team' not in df.columns:
+                    # Use pod_name if it exists and is not null/empty
+                    df['Team'] = df['pod_name'].fillna(df['pod_id']).replace('', df['pod_id'])
+                elif 'pod_id' in df.columns and 'Team' not in df.columns:
                     df['Team'] = df['pod_id']
                 
                 # Map week_date to Week if needed
@@ -140,8 +143,11 @@ class DashboardDataLoader:
                 logger.info(f"MongoDB columns: {list(df.columns)}")
                 logger.info(f"Sample row data: {df.iloc[0].to_dict() if len(df) > 0 else 'No data'}")
                 
-                # Map pod_id to Team if needed
-                if 'pod_id' in df.columns and 'Team' not in df.columns:
+                # Map pod_name to Team if available, otherwise use pod_id
+                if 'pod_name' in df.columns and 'Team' not in df.columns:
+                    # Use pod_name if it exists and is not null/empty
+                    df['Team'] = df['pod_name'].fillna(df['pod_id']).replace('', df['pod_id'])
+                elif 'pod_id' in df.columns and 'Team' not in df.columns:
                     df['Team'] = df['pod_id']
                 
                 # Map week_date to Week if needed

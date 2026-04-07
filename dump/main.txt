@@ -333,13 +333,14 @@ def run_weekly_refresh(config: Config, generate_docs: bool = False):
             # Compute badges
             badges = badge_engine.compute_badges(scores)
             
-            # Upsert pod info
+            # Upsert pod info (use YAML values as-is)
+            logger.info(f"  Storing pod info: tier='{app.tier}', stack='{app.stack}', business_unit='{app.business_unit}'")
             db.upsert_pod(
                 pod_id=app.app_id,
                 pod_name=app.app_name,
                 stack=app.stack,
                 business_unit=app.business_unit,
-                tier=app.tier
+                tier=str(app.tier)  # Convert to string in case it's numeric
             )
             
             # Insert weekly metrics

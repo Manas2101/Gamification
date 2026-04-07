@@ -192,47 +192,108 @@ class MongoDatabase:
         Returns:
             DataFrame with latest metrics for each pod including tier, stack, business_unit
         """
-        pipeline = [
-            # Get latest metrics for each pod
-            {"$sort": {"created_at": -1}},
-            {"$group": {
-                "_id": "$pod_id",
-                "latest": {"$first": "$$ROOT"}
-            }},
-            {"$replaceRoot": {"newRoot": "$latest"}},
+        try:
+            # First try the aggregation pipeline with join
+            pipeline = [
+                # Get latest metrics for each pod
+                {"$sort": {"created_at": -1}},
+                {"$group": {
+                    "_id": "$pod_id",
+                    "latest": {"$first": "$$ROOT"}
+                }},
+                {"$replaceRoot": {"newRoot": "$latest"}},
+                
+                # Join with pods collection to get tier, stack, business_unit
+                {"$lookup": {
+                    "from": "pods",
+                    "localField": "pod_id",
+                    "foreignField": "pod_id",
+                    "as": "pod_info"
+                }},
+                
+                # Merge pod info into main document
+                {"$addFields": {
+                    "tier": {"$arrayElemAt": ["$pod_info.tier", 0]},
+                    "stack": {"$arrayElemAt": ["$pod_info.stack", 0]},
+                    "business_unit": {"$arrayElemAt": ["$pod_info.business_unit", 0]},
+                    "pod_name": {"$arrayElemAt": ["$pod_info.pod_name", 0]}
+                }},
+                
+                # Remove the pod_info array
+                {"$unset": "pod_info"}
+            ]
             
-            # Join with pods collection to get tier, stack, business_unit
-            {"$lookup": {
-                "from": "pods",
-                "localField": "pod_id",
-                "foreignField": "pod_id",
-                "as": "pod_info"
-            }},
+            results = list(self.metrics.aggregate(pipeline))
             
-            # Merge pod info into main document
-            {"$addFields": {
-                "tier": {"$arrayElemAt": ["$pod_info.tier", 0]},
-                "stack": {"$arrayElemAt": ["$pod_info.stack", 0]},
-                "business_unit": {"$arrayElemAt": ["$pod_info.business_unit", 0]},
-                "pod_name": {"$arrayElemAt": ["$pod_info.pod_name", 0]}
-            }},
+            if not results:
+                logger.warning("No results from aggregation pipeline")
+                return pd.DataFrame()
             
-            # Remove the pod_info array
-            {"$unset": "pod_info"}
-        ]
-        
-        results = list(self.metrics.aggregate(pipeline))
-        
-        if not results:
+            df = pd.DataFrame(results)
+            
+            # Check if join worked by seeing if we have tier data
+            if 'tier' not in df.columns or df['tier'].isna().all():
+                logger.warning("MongoDB join didn't work, falling back to separate queries")
+                return self._get_latest_metrics_fallback()
+            
+            # Remove MongoDB _id field
+            if '_id' in df.columns:
+                df = df.drop('_id', axis=1)
+            
+            logger.info(f"Successfully joined {len(df)} records with pod metadata")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error in get_latest_metrics aggregation: {e}")
+            return self._get_latest_metrics_fallback()
+    
+    def _get_latest_metrics_fallback(self) -> pd.DataFrame:
+        """
+        Fallback method to get metrics and pod info separately then merge.
+        """
+        try:
+            # Get latest metrics without join
+            pipeline = [
+                {"$sort": {"created_at": -1}},
+                {"$group": {
+                    "_id": "$pod_id",
+                    "latest": {"$first": "$$ROOT"}
+                }},
+                {"$replaceRoot": {"newRoot": "$latest"}}
+            ]
+            
+            metrics_results = list(self.metrics.aggregate(pipeline))
+            if not metrics_results:
+                return pd.DataFrame()
+            
+            metrics_df = pd.DataFrame(metrics_results)
+            
+            # Get all pod info
+            pods_results = list(self.pods.find({}))
+            if not pods_results:
+                logger.warning("No pods found in pods collection")
+                return metrics_df
+            
+            pods_df = pd.DataFrame(pods_results)
+            
+            # Merge on pod_id
+            merged_df = metrics_df.merge(
+                pods_df[['pod_id', 'pod_name', 'tier', 'stack', 'business_unit']], 
+                on='pod_id', 
+                how='left'
+            )
+            
+            # Remove MongoDB _id fields
+            for col in ['_id_x', '_id_y', '_id']:
+                if col in merged_df.columns:
+                    merged_df = merged_df.drop(col, axis=1)
+            
+            logger.info(f"Fallback merge successful: {len(merged_df)} records")
+            return merged_df
+            
+        except Exception as e:
+            logger.error(f"Error in fallback method: {e}")
             return pd.DataFrame()
-        
-        df = pd.DataFrame(results)
-        
-        # Remove MongoDB _id field
-        if '_id' in df.columns:
-            df = df.drop('_id', axis=1)
-        
-        return df
     
     def get_pod_history(self, pod_id: str, limit: int = 52) -> pd.DataFrame:
         """
@@ -276,50 +337,115 @@ class MongoDatabase:
         Returns:
             DataFrame with all historical metrics including tier, stack, business_unit
         """
-        pipeline = [
-            {"$sort": {"pod_id": 1, "created_at": -1}},
-            {"$group": {
-                "_id": "$pod_id",
-                "records": {"$push": "$$ROOT"}
-            }},
-            {"$project": {
-                "records": {"$slice": ["$records", limit_per_pod]}
-            }},
-            {"$unwind": "$records"},
-            {"$replaceRoot": {"newRoot": "$records"}},
+        try:
+            # First try the aggregation pipeline with join
+            pipeline = [
+                {"$sort": {"pod_id": 1, "created_at": -1}},
+                {"$group": {
+                    "_id": "$pod_id",
+                    "records": {"$push": "$$ROOT"}
+                }},
+                {"$project": {
+                    "records": {"$slice": ["$records", limit_per_pod]}
+                }},
+                {"$unwind": "$records"},
+                {"$replaceRoot": {"newRoot": "$records"}},
+                
+                # Join with pods collection to get tier, stack, business_unit
+                {"$lookup": {
+                    "from": "pods",
+                    "localField": "pod_id",
+                    "foreignField": "pod_id",
+                    "as": "pod_info"
+                }},
+                
+                # Merge pod info into main document
+                {"$addFields": {
+                    "tier": {"$arrayElemAt": ["$pod_info.tier", 0]},
+                    "stack": {"$arrayElemAt": ["$pod_info.stack", 0]},
+                    "business_unit": {"$arrayElemAt": ["$pod_info.business_unit", 0]},
+                    "pod_name": {"$arrayElemAt": ["$pod_info.pod_name", 0]}
+                }},
+                
+                # Remove the pod_info array
+                {"$unset": "pod_info"}
+            ]
             
-            # Join with pods collection to get tier, stack, business_unit
-            {"$lookup": {
-                "from": "pods",
-                "localField": "pod_id",
-                "foreignField": "pod_id",
-                "as": "pod_info"
-            }},
+            results = list(self.metrics.aggregate(pipeline))
             
-            # Merge pod info into main document
-            {"$addFields": {
-                "tier": {"$arrayElemAt": ["$pod_info.tier", 0]},
-                "stack": {"$arrayElemAt": ["$pod_info.stack", 0]},
-                "business_unit": {"$arrayElemAt": ["$pod_info.business_unit", 0]},
-                "pod_name": {"$arrayElemAt": ["$pod_info.pod_name", 0]}
-            }},
+            if not results:
+                logger.warning("No results from history aggregation pipeline")
+                return pd.DataFrame()
             
-            # Remove the pod_info array
-            {"$unset": "pod_info"}
-        ]
-        
-        results = list(self.metrics.aggregate(pipeline))
-        
-        if not results:
+            df = pd.DataFrame(results)
+            
+            # Check if join worked by seeing if we have tier data
+            if 'tier' not in df.columns or df['tier'].isna().all():
+                logger.warning("MongoDB history join didn't work, falling back to separate queries")
+                return self._get_all_history_fallback(limit_per_pod)
+            
+            # Remove MongoDB _id field
+            if '_id' in df.columns:
+                df = df.drop('_id', axis=1)
+            
+            logger.info(f"Successfully joined {len(df)} history records with pod metadata")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error in get_all_history aggregation: {e}")
+            return self._get_all_history_fallback(limit_per_pod)
+    
+    def _get_all_history_fallback(self, limit_per_pod: int = 52) -> pd.DataFrame:
+        """
+        Fallback method to get all history and pod info separately then merge.
+        """
+        try:
+            # Get all metrics without join
+            pipeline = [
+                {"$sort": {"pod_id": 1, "created_at": -1}},
+                {"$group": {
+                    "_id": "$pod_id",
+                    "records": {"$push": "$$ROOT"}
+                }},
+                {"$project": {
+                    "records": {"$slice": ["$records", limit_per_pod]}
+                }},
+                {"$unwind": "$records"},
+                {"$replaceRoot": {"newRoot": "$records"}}
+            ]
+            
+            metrics_results = list(self.metrics.aggregate(pipeline))
+            if not metrics_results:
+                return pd.DataFrame()
+            
+            metrics_df = pd.DataFrame(metrics_results)
+            
+            # Get all pod info
+            pods_results = list(self.pods.find({}))
+            if not pods_results:
+                logger.warning("No pods found in pods collection for history")
+                return metrics_df
+            
+            pods_df = pd.DataFrame(pods_results)
+            
+            # Merge on pod_id
+            merged_df = metrics_df.merge(
+                pods_df[['pod_id', 'pod_name', 'tier', 'stack', 'business_unit']], 
+                on='pod_id', 
+                how='left'
+            )
+            
+            # Remove MongoDB _id fields
+            for col in ['_id_x', '_id_y', '_id']:
+                if col in merged_df.columns:
+                    merged_df = merged_df.drop(col, axis=1)
+            
+            logger.info(f"Fallback history merge successful: {len(merged_df)} records")
+            return merged_df
+            
+        except Exception as e:
+            logger.error(f"Error in history fallback method: {e}")
             return pd.DataFrame()
-        
-        df = pd.DataFrame(results) 
-        
-        # Remove MongoDB _id field
-        if '_id' in df.columns:
-            df = df.drop('_id', axis=1)
-        
-        return df
     
     def get_leaderboard(self, metric: str = 'dpi', limit: int = 10) -> pd.DataFrame:
         """
