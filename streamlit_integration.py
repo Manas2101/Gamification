@@ -66,8 +66,8 @@ class DashboardDataLoader:
             if not df.empty:
                 # Map pod_name to Team if available, otherwise use pod_id
                 if 'pod_name' in df.columns and 'Team' not in df.columns:
-                    # Use pod_name if it exists and is not null/empty
-                    df['Team'] = df['pod_name'].fillna(df['pod_id']).replace('', df['pod_id'])
+                    # Use pod_name if it exists and is not null/empty, otherwise use pod_id
+                    df['Team'] = df.apply(lambda row: row['pod_name'] if pd.notna(row['pod_name']) and row['pod_name'] != '' else row['pod_id'], axis=1)
                 elif 'pod_id' in df.columns and 'Team' not in df.columns:
                     df['Team'] = df['pod_id']
                 
@@ -78,6 +78,10 @@ class DashboardDataLoader:
                 # Ensure DPI column exists (might be lowercase 'dpi')
                 if 'dpi' in df.columns and 'DPI' not in df.columns:
                     df['DPI'] = df['dpi']
+                elif 'DPI' not in df.columns:
+                    # Add default DPI column if missing
+                    logger.warning("DPI column missing - adding default values")
+                    df['DPI'] = 0.0
                 
                 # Map rf to RF (release frequency)
                 if 'rf' in df.columns and 'RF' not in df.columns:
@@ -145,8 +149,8 @@ class DashboardDataLoader:
                 
                 # Map pod_name to Team if available, otherwise use pod_id
                 if 'pod_name' in df.columns and 'Team' not in df.columns:
-                    # Use pod_name if it exists and is not null/empty
-                    df['Team'] = df['pod_name'].fillna(df['pod_id']).replace('', df['pod_id'])
+                    # Use pod_name if it exists and is not null/empty, otherwise use pod_id
+                    df['Team'] = df.apply(lambda row: row['pod_name'] if pd.notna(row['pod_name']) and row['pod_name'] != '' else row['pod_id'], axis=1)
                 elif 'pod_id' in df.columns and 'Team' not in df.columns:
                     df['Team'] = df['pod_id']
                 
@@ -157,6 +161,10 @@ class DashboardDataLoader:
                 # Ensure DPI column exists (might be lowercase 'dpi')
                 if 'dpi' in df.columns and 'DPI' not in df.columns:
                     df['DPI'] = df['dpi']
+                elif 'DPI' not in df.columns:
+                    # Add default DPI column if missing
+                    logger.warning("DPI column missing - adding default values")
+                    df['DPI'] = 0.0
                 
                 # Map rf to RF (release frequency)
                 if 'rf' in df.columns and 'RF' not in df.columns:
