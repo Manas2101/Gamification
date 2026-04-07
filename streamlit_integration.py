@@ -75,6 +75,26 @@ class DashboardDataLoader:
                 # Ensure DPI column exists (might be lowercase 'dpi')
                 if 'dpi' in df.columns and 'DPI' not in df.columns:
                     df['DPI'] = df['dpi']
+                
+                # Map rf to RF (release frequency)
+                if 'rf' in df.columns and 'RF' not in df.columns:
+                    df['RF'] = df['rf']
+                
+                # Map lttd to LTTD (lead time to deploy)
+                if 'lttd' in df.columns and 'LTTD' not in df.columns:
+                    df['LTTD'] = df['lttd']
+                
+                # Map tier to Tier (performance tier)
+                if 'tier' in df.columns and 'Tier' not in df.columns:
+                    df['Tier'] = df['tier']
+                
+                # Map stack to Stack (technology stack)
+                if 'stack' in df.columns and 'Stack' not in df.columns:
+                    df['Stack'] = df['stack']
+                
+                # Map business_unit to Business_Unit
+                if 'business_unit' in df.columns and 'Business_Unit' not in df.columns:
+                    df['Business_Unit'] = df['business_unit']
             
             return df
         except Exception as e:
@@ -117,6 +137,26 @@ class DashboardDataLoader:
                 # Ensure DPI column exists (might be lowercase 'dpi')
                 if 'dpi' in df.columns and 'DPI' not in df.columns:
                     df['DPI'] = df['dpi']
+                
+                # Map rf to RF (release frequency)
+                if 'rf' in df.columns and 'RF' not in df.columns:
+                    df['RF'] = df['rf']
+                
+                # Map lttd to LTTD (lead time to deploy)
+                if 'lttd' in df.columns and 'LTTD' not in df.columns:
+                    df['LTTD'] = df['lttd']
+                
+                # Map tier to Tier (performance tier)
+                if 'tier' in df.columns and 'Tier' not in df.columns:
+                    df['Tier'] = df['tier']
+                
+                # Map stack to Stack (technology stack)
+                if 'stack' in df.columns and 'Stack' not in df.columns:
+                    df['Stack'] = df['stack']
+                
+                # Map business_unit to Business_Unit
+                if 'business_unit' in df.columns and 'Business_Unit' not in df.columns:
+                    df['Business_Unit'] = df['business_unit']
                 
                 logger.info(f"After mapping - columns: {list(df.columns)}")
             
