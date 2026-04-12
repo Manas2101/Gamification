@@ -2655,7 +2655,7 @@ def tier_html(tier, dpi=None):
 
  
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(['🏁 Overview','🏆 Leaderboard','🎖️ Badges','👥 Team','📘 Docs'])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(['🏁 Overview','🏆 Leaderboard','🎖️ Badges','📈 Team Trends','📘 Docs'])
 
  
 
@@ -3023,253 +3023,61 @@ with tab1:
 
  
 
-    st.markdown("<h3 style='color:white; margin-top:40px;'>🎮 Team Performance Dashboard</h3>", unsafe_allow_html=True)
-
- 
-
-    left, right = st.columns([2,1])
-
- 
-
-    with left:
-
- 
-
-        st.markdown("<p style='color:rgba(255,255,255,0.8);'>Select a team to view detailed performance metrics</p>", unsafe_allow_html=True)
-
- 
-
-        # Natural sort for team numbers (Team 1, Team 2, ..., Team 10, Team 11, etc.)
-
-        def natural_sort_key(team_name):
-
-            return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', str(team_name))]
-
-       
-
-        teams_for_overview = sorted(display_history['Team'].unique(), key=natural_sort_key)
-
- 
-
-        team_choice = st.selectbox('🏢 Select Team', options=teams_for_overview, key='overview_team')
-
- 
-
-        team_data = display_latest_df[display_latest_df['Team'] == team_choice]
-        if team_data.empty:
-            st.error(f"⚠️ No data found for team '{team_choice}'. Please run the weekly refresh script to populate data.")
-            st.stop()
-        trow = team_data.iloc[0]
-
- 
-
-        st.markdown(f"""<div style='background: rgba(45,55,72,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);'>
-
-<div style='display:flex; justify-content:space-between; align-items:center;'>
-
-<div>
-
-<h2 style='font-size: 24px; font-weight: 700; color: white; margin: 0;'>{team_choice}</h2>
-
-<div style='font-size:16px; color:rgba(255,255,255,0.8);'>DPI Score: <span style='font-size:24px; font-weight:800; color:#ffd700;'>{f"{trow.get('DPI', 0):.1f}" if trow.get('DPI') is not None else 'N/A'}</span></div>
-
-</div>
-
-<div>{tier_html(trow['Tier'])}</div>
-
-</div>
-
-</div>
-
-        """, unsafe_allow_html=True)
-
- 
-
-        # show numeric score bars with labels
-
-        st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-
- 
-
-        # NEW 6-PILLAR SYSTEM
-        st.markdown("<div style='color:white; font-size:18px; font-weight:600; margin-bottom:15px;'>📊 6-Pillar Breakdown</div>", unsafe_allow_html=True)
+    # Overall Statistics Graphs Section
+    st.markdown("<h3 style='color:white; margin-top:40px;'>📊 Overall Statistics</h3>", unsafe_allow_html=True)
+    
+    # Create charts showing overall trends and distributions
+    chart_col1, chart_col2 = st.columns(2)
+    
+    with chart_col1:
+        st.markdown("<h4 style='color:white; margin-bottom:15px;'>📈 DPI Distribution by Tier</h4>", unsafe_allow_html=True)
         
-        cols = st.columns(3)
-
-        # Row 1: Top 3 pillars (highest weights)
-        with cols[0]:
-            # Release Velocity (30%)
-            release_velocity = trow.get('Release_Velocity_Score', 0)
-            rv_pct = int(release_velocity) if release_velocity is not None and not pd.isna(release_velocity) else 0
-            rv_display = f"{release_velocity:.1f}" if release_velocity is not None and not pd.isna(release_velocity) else 'N/A'
-            st.markdown(f"""<div style='margin-bottom:20px;'>
-<div style='color:white; font-weight:600; margin-bottom:8px;'>🚀 Release Velocity <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(30%)</span></div>
-<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{rv_pct}%; background:#06b6d4;'></div>
-</div>
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{rv_display} / 100</div>
-</div>
-            """, unsafe_allow_html=True)
-
-        with cols[1]:
-            # Git Hygiene (20%)
-            git_hygiene = trow.get('Git_Hygiene_Score', 0)
-            gh_pct = int(git_hygiene) if git_hygiene is not None and not pd.isna(git_hygiene) else 0
-            gh_display = f"{git_hygiene:.1f}" if git_hygiene is not None and not pd.isna(git_hygiene) else "N/A"
-            st.markdown(f"""<div style='margin-bottom:20px;'>
-<div style='color:white; font-weight:600; margin-bottom:8px;'>🧹 Git Hygiene <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(20%)</span></div>
-<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{gh_pct}%; background:#10b981;'></div>
-</div>
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{gh_display} / 100</div>
-</div>
-            """, unsafe_allow_html=True)
-
-        with cols[2]:
-            # Pipeline Maturity (20%)
-            pipeline_maturity = trow.get('Pipeline_Maturity_Score', 0)
-            pm_pct = int(pipeline_maturity) if pipeline_maturity is not None and not pd.isna(pipeline_maturity) else 0
-            pm_display = f"{pipeline_maturity:.1f}" if pipeline_maturity is not None and not pd.isna(pipeline_maturity) else "N/A"
-            st.markdown(f"""<div style='margin-bottom:20px;'>
-<div style='color:white; font-weight:600; margin-bottom:8px;'>⚙️ Pipeline Maturity <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(20%)</span></div>
-<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{pm_pct}%; background:#60a5fa;'></div>
-</div>
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{pm_display} / 100</div>
-</div>
-            """, unsafe_allow_html=True)
-
-        # Row 2: Bottom 3 pillars (lower weights)
-        cols2 = st.columns(3)
+        # Create tier distribution chart
+        tier_counts = display_latest_df['Tier'].value_counts()
+        tier_data = pd.DataFrame({
+            'Tier': tier_counts.index,
+            'Count': tier_counts.values
+        })
         
-        with cols2[0]:
-            # Compliance (15%)
-            compliance = trow.get('Compliance_Score', 0)
-            comp_pct = int(compliance) if compliance is not None and not pd.isna(compliance) else 0
-            comp_display = f"{compliance:.1f}" if compliance is not None and not pd.isna(compliance) else "N/A"
-            st.markdown(f"""<div style='margin-bottom:20px;'>
-<div style='color:white; font-weight:600; margin-bottom:8px;'>📋 Compliance <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(15%)</span></div>
-<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{comp_pct}%; background:#ec4899;'></div>
-</div>
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{comp_display} / 100</div>
-</div>
-            """, unsafe_allow_html=True)
+        # Display as a simple bar chart using Streamlit
+        st.bar_chart(tier_data.set_index('Tier'))
+    
+    with chart_col2:
+        st.markdown("<h4 style='color:white; margin-bottom:15px;'>🏢 Teams by Stack</h4>", unsafe_allow_html=True)
         
-        with cols2[1]:
-            # Quality & Security (10%)
-            quality_security = trow.get('Quality_Security_Score', 0)
-            qs_pct = int(quality_security) if quality_security is not None and not pd.isna(quality_security) else 0
-            qs_display = f"{quality_security:.1f}" if quality_security is not None and not pd.isna(quality_security) else "N/A"
-            st.markdown(f"""<div style='margin-bottom:20px;'>
-<div style='color:white; font-weight:600; margin-bottom:8px;'>🔒 Quality & Security <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(10%)</span></div>
-<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{qs_pct}%; background:#f97316;'></div>
-</div>
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{qs_display} / 100</div>
-</div>
-            """, unsafe_allow_html=True)
+        # Create stack distribution chart
+        stack_counts = display_latest_df['Stack'].value_counts()
+        stack_data = pd.DataFrame({
+            'Stack': stack_counts.index,
+            'Count': stack_counts.values
+        })
         
-        with cols2[2]:
-            # Adoption (5%)
-            adoption = trow.get('Adoption_Score', 0)
-            adopt_pct = int(adoption) if adoption is not None and not pd.isna(adoption) else 0
-            adopt_display = f"{adoption:.1f}" if adoption is not None and not pd.isna(adoption) else "N/A"
-            st.markdown(f"""<div style='margin-bottom:20px;'>
-<div style='color:white; font-weight:600; margin-bottom:8px;'>🎯 Adoption <span style='color:rgba(255,255,255,0.6); font-size:12px;'>(5%)</span></div>
-<div style='width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;'>
-<div style='height: 100%; border-radius: 10px; transition: width 0.3s ease; width:{adopt_pct}%; background:#8b5cf6;'></div>
-</div>
-<div style='color:rgba(255,255,255,0.7); font-size:14px; margin-top:5px;'>{adopt_display} / 100</div>
-</div>
-            """, unsafe_allow_html=True)
-
- 
-
-    with right:
-
- 
-
-        st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, #8b5cf6, #6366f1);'>
-
-<div style='font-size:20px; font-weight:700; margin-bottom:15px;'>💡 Recommended Actions</div>
-
-        """, unsafe_allow_html=True)
-
- 
-
-        # Use new 6-pillar scores (0-100 scale)
-        velocity_val = trow.get('Velocity', 0)
-        velocity_progress = velocity_val / 100.0 if velocity_val is not None and not pd.isna(velocity_val) else 0
-
-        flow_val = trow.get('Flow', 0)
-        flow_progress = flow_val / 100.0 if flow_val is not None and not pd.isna(flow_val) else 0
-
-        automation_val = trow.get('Automation', 0)
-        automation_progress = automation_val / 100.0 if automation_val is not None and not pd.isna(automation_val) else 0
-
-        stability_val = trow.get('Stability', 0)
-        stability_progress = stability_val / 100.0 if stability_val is not None and not pd.isna(stability_val) else 0
-        
-        quality_val = trow.get('Quality_Security', 0)
-        quality_progress = quality_val / 100.0 if quality_val is not None and not pd.isna(quality_val) else 0
-        
-        ai_val = trow.get('AI_Adoption', 0)
-        ai_progress = ai_val / 100.0 if ai_val is not None and not pd.isna(ai_val) else 0
-
- 
-
-        recs = []
-
- 
-
-        if velocity_progress < 0.5:
-
-            recs.append('🚀 Increase release velocity: automate CD and reduce batch sizes')
-
- 
-
-        if flow_progress < 0.5:
-
-            recs.append('⚡ Reduce Lead Time: streamline approvals and automate testing')
-
- 
-
-        if automation_progress < 0.5:
-
-            recs.append('🤖 Boost automation: enable CI/CD, zero-touch deployment, and feature flags')
-
- 
-
-        if stability_progress < 0.5:
-
-            recs.append('🛡️ Improve stability: reduce CFR and MTTR through better testing')
-        
-        if quality_progress < 0.5:
-        
-            recs.append('🔒 Enhance security: enable SAST/DAST and remove privileged access requirements')
-        
-        if ai_progress < 0.5:
-        
-            recs.append('🤖 Adopt AI tools: enable GitHub Copilot and publish APIs to catalog')
-
- 
-
-        if not recs:
-
- 
-
-            recs = ['✨ Keep optimizing and scale automation']
-
- 
-
-        for r in recs[:5]:
-
-            st.markdown(f"<div style='padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1);'>{r}</div>", unsafe_allow_html=True)
-
-       
-
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Display as a simple bar chart using Streamlit
+        st.bar_chart(stack_data.set_index('Stack'))
+    
+    # Add overall trend chart
+    st.markdown("<h4 style='color:white; margin-top:30px; margin-bottom:15px;'>📊 6-Pillar Average Scores</h4>", unsafe_allow_html=True)
+    
+    # Calculate average scores for each pillar
+    pillar_cols = ['Release_Velocity_Score', 'Git_Hygiene_Score', 'Pipeline_Maturity_Score', 
+                   'Compliance_Score', 'Quality_Security_Score', 'Adoption_Score']
+    pillar_names = ['Release Velocity', 'Git Hygiene', 'Pipeline Maturity', 
+                    'Compliance', 'Quality & Security', 'Adoption']
+    
+    pillar_averages = []
+    for col in pillar_cols:
+        if col in display_latest_df.columns:
+            avg_val = display_latest_df[col].mean()
+            pillar_averages.append(avg_val if not pd.isna(avg_val) else 0)
+        else:
+            pillar_averages.append(0)
+    
+    pillar_chart_data = pd.DataFrame({
+        'Pillar': pillar_names,
+        'Average Score': pillar_averages
+    })
+    
+    st.bar_chart(pillar_chart_data.set_index('Pillar'))
 
  
 
@@ -3282,124 +3090,77 @@ with tab2:
 
    
 
-    # Create sub-tabs for better organization
+    # Remove sub-tabs - show only team rankings
+    
+    # Layout: Compact podium on left, sortable table on right
+    podium_col, table_col = st.columns([1, 3])
 
-    leaderboard_subtab1, leaderboard_subtab2 = st.tabs(['📋 Team Rankings', '📊 Performance Graphs'])
-
-   
-
-    with leaderboard_subtab1:
-
-        # Layout: Compact podium on left, sortable table on right
-
-        podium_col, table_col = st.columns([1, 3])
-
-       
-
-        with podium_col:
-
-            st.markdown("<h4 style='color:white; text-align:center; margin-bottom:15px;'>🏆 Top 3</h4>", unsafe_allow_html=True)
-
-           
-
-            if len(display_latest_df) >= 3:
-
-                top3 = display_latest_df.head(3)
-
-                for idx, (_, row) in enumerate(top3.iterrows()):
-
-                    rank = idx + 1
-
-                    medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉"
-
-                    medal_color = "rgba(255,215,0,0.2)" if rank == 1 else "rgba(192,192,192,0.15)" if rank == 2 else "rgba(205,127,50,0.15)"
-
-                   
-
-                    st.markdown(f"""<div style='background: rgba(45,55,72,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); background:{medal_color}; padding:15px; margin-bottom:10px; text-align:center;'>
-
+    
+    with podium_col:
+        st.markdown("<h4 style='color:white; text-align:center; margin-bottom:15px;'>🏆 Top 3</h4>", unsafe_allow_html=True)
+        
+        if len(display_latest_df) >= 3:
+            top3 = display_latest_df.head(3)
+            for idx, (_, row) in enumerate(top3.iterrows()):
+                rank = idx + 1
+                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉"
+                medal_color = "rgba(255,215,0,0.2)" if rank == 1 else "rgba(192,192,192,0.15)" if rank == 2 else "rgba(205,127,50,0.15)"
+                
+                st.markdown(f"""<div style='background: rgba(45,55,72,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); background:{medal_color}; padding:15px; margin-bottom:10px; text-align:center;'>
 <div style='font-size:32px; margin-bottom:5px;'>{medal}</div>
-
 <div style='font-size:14px; font-weight:700; color:white; margin-bottom:3px;'>{row['Team']}</div>
-
 <div style='font-size:18px; font-weight:800; color:#93c5fd;'>{f"{row.get('DPI', 0):.1f}" if row.get('DPI') is not None else 'N/A'}</div>
-
 <div style='font-size:11px; color:rgba(255,255,255,0.6); margin-top:3px;'>Rank #{rank}</div>
+</div>""", unsafe_allow_html=True)
 
-</div>
+    
+    with table_col:
+        # Header with sort controls
+        st.markdown("<h3 style='color:white; margin-bottom:15px;'>📊 Team Rankings</h3>", unsafe_allow_html=True)
+        
+        # Simplified filters - single row with dropdowns
+        filter_col1, filter_col2, filter_col3 = st.columns([2, 2, 2])
+        
+        with filter_col1:
+            sort_by = st.selectbox('Sort by', options=['DPI', 'RF', 'LTTD'], index=0, key='sort_metric')
+        
+        with filter_col2:
+            # Simple dropdown for Stack with all selected by default
+            selected_stacks = st.multiselect('Filter by Stack', 
+                                           options=sorted(display_history['Stack'].unique()), 
+                                           default=sorted(display_history['Stack'].unique()), 
+                                           key='lb_stack')
+        
+        with filter_col3:
+            # Simple dropdown for Tier with all selected by default  
+            selected_tiers = st.multiselect('Filter by Tier', 
+                                          options=sorted(display_latest_df['Tier'].unique()), 
+                                          default=sorted(display_latest_df['Tier'].unique()), 
+                                          key='lb_tier')
 
-                    """, unsafe_allow_html=True)
+        
+        # Apply filters and sorting - show all if no filters selected
+        if selected_stacks and selected_tiers:
+            lb = display_latest_df[display_latest_df['Stack'].isin(selected_stacks) & display_latest_df['Tier'].isin(selected_tiers)].copy()
+        elif selected_stacks:
+            lb = display_latest_df[display_latest_df['Stack'].isin(selected_stacks)].copy()
+        elif selected_tiers:
+            lb = display_latest_df[display_latest_df['Tier'].isin(selected_tiers)].copy()
+        else:
+            lb = display_latest_df.copy()
 
-       
+        
+        # Sort based on selection
+        if sort_by == 'DPI':
+            lb = lb.sort_values(by='DPI', ascending=False)
+        elif sort_by == 'RF':
+            lb = lb.sort_values(by='RF', ascending=False)
+        elif sort_by == 'LTTD':
+            lb = lb.sort_values(by='LTTD', ascending=True)  # Lower is better
 
-        with table_col:
-
-            # Header with sort controls
-
-            st.markdown("<h3 style='color:white; margin-bottom:15px;'>📊 Team Rankings</h3>", unsafe_allow_html=True)
-
-           
-
-            # Filters and sorting
-
-            filter_row1, filter_row2 = st.columns([3, 1])
-
-            with filter_row1:
-
-                sort_by = st.selectbox('Sort by', options=['DPI', 'RF', 'LTTD'], index=0, key='sort_metric')
-
-            with filter_row2:
-
-                st.download_button('⬇️ Export', data=display_latest_df.to_csv(index=False), file_name='leaderboard_latest.csv')
-
-           
-
-            # Filter controls
-
-            f1, f2 = st.columns([3, 1])
-
-            with f1:
-
-                stacks = st.multiselect('Stack', options=display_history['Stack'].unique(), default=display_history['Stack'].unique(), key='lb_stack')
-
-            with f2:
-
-                tiers = st.multiselect('Tier', options=display_latest_df['Tier'].unique(), default=display_latest_df['Tier'].unique(), key='lb_tier')
-
-           
-
-            # Apply filters and sorting - show all if no filters selected
-
-            if stacks and tiers:
-                lb = display_latest_df[display_latest_df['Stack'].isin(stacks) & display_latest_df['Tier'].isin(tiers)].copy()
-            elif stacks:
-                lb = display_latest_df[display_latest_df['Stack'].isin(stacks)].copy()
-            elif tiers:
-                lb = display_latest_df[display_latest_df['Tier'].isin(tiers)].copy()
-            else:
-                lb = display_latest_df.copy()
-
-           
-
-            # Sort based on selection
-
-            if sort_by == 'DPI':
-
-                lb = lb.sort_values(by='DPI', ascending=False)
-
-            elif sort_by == 'RF':
-
-                lb = lb.sort_values(by='RF', ascending=False)
-
-            elif sort_by == 'LTTD':
-
-                lb = lb.sort_values(by='LTTD', ascending=True)  # Lower is better
-
-           
-
-            # Build complete table HTML as single string
-
-            table_html = """<table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>
+        
+        # Build complete table HTML as single string
+        table_html = """<table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>
 <tr>
 <th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:60px;'>Rank</th>
 <th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5);'>Team</th>
@@ -3411,31 +3172,19 @@ with tab2:
 </tr>
 """
 
-           
-
-            # Build table rows
-
-            for _, row in lb.iterrows():
-
-                rank_change = row['Δ Rank']
-
-                rank_indicator = f"<span style='color:#10b981;'>↑ {rank_change}</span>" if rank_change > 0 else f"<span style='color:#ef4444;'>↓ {abs(rank_change)}</span>" if rank_change < 0 else "<span style='color:#6b7280;'>—</span>"
-
-                tier_color = COLOR_MAP.get(row['Tier'], '#6b7280')
-
-               
-
-                # Format values with None checks
-
-                rf_display = f"{row['RF']:.0f}" if row['RF'] is not None else "N/A"
-
-                lttd_display = f"{row['LTTD']:.1f}" if row['LTTD'] is not None else "N/A"
-
-                dpi_display = f"{row['DPI']:.1f}" if row['DPI'] is not None else "N/A"
-
-               
-
-                table_html += f"""<tr style='border-bottom: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;'>
+        
+        # Build table rows
+        for _, row in lb.iterrows():
+            rank_change = row['Δ Rank']
+            rank_indicator = f"<span style='color:#10b981;'>↑ {rank_change}</span>" if rank_change > 0 else f"<span style='color:#ef4444;'>↓ {abs(rank_change)}</span>" if rank_change < 0 else "<span style='color:#6b7280;'>—</span>"
+            tier_color = COLOR_MAP.get(row['Tier'], '#6b7280')
+            
+            # Format values with None checks
+            rf_display = f"{row['RF']:.0f}" if row['RF'] is not None else "N/A"
+            lttd_display = f"{row['LTTD']:.1f}" if row['LTTD'] is not None else "N/A"
+            dpi_display = f"{row['DPI']:.1f}" if row['DPI'] is not None else "N/A"
+            
+            table_html += f"""<tr style='border-bottom: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;'>
 <td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
 <td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:700;'>{row['Team']}</td>
 <td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:700; color:#fbbf24;'>{dpi_display}</td>
@@ -3445,161 +3194,12 @@ with tab2:
 <td style='padding: 12px; color: rgba(255,255,255,0.9);'>{rank_indicator}</td>
 </tr>
 """
+        
+        table_html += "</table>"
+        
+        # Render complete table
+        st.markdown(table_html, unsafe_allow_html=True)
 
-           
-
-            table_html += "</table>"
-
-           
-
-            # Render complete table
-
-            st.markdown(table_html, unsafe_allow_html=True)
-
-   
-
-    with leaderboard_subtab2:
-
-        # Overall statistics FIRST (moved to top)
-
-        st.markdown("<h3 style='color:white; margin-top:20px;'>📊 Overall Statistics</h3>", unsafe_allow_html=True)
-
-       
-
-        # Use same filtered data
-
-        f1_graph, f2_graph = st.columns([3,1])
-
-       
-
-        with f1_graph:
-
-            stacks_graph = st.multiselect('Stack', options=display_history['Stack'].unique(), default=display_history['Stack'].unique(), key='graph_stack')
-
-       
-
-        with f2_graph:
-
-            tiers_graph = st.multiselect('Tier', options=display_latest_df['Tier'].unique(), default=display_latest_df['Tier'].unique(), key='graph_tier')
-
-       
-
-        # Apply filters - show all if no filters selected
-        if stacks_graph and tiers_graph:
-            lb_graph = display_latest_df[display_latest_df['Stack'].isin(stacks_graph) & display_latest_df['Tier'].isin(tiers_graph)].copy()
-        elif stacks_graph:
-            lb_graph = display_latest_df[display_latest_df['Stack'].isin(stacks_graph)].copy()
-        elif tiers_graph:
-            lb_graph = display_latest_df[display_latest_df['Tier'].isin(tiers_graph)].copy()
-        else:
-            lb_graph = display_latest_df.copy()
-
-       
-
-        stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
-
-       
-
-        with stat_col1:
-
-            rf_mean = lb_graph['RF'].mean()
-
-            rf_mean_display = f"{rf_mean:.0f}" if rf_mean is not None and not pd.isna(rf_mean) else "N/A"
-
-            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-
-<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{rf_mean_display}</div>
-
-<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Avg RF</div>
-
-</div>
-
-            """, unsafe_allow_html=True)
-
-       
-
-        with stat_col2:
-
-            rf_max = lb_graph['RF'].max()
-
-            rf_max_display = f"{rf_max:.0f}" if rf_max is not None and not pd.isna(rf_max) else "N/A"
-
-            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-
-<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{rf_max_display}</div>
-
-<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Max RF</div>
-
-</div>
-
-            """, unsafe_allow_html=True)
-
-       
-
-        with stat_col3:
-
-            lttd_mean = lb_graph['LTTD'].mean()
-
-            lttd_mean_display = f"{lttd_mean:.1f}" if lttd_mean is not None and not pd.isna(lttd_mean) else "N/A"
-
-            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-
-<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{lttd_mean_display}</div>
-
-<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Avg LTTD</div>
-
-</div>
-
-            """, unsafe_allow_html=True)
-
-       
-
-        with stat_col4:
-
-            st.markdown(f"""<div style='background: rgba(45,55,72,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-
-<div style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>{len(lb_graph)}</div>
-
-<div style='color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Teams</div>
-
-</div>
-
-            """, unsafe_allow_html=True)
-
-       
-
-        # Performance graphs BELOW statistics
-
-        st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
-
-        st.markdown("<h3 style='color:white;'>📈 Performance Metrics Comparison</h3>", unsafe_allow_html=True)
-
-        st.markdown("<p style='color:rgba(255,255,255,0.8); margin-bottom:20px;'>Compare Release Frequency and Lead Time across all teams</p>", unsafe_allow_html=True)
-
-       
-
-        c1,c2 = st.columns(2)
-
- 
-
-        with c1:
-
-            st.markdown("<p style='color:rgba(255,255,255,0.8); text-align:center; font-weight:600; font-size:16px;'>⚡ Release Frequency (RF)</p>", unsafe_allow_html=True)
-
-            st.bar_chart(lb_graph.set_index('Team')['RF'], color='#06b6d4')
-
- 
-
-        with c2:
-
-            st.markdown("<p style='color:rgba(255,255,255,0.8); text-align:center; font-weight:600; font-size:16px;'>⏱️ Lead Time (LTTD)</p>", unsafe_allow_html=True)
-
-            st.bar_chart(lb_graph.set_index('Team')['LTTD'], color='#f59e0b')
-
- 
-
-
- 
 
 with tab3:
 
@@ -3614,12 +3214,9 @@ with tab3:
    
 
     with criteria_col:
-
-        st.markdown("""<div style='border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); background: rgba(96,165,250,0.15); padding:15px;'>
-
-<div style='font-size:14px; font-weight:700; margin-bottom:12px; color:white;'>📋 Badge Criteria</div>
-
-<div style='font-size:11px; line-height:1.6; color:rgba(255,255,255,0.9);'>
+        # Make badge criteria collapsible and collapsed by default
+        with st.expander("📋 Badge Criteria", expanded=False):
+            st.markdown("""<div style='font-size:11px; line-height:1.6; color:rgba(255,255,255,0.9);'>
 
 <div style='margin-bottom:8px;'><strong>🚀 Velocity Champion</strong> <span style='opacity:0.6; cursor:help;' title='High release frequency and fast delivery'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Release Velocity ≥ 70</span></div>
 
@@ -3627,17 +3224,13 @@ with tab3:
 
 <div style='margin-bottom:8px;'><strong>⚙️ Automation Pro</strong> <span style='opacity:0.6; cursor:help;' title='Mature CI/CD pipeline with automation'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Pipeline Maturity ≥ 70</span></div>
 
-<div style='margin-bottom:8px;'><strong>� Governance</strong> <span style='opacity:0.6; cursor:help;' title='Strong compliance and governance practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Compliance ≥ 70</span></div>
+<div style='margin-bottom:8px;'><strong>📋 Governance</strong> <span style='opacity:0.6; cursor:help;' title='Strong compliance and governance practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Compliance ≥ 70</span></div>
 
 <div style='margin-bottom:8px;'><strong>🛡️ Security Shield</strong> <span style='opacity:0.6; cursor:help;' title='Excellent security and quality standards'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Quality & Security ≥ 70</span></div>
 
 <div style='margin-bottom:8px;'><strong>🎯 Innovation</strong> <span style='opacity:0.6; cursor:help;' title='Adopting new tools and practices'>ℹ️</span><br/><span style='font-size:10px; opacity:0.8;'>Adoption ≥ 70</span></div>
 
-</div>
-
-</div>
-
-        """, unsafe_allow_html=True)
+</div>""", unsafe_allow_html=True)
 
    
 
@@ -3822,7 +3415,7 @@ with tab4:
 
  
 
-    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:30px;'>👥 Team Deep Dive</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:30px;'>📈 Team Trends</h2>", unsafe_allow_html=True)
 
  
 
