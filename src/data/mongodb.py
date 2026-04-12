@@ -345,8 +345,17 @@ class MongoDatabase:
         """
         try:
             # First try the aggregation pipeline with join
+            # Group by pod_id AND week_date to get unique records per week
             pipeline = [
-                {"$sort": {"pod_id": 1, "created_at": -1}},
+                {"$sort": {"pod_id": 1, "week_date": -1, "created_at": -1}},
+                # First group by pod_id and week_date to get latest record for each week
+                {"$group": {
+                    "_id": {"pod_id": "$pod_id", "week_date": "$week_date"},
+                    "latest": {"$first": "$$ROOT"}
+                }},
+                {"$replaceRoot": {"newRoot": "$latest"}},
+                # Then group by pod_id to limit records per pod
+                {"$sort": {"pod_id": 1, "week_date": -1}},
                 {"$group": {
                     "_id": "$pod_id",
                     "records": {"$push": "$$ROOT"}
@@ -407,8 +416,17 @@ class MongoDatabase:
         """
         try:
             # Get all metrics without join
+            # Group by pod_id AND week_date to get unique records per week
             pipeline = [
-                {"$sort": {"pod_id": 1, "created_at": -1}},
+                {"$sort": {"pod_id": 1, "week_date": -1, "created_at": -1}},
+                # First group by pod_id and week_date to get latest record for each week
+                {"$group": {
+                    "_id": {"pod_id": "$pod_id", "week_date": "$week_date"},
+                    "latest": {"$first": "$$ROOT"}
+                }},
+                {"$replaceRoot": {"newRoot": "$latest"}},
+                # Then group by pod_id to limit records per pod
+                {"$sort": {"pod_id": 1, "week_date": -1}},
                 {"$group": {
                     "_id": "$pod_id",
                     "records": {"$push": "$$ROOT"}
