@@ -394,6 +394,19 @@ class MongoDatabase:
             
             df = pd.DataFrame(results)
             
+            # DEBUG: Check for duplicates in raw MongoDB data
+            if 'pod_id' in df.columns and 'week_date' in df.columns:
+                duplicates = df.groupby(['pod_id', 'week_date']).size()
+                dup_entries = duplicates[duplicates > 1]
+                if not dup_entries.empty:
+                    logger.warning(f"DUPLICATES FOUND in MongoDB query results:")
+                    logger.warning(f"{dup_entries}")
+                    logger.warning(f"Sample duplicate data:")
+                    for (pod, week), count in dup_entries.items():
+                        sample = df[(df['pod_id'] == pod) & (df['week_date'] == week)]
+                        logger.warning(f"  {pod} on {week}: {count} records")
+                        logger.warning(f"  created_at values: {sample['created_at'].tolist() if 'created_at' in sample.columns else 'N/A'}")
+            
             # Check if join worked by seeing if we have tier data
             if 'tier' not in df.columns or df['tier'].isna().all():
                 logger.warning("MongoDB history join didn't work, falling back to separate queries")

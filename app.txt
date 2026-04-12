@@ -2668,6 +2668,25 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(['🏁 Overview','🏆 Leaderboard','🎖
 
 display_history = history_df.copy()
 
+# DEBUG: Show raw data info in sidebar
+st.sidebar.markdown("### 🔍 Debug Info")
+st.sidebar.text(f"Total records from DB: {len(display_history)}")
+if 'Team' in display_history.columns and 'Week_Start' in display_history.columns:
+    unique_weeks = display_history['Week_Start'].nunique()
+    unique_teams = display_history['Team'].nunique()
+    st.sidebar.text(f"Unique weeks: {unique_weeks}")
+    st.sidebar.text(f"Unique teams: {unique_teams}")
+    st.sidebar.text(f"Expected records: ~{unique_weeks * unique_teams}")
+    
+    # Check for duplicates in raw data
+    raw_dups = display_history.groupby(['Team', 'Week_Start']).size()
+    raw_dup_entries = raw_dups[raw_dups > 1]
+    if not raw_dup_entries.empty:
+        st.sidebar.error(f"⚠️ RAW DATA has {len(raw_dup_entries)} duplicate (Team, Week) pairs!")
+        with st.sidebar.expander("Show duplicates"):
+            for (team, week), count in raw_dup_entries.items():
+                st.text(f"{team} on {week}: {count}x")
+
  
 
 # ---- Column name normalization (DB vs CSV) ----
@@ -2726,8 +2745,29 @@ display_prev_week = display_prev_weeks[-2] if len(display_prev_weeks) > 1 else N
 
 display_latest_df = display_history[display_history['Week_Start'] == display_latest_week].copy()
 
+# DEBUG: Check for duplicates before deduplication
+if 'Team' in display_latest_df.columns:
+    team_counts = display_latest_df['Team'].value_counts()
+    duplicates = team_counts[team_counts > 1]
+    if not duplicates.empty:
+        st.sidebar.warning(f"⚠️ DEBUG: Found {len(duplicates)} teams with duplicates BEFORE dedup")
+        for team, count in duplicates.items():
+            st.sidebar.text(f"  {team}: {count} records")
+            # Show the duplicate records
+            dup_records = display_latest_df[display_latest_df['Team'] == team][['Team', 'DPI', 'Week_Start', 'week_date' if 'week_date' in display_latest_df.columns else 'Week']]
+            st.sidebar.dataframe(dup_records)
+
 # Remove duplicates - keep only the first occurrence of each team (highest DPI if sorted)
 display_latest_df = display_latest_df.drop_duplicates(subset=['Team'], keep='first')
+
+# DEBUG: Check after deduplication
+if 'Team' in display_latest_df.columns:
+    team_counts_after = display_latest_df['Team'].value_counts()
+    duplicates_after = team_counts_after[team_counts_after > 1]
+    if not duplicates_after.empty:
+        st.sidebar.error(f"❌ DEBUG: STILL {len(duplicates_after)} duplicates AFTER dedup!")
+    else:
+        st.sidebar.success(f"✅ DEBUG: No duplicates after dedup. Total teams: {len(display_latest_df)}")
 
  
 
