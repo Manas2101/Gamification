@@ -2726,6 +2726,9 @@ display_prev_week = display_prev_weeks[-2] if len(display_prev_weeks) > 1 else N
 
 display_latest_df = display_history[display_history['Week_Start'] == display_latest_week].copy()
 
+# Remove duplicates - keep only the first occurrence of each team (highest DPI if sorted)
+display_latest_df = display_latest_df.drop_duplicates(subset=['Team'], keep='first')
+
  
 
 display_latest_df = display_latest_df.sort_values(by='DPI', ascending=False).reset_index(drop=True)
@@ -3125,17 +3128,17 @@ with tab2:
             sort_by = st.selectbox('Sort by', options=['DPI', 'RF', 'LTTD'], index=0, key='sort_metric')
         
         with filter_col2:
-            # Simple dropdown for Stack with all selected by default
+            # Simple dropdown for Stack with no default selection
             selected_stacks = st.multiselect('Filter by Stack', 
                                            options=sorted(display_history['Stack'].unique()), 
-                                           default=sorted(display_history['Stack'].unique()), 
+                                           default=[], 
                                            key='lb_stack')
         
         with filter_col3:
-            # Simple dropdown for Tier with all selected by default  
+            # Simple dropdown for Tier with no default selection
             selected_tiers = st.multiselect('Filter by Tier', 
                                           options=sorted(display_latest_df['Tier'].unique()), 
-                                          default=sorted(display_latest_df['Tier'].unique()), 
+                                          default=[], 
                                           key='lb_tier')
 
         
