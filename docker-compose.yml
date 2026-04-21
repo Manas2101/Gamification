@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  gamification-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devops-gamification-dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      # Database Configuration
+      - DB_PATH=/app/data/metrics.db
+      
+      # API Tokens (replace with your actual tokens or use .env file)
+      - TEAMBOOK_BEARER_TOKEN=${TEAMBOOK_BEARER_TOKEN:-your_teambook_token_here}
+      - DATASIGHT_BEARER_TOKEN=${DATASIGHT_BEARER_TOKEN:-your_datasight_token_here}
+      
+      # MongoDB Configuration (optional - uncomment if using MongoDB)
+      # - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017}
+      # - MONGODB_DATABASE=${MONGODB_DATABASE:-gamification}
+      # - USE_MONGODB=${USE_MONGODB:-false}
+      
+      # Service Configuration
+      - SERVICE_LINE_ID=${SERVICE_LINE_ID:-449}
+      - MAX_WEEKS_TO_KEEP=${MAX_WEEKS_TO_KEEP:-5}
+      - AUTO_REFRESH_ENABLED=${AUTO_REFRESH_ENABLED:-false}
+      - REFRESH_INTERVAL_HOURS=${REFRESH_INTERVAL_HOURS:-168}
+      
+      # Streamlit Configuration
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    
+    volumes:
+      # Persist database and logs
+      - ./data:/app/data
+      - ./logs:/app/logs
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: MongoDB service (uncomment if needed)
+  # mongodb:
+  #   image: mongo:7.0
+  #   container_name: gamification-mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     - MONGO_INITDB_DATABASE=gamification
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   restart: unless-stopped
+
+# volumes:
+#   mongodb_data:

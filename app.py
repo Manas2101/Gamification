@@ -39,248 +39,91 @@ st.set_page_config(layout="wide", page_title="🚀 DevOps Gamification Dashboard
 
  
 
-# --- Custom CSS for Gamification UI ---
+# --- HSBC Design System CSS ---
 
 st.markdown("""<style>
 
- 
+/* Import HSBC-compatible Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
 
+/* Global Styles */
 * {
-
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-
+    font-family: 'Inter', 'Univers Next for HSBC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
- 
+/* Remove Streamlit Branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+.stDeployButton {display: none;}
+header {visibility: hidden;}
 
+/* Hide sidebar by default */
+[data-testid="stSidebar"] {
+    display: none;
+}
+
+/* Main Container - HSBC Clean White */
 .main {
-
-    background: #1a202c;
-
-    background-attachment: fixed;
-
+    background: #FFFFFF;
+    padding: 0;
 }
-
- 
 
 .stApp {
-
-    background: #1a202c;
-
+    background: #FFFFFF;
 }
 
- 
-
-/* Sidebar Styling */
-
-[data-testid="stSidebar"] {
-
-    background: #1a202c;
-
-}
-
- 
-
-[data-testid="stSidebar"] > div:first-child {
-
-    background: #1a202c;
-
-}
-
- 
-
-[data-testid="stSidebar"] .stMarkdown {
-
-    color: white;
-
-}
-
- 
-
-[data-testid="stSidebar"] h1,
-
-[data-testid="stSidebar"] h2,
-
-[data-testid="stSidebar"] h3,
-
-[data-testid="stSidebar"] h4 {
-
-    color: white !important;
-
-}
-
- 
-
-[data-testid="stSidebar"] label {
-
-    color: white !important;
-
-    font-weight: 600;
-
-}
-
- 
-
-[data-testid="stSidebar"] .stFileUploader {
-
-    background: rgba(255,255,255,0.1);
-
-    border-radius: 15px;
-
-    padding: 20px;
-
-    border: 2px dashed rgba(255,255,255,0.3);
-
-}
-
- 
-
-[data-testid="stSidebar"] .stFileUploader label {
-
-    color: white !important;
-
-}
-
- 
-
-[data-testid="stSidebar"] .stFileUploader [data-testid="stFileUploaderDropzone"] {
-
-    background: rgba(255,255,255,0.05);
-
-    border: 2px dashed rgba(255,255,255,0.4);
-
-    border-radius: 10px;
-
-}
-
- 
-
-[data-testid="stSidebar"] .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] {
-
-    color: rgba(255,255,255,0.9) !important;
-
-}
-
- 
-
-[data-testid="stSidebar"] .stSelectbox label,
-
-[data-testid="stSidebar"] .stMultiSelect label {
-
-    color: white !important;
-
-    font-weight: 600;
-
-}
-
- 
-
-[data-testid="stSidebar"] [data-baseweb="select"] {
-
-    background: rgba(255,255,255,0.1);
-
-    border-radius: 10px;
-
-}
-
- 
-
-[data-testid="stSidebar"] [data-baseweb="select"] > div {
-
-    background: rgba(255,255,255,0.1);
-
-    color: white;
-
-}
-
- 
-
-/* Fix text visibility in main content */
-
+/* HSBC Text Styling */
 .stMarkdown, .stText {
-
-    color: white;
-
+    color: #2D2D2D;
 }
-
- 
 
 h1, h2, h3, h4, h5, h6 {
-
-    color: white !important;
-
+    color: #2D2D2D !important;
+    font-weight: 400;
 }
-
- 
 
 p {
-
-    color: rgba(255,255,255,0.9);
-
+    color: #2D2D2D;
+    font-size: 14px;
 }
 
  
 
-/* Fix expander styling */
-
+/* HSBC Expander Styling - Clean Design */
 .streamlit-expanderHeader {
-
-    background: rgba(255,255,255,0.1);
-
-    border-radius: 10px;
-
-    color: white !important;
-
-    font-weight: 600;
-
+    background: white;
+    border-radius: 0;
+    color: #2D2D2D !important;
+    font-weight: 400;
+    border: 1px solid #E5E5E5;
+    font-size: 13px;
 }
-
- 
 
 .streamlit-expanderHeader p {
-
-    color: white !important;
-
+    color: #2D2D2D !important;
 }
-
- 
 
 .streamlit-expanderContent {
-
-    background: rgba(255,255,255,0.05);
-
-    border-radius: 0 0 10px 10px;
-
-    color: white !important;
-
+    background: #FAFAFA;
+    border-radius: 0;
+    color: #2D2D2D !important;
+    border: 1px solid #E5E5E5;
+    border-top: none;
 }
-
- 
-
-.streamlit-expanderContent p,
-
-.streamlit-expanderContent li,
 
 .streamlit-expanderContent div {
-
-    color: white !important;
-
+    color: #2D2D2D !important;
 }
 
  
 
-/* Chart styling */
-
+/* HSBC Chart Styling */
 .stVegaLiteChart {
-
-    background: rgba(255,255,255,0.95);
-
-    border-radius: 15px;
-
+    background: white;
+    border-radius: 0;
     padding: 20px;
-
-    border: 1px solid rgba(255,255,255,0.2);
-
+    border: 1px solid #E5E5E5;
+    box-shadow: none;
 }
 
  
@@ -317,54 +160,170 @@ canvas {
 
  
 
-/* Fix multiselect styling */
-
+/* HSBC Multiselect Tags - Clean Design */
 [data-baseweb="tag"] {
-
-    background: linear-gradient(135deg, #667eea, #764ba2);
-
+    background: #DB0011;
     color: white;
-
+    border-radius: 2px;
+    font-size: 12px;
+    padding: 4px 8px;
 }
 
  
 
-/* Fix dataframe styling */
-
+/* HSBC Table Styling - Clean Design */
 .stDataFrame {
-
-    background: rgba(255,255,255,0.05);
-
-    border-radius: 15px;
-
-    padding: 10px;
-
+    background: white !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    border: 1px solid #E5E5E5 !important;
 }
 
- 
+.stDataFrame > div {
+    background: white !important;
+}
+
+.stDataFrame [data-testid="stDataFrameResizable"] {
+    background: white !important;
+}
 
 .stDataFrame table {
-
-    color: white !important;
-
+    color: #2D2D2D !important;
+    font-size: 13px !important;
+    border-collapse: collapse !important;
+    background: white !important;
 }
-
- 
 
 .stDataFrame th {
-
-    background: rgba(255,255,255,0.1) !important;
-
-    color: white !important;
-
+    background: #F5F5F5 !important;
+    color: #2D2D2D !important;
+    font-weight: 500 !important;
+    padding: 12px 16px !important;
+    border-bottom: 2px solid #E5E5E5 !important;
+    text-align: left !important;
 }
 
- 
-
 .stDataFrame td {
+    color: #2D2D2D !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #EEEEEE !important;
+    font-weight: 400 !important;
+    background: white !important;
+}
 
-    color: white !important;
+.stDataFrame tbody tr:hover td {
+    background: #F9F9F9 !important;
+}
 
+/* Glide Data Grid (Streamlit's new table) */
+[data-testid="stDataFrame"] canvas {
+    background: white !important;
+}
+
+[data-testid="stDataFrame"] > div > div {
+    background: white !important;
+}
+
+/* Fix for glide-data-grid cells */
+.dvn-scroller {
+    background: white !important;
+}
+
+.gdg-style {
+    --gdg-bg-cell: white !important;
+    --gdg-bg-header: #F5F5F5 !important;
+    --gdg-text-dark: #2D2D2D !important;
+    --gdg-text-medium: #666666 !important;
+    --gdg-border-color: #E5E5E5 !important;
+}
+
+/* Additional table fixes for Streamlit data editor */
+[data-testid="stDataFrame"] {
+    background: white !important;
+}
+
+[data-testid="stDataFrame"] * {
+    color: #2D2D2D !important;
+}
+
+[data-testid="stDataFrame"] [role="grid"] {
+    background: white !important;
+}
+
+[data-testid="stDataFrame"] [role="columnheader"] {
+    background: #F5F5F5 !important;
+    color: #2D2D2D !important;
+    font-weight: 500 !important;
+}
+
+[data-testid="stDataFrame"] [role="gridcell"] {
+    background: white !important;
+    color: #2D2D2D !important;
+}
+
+/* Fix input fields in main content */
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox select {
+    background: white !important;
+    color: #2D2D2D !important;
+    border: 1px solid #E5E5E5 !important;
+}
+
+/* Fix select dropdown */
+[data-baseweb="select"] {
+    background: white !important;
+}
+
+[data-baseweb="select"] > div {
+    background: white !important;
+    color: #2D2D2D !important;
+    border: 1px solid #E5E5E5 !important;
+    border-radius: 2px !important;
+}
+
+/* Fix popover/dropdown menus */
+[data-baseweb="popover"] {
+    background: white !important;
+}
+
+[data-baseweb="menu"] {
+    background: white !important;
+}
+
+[data-baseweb="menu"] li {
+    color: #2D2D2D !important;
+}
+
+[data-baseweb="menu"] li:hover {
+    background: #F5F5F5 !important;
+}
+
+/* Ensure all text is visible */
+.element-container {
+    color: #2D2D2D !important;
+}
+
+/* Fix metric styling */
+[data-testid="stMetric"] {
+    background: white !important;
+    border: 1px solid #E5E5E5 !important;
+    border-left: 3px solid #DB0011 !important;
+    padding: 16px !important;
+    border-radius: 0 !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #666666 !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #2D2D2D !important;
+}
+
+/* Fix column layout */
+[data-testid="column"] {
+    background: transparent !important;
 }
 
  
@@ -1842,12 +1801,118 @@ canvas {
  
 
 .quality-details li {
-
     margin-bottom: 5px;
-
 }
 
- 
+/* HSBC Button Styling - Clean Design */
+.stButton > button {
+    background: #DB0011;
+    color: white;
+    border: none;
+    border-radius: 2px;
+    padding: 8px 20px;
+    font-weight: 400;
+    font-size: 13px;
+    transition: background 0.2s ease;
+    box-shadow: none;
+}
+
+.stButton > button:hover {
+    background: #C00010;
+    box-shadow: none;
+}
+
+/* HSBC Tab Styling - Clean Design */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0;
+    background: white;
+    border-bottom: 1px solid #E5E5E5;
+    padding: 0;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent;
+    color: #666666;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 400;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: transparent;
+    color: #2D2D2D;
+}
+
+.stTabs [aria-selected="true"] {
+    background: transparent !important;
+    color: #2D2D2D !important;
+    border-bottom: 2px solid #DB0011 !important;
+    font-weight: 400 !important;
+}
+
+/* HSBC Metric Cards - Clean Design */
+.stMetric {
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-left: 3px solid #DB0011;
+    border-radius: 0;
+    padding: 16px;
+    box-shadow: none;
+}
+
+.stMetric label {
+    color: #666666 !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+}
+
+.stMetric [data-testid="stMetricValue"] {
+    color: #2D2D2D !important;
+    font-size: 28px !important;
+    font-weight: 400 !important;
+}
+
+.stMetric [data-testid="stMetricDelta"] {
+    font-size: 13px !important;
+}
+
+/* HSBC Select/Dropdown - Clean Design */
+.stSelectbox > div > div,
+.stMultiSelect > div > div {
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-radius: 2px;
+}
+
+.stSelectbox label,
+.stMultiSelect label {
+    color: #2D2D2D !important;
+    font-weight: 400 !important;
+    font-size: 13px !important;
+}
+
+.stSelectbox [data-baseweb="select"],
+.stMultiSelect [data-baseweb="select"] {
+    font-size: 13px !important;
+}
+
+/* HSBC Download Button - Clean Design */
+.stDownloadButton > button {
+    background: #2D2D2D;
+    color: white;
+    border: none;
+    border-radius: 2px;
+    padding: 8px 20px;
+    font-weight: 400;
+    font-size: 13px;
+    box-shadow: none;
+}
+
+.stDownloadButton > button:hover {
+    background: #1A1A1A;
+}
 
 </style>
 
@@ -1855,14 +1920,95 @@ canvas {
 
  
 
-# --- Animated Hero Header --- v2.0 (inline styles)
+# --- HSBC Navigation Header with App Tabs ---
+
+# Create session state for tab selection
+if 'active_tab' not in st.session_state:
+    st.session_state.active_tab = 'Overview'
 
 st.markdown("""
-<!-- Cache bust: v2.0 inline styles -->
-<div style='text-align: center; padding: 40px 20px; background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(139,92,246,0.1)); border-radius: 20px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.1);'>
-<h1 style='font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #06b6d4, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>🚀 DevOps Transformation Gamification 2026</h1>
-<p style='font-size: 18px; color: rgba(255,255,255,0.8); margin: 0;'>⚡ Target: RF 280 | ⏱ LTTD 1.8 | 🎯 Sustainable Maturity</p>
+<div style='background: #2D2D2D; padding: 0; margin: -1rem -1rem 0 -1rem;'>
+    <div style='display: flex; align-items: center; padding: 12px 24px;'>
+        <div style='display: flex; align-items: center; gap: 8px; margin-right: 40px;'>
+            <svg width="24" height="24" viewBox="0 0 24 24" style="fill: #DB0011;">
+                <rect width="24" height="12" fill="#DB0011"/>
+                <rect y="12" width="24" height="12" fill="white"/>
+            </svg>
+            <span style='color: white; font-size: 18px; font-weight: 700; letter-spacing: 4px;'>HSBC</span>
+        </div>
+        <div style='display: flex; gap: 0; align-items: center;'>
+            <div id="tab-overview" style='color: white; font-size: 13px; font-weight: 400; padding: 12px 20px; cursor: pointer; border-bottom: 2px solid #DB0011;'>🏁 Overview</div>
+            <div id="tab-leaderboard" style='color: #999999; font-size: 13px; font-weight: 400; padding: 12px 20px; cursor: pointer; border-bottom: 2px solid transparent;'>🏆 Leaderboard</div>
+            <div id="tab-badges" style='color: #999999; font-size: 13px; font-weight: 400; padding: 12px 20px; cursor: pointer; border-bottom: 2px solid transparent;'>🎖️ Badges</div>
+            <div id="tab-teams" style='color: #999999; font-size: 13px; font-weight: 400; padding: 12px 20px; cursor: pointer; border-bottom: 2px solid transparent;'>📊 Team Trends</div>
+            <div id="tab-docs" style='color: #999999; font-size: 13px; font-weight: 400; padding: 12px 20px; cursor: pointer; border-bottom: 2px solid transparent;'>📘 Docs</div>
+        </div>
+    </div>
 </div>
+<div style='background: white; padding: 20px 24px; margin: 0 -1rem 20px -1rem; border-bottom: 1px solid #E5E5E5;'>
+    <h1 style='color: #2D2D2D; font-size: 22px; font-weight: 400; margin: 0;'>DevOps Transformation Dashboard</h1>
+    <p style='color: #666666; font-size: 13px; margin: 8px 0 0 0;'>Track team performance and DevOps maturity metrics | Target: RF 280 | LTTD 1.8</p>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = ['overview', 'leaderboard', 'badges', 'teams', 'docs'];
+    
+    tabs.forEach(tab => {
+        const element = document.getElementById('tab-' + tab);
+        if (element) {
+            element.addEventListener('click', function() {
+                // Reset all tabs
+                tabs.forEach(t => {
+                    const el = document.getElementById('tab-' + t);
+                    if (el) {
+                        el.style.color = '#999999';
+                        el.style.borderBottom = '2px solid transparent';
+                    }
+                });
+                
+                // Activate clicked tab
+                this.style.color = 'white';
+                this.style.borderBottom = '2px solid #DB0011';
+                
+                // Store active tab (you'll need to handle this with Streamlit)
+                window.parent.postMessage({type: 'tab-change', tab: tab}, '*');
+            });
+        }
+    });
+});
+</script>
+""", unsafe_allow_html=True)
+
+# Tab selection buttons (hidden but functional)
+col1, col2, col3, col4, col5 = st.columns(5)
+with col1:
+    if st.button("Overview", key="btn_overview", help="Overview tab"):
+        st.session_state.active_tab = 'Overview'
+with col2:
+    if st.button("Leaderboard", key="btn_leaderboard", help="Leaderboard tab"):
+        st.session_state.active_tab = 'Leaderboard'
+with col3:
+    if st.button("Badges", key="btn_badges", help="Badges tab"):
+        st.session_state.active_tab = 'Badges'
+with col4:
+    if st.button("Team Trends", key="btn_teams", help="Team Trends tab"):
+        st.session_state.active_tab = 'Team Trends'
+with col5:
+    if st.button("Docs", key="btn_docs", help="Docs tab"):
+        st.session_state.active_tab = 'Docs'
+
+# Hide the buttons with CSS
+st.markdown("""
+<style>
+[data-testid="column"]:has([title="Overview tab"]),
+[data-testid="column"]:has([title="Leaderboard tab"]),
+[data-testid="column"]:has([title="Badges tab"]),
+[data-testid="column"]:has([title="Team Trends tab"]),
+[data-testid="column"]:has([title="Docs tab"]) {
+    display: none !important;
+}
+</style>
 """, unsafe_allow_html=True)
 
  
@@ -2655,7 +2801,8 @@ def tier_html(tier, dpi=None):
 
  
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(['🏁 Overview','🏆 Leaderboard','🎖️ Badges','📈 Team Trends','📘 Docs'])
+# Replace Streamlit tabs with conditional content based on session state
+# tab1, tab2, tab3, tab4, tab5 = st.tabs(['🏁 Overview','🏆 Leaderboard','🎖️ Badges','📈 Team Trends','📘 Docs'])
 
  
 
@@ -2668,24 +2815,6 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(['🏁 Overview','🏆 Leaderboard','🎖
 
 display_history = history_df.copy()
 
-# DEBUG: Show raw data info in sidebar
-st.sidebar.markdown("### 🔍 Debug Info")
-st.sidebar.text(f"Total records from DB: {len(display_history)}")
-if 'Team' in display_history.columns and 'Week_Start' in display_history.columns:
-    unique_weeks = display_history['Week_Start'].nunique()
-    unique_teams = display_history['Team'].nunique()
-    st.sidebar.text(f"Unique weeks: {unique_weeks}")
-    st.sidebar.text(f"Unique teams: {unique_teams}")
-    st.sidebar.text(f"Expected records: ~{unique_weeks * unique_teams}")
-    
-    # Check for duplicates in raw data
-    raw_dups = display_history.groupby(['Team', 'Week_Start']).size()
-    raw_dup_entries = raw_dups[raw_dups > 1]
-    if not raw_dup_entries.empty:
-        st.sidebar.error(f"⚠️ RAW DATA has {len(raw_dup_entries)} duplicate (Team, Week) pairs!")
-        with st.sidebar.expander("Show duplicates"):
-            for (team, week), count in raw_dup_entries.items():
-                st.text(f"{team} on {week}: {count}x")
 
  
 
@@ -2745,29 +2874,8 @@ display_prev_week = display_prev_weeks[-2] if len(display_prev_weeks) > 1 else N
 
 display_latest_df = display_history[display_history['Week_Start'] == display_latest_week].copy()
 
-# DEBUG: Check for duplicates before deduplication
-if 'Team' in display_latest_df.columns:
-    team_counts = display_latest_df['Team'].value_counts()
-    duplicates = team_counts[team_counts > 1]
-    if not duplicates.empty:
-        st.sidebar.warning(f"⚠️ DEBUG: Found {len(duplicates)} teams with duplicates BEFORE dedup")
-        for team, count in duplicates.items():
-            st.sidebar.text(f"  {team}: {count} records")
-            # Show the duplicate records
-            dup_records = display_latest_df[display_latest_df['Team'] == team][['Team', 'DPI', 'Week_Start', 'week_date' if 'week_date' in display_latest_df.columns else 'Week']]
-            st.sidebar.dataframe(dup_records)
-
 # Remove duplicates - keep only the first occurrence of each team (highest DPI if sorted)
 display_latest_df = display_latest_df.drop_duplicates(subset=['Team'], keep='first')
-
-# DEBUG: Check after deduplication
-if 'Team' in display_latest_df.columns:
-    team_counts_after = display_latest_df['Team'].value_counts()
-    duplicates_after = team_counts_after[team_counts_after > 1]
-    if not duplicates_after.empty:
-        st.sidebar.error(f"❌ DEBUG: STILL {len(duplicates_after)} duplicates AFTER dedup!")
-    else:
-        st.sidebar.success(f"✅ DEBUG: No duplicates after dedup. Total teams: {len(display_latest_df)}")
 
  
 
@@ -2930,11 +3038,10 @@ monthly_sorted = monthly_avg.sort_values(by='Monthly_Avg_DPI', ascending=False)
 
  
 
-with tab1:
+# === OVERVIEW TAB ===
+if st.session_state.active_tab == 'Overview':
 
- 
-
-    st.markdown(f"<h2 style='color:white; text-align:center; margin-bottom:30px;'>📊 Overview — Week of {display_latest_week.date()}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color:#2D2D2D; text-align:center; margin-bottom:30px;'>📊 Overview — Week of {display_latest_week.date()}</h2>", unsafe_allow_html=True)
 
  
 
@@ -3127,9 +3234,10 @@ with tab1:
 
  
 
-with tab2:
+# === LEADERBOARD TAB ===
+elif st.session_state.active_tab == 'Leaderboard':
 
-    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:20px;'>🏆 Leaderboard</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#2D2D2D; text-align:center; margin-bottom:20px;'>🏆 Leaderboard</h2>", unsafe_allow_html=True)
 
    
 
@@ -3202,51 +3310,37 @@ with tab2:
             lb = lb.sort_values(by='LTTD', ascending=True)  # Lower is better
 
         
-        # Build complete table HTML as single string
-        table_html = """<table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>
-<tr>
-<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:60px;'>Rank</th>
-<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5);'>Team</th>
-<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:80px;'>DPI</th>
-<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:70px;'>RF</th>
-<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:80px;'>LTTD</th>
-<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:100px;'>Tier</th>
-<th style='background: rgba(59,130,246,0.2); color: white; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(59,130,246,0.5); width:80px;'>Δ Rank</th>
-</tr>
-"""
-
+        # Use Streamlit's native dataframe component for better visibility
+        # Prepare display dataframe
+        display_df = lb.copy()
         
-        # Build table rows
-        for _, row in lb.iterrows():
-            rank_change = row['Δ Rank']
-            rank_indicator = f"<span style='color:#10b981;'>↑ {rank_change}</span>" if rank_change > 0 else f"<span style='color:#ef4444;'>↓ {abs(rank_change)}</span>" if rank_change < 0 else "<span style='color:#6b7280;'>—</span>"
-            tier_color = COLOR_MAP.get(row['Tier'], '#6b7280')
-            
-            # Format values with None checks
-            rf_display = f"{row['RF']:.0f}" if row['RF'] is not None else "N/A"
-            lttd_display = f"{row['LTTD']:.1f}" if row['LTTD'] is not None else "N/A"
-            dpi_display = f"{row['DPI']:.1f}" if row['DPI'] is not None else "N/A"
-            
-            table_html += f"""<tr style='border-bottom: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;'>
-<td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:800; font-size:18px; color:#93c5fd;'>#{row['Rank']}</td>
-<td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:700;'>{row['Team']}</td>
-<td style='padding: 12px; color: rgba(255,255,255,0.9); font-weight:700; color:#fbbf24;'>{dpi_display}</td>
-<td style='padding: 12px; color: rgba(255,255,255,0.9);'>{rf_display}</td>
-<td style='padding: 12px; color: rgba(255,255,255,0.9);'>{lttd_display}</td>
-<td style='padding: 12px; color: rgba(255,255,255,0.9);'><span style='background:{tier_color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;'>{row['Tier']}</span></td>
-<td style='padding: 12px; color: rgba(255,255,255,0.9);'>{rank_indicator}</td>
-</tr>
-"""
+        # Format columns for display
+        if 'RF' in display_df.columns:
+            display_df['RF'] = display_df['RF'].apply(lambda x: f"{x:.0f}" if pd.notna(x) else "N/A")
+        if 'LTTD' in display_df.columns:
+            display_df['LTTD'] = display_df['LTTD'].apply(lambda x: f"{x:.1f}" if pd.notna(x) else "N/A")
+        if 'DPI' in display_df.columns:
+            display_df['DPI'] = display_df['DPI'].apply(lambda x: f"{x:.1f}" if pd.notna(x) else "N/A")
+        if 'Δ Rank' in display_df.columns:
+            display_df['Δ Rank'] = display_df['Δ Rank'].apply(
+                lambda x: f"↑ {x}" if x > 0 else f"↓ {abs(x)}" if x < 0 else "—"
+            )
         
-        table_html += "</table>"
+        # Select and reorder columns for display
+        display_columns = ['Rank', 'Team', 'DPI', 'RF', 'LTTD', 'Tier', 'Δ Rank']
+        available_columns = [col for col in display_columns if col in display_df.columns]
         
-        # Render complete table
-        st.markdown(table_html, unsafe_allow_html=True)
+        st.dataframe(
+            display_df[available_columns],
+            use_container_width=True,
+            hide_index=True
+        )
 
 
-with tab3:
+# === BADGES TAB ===
+elif st.session_state.active_tab == 'Badges':
 
-    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:30px;'>🎖️ Achievements & Badges</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#2D2D2D; text-align:center; margin-bottom:30px;'>🎖️ Achievements & Badges</h2>", unsafe_allow_html=True)
 
    
 
@@ -3454,11 +3548,12 @@ with tab3:
 
  
 
-with tab4:
+# === TEAM TRENDS TAB ===
+elif st.session_state.active_tab == 'Team Trends':
 
  
 
-    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:30px;'>📈 Team Trends</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#2D2D2D; text-align:center; margin-bottom:30px;'>📈 Team Trends</h2>", unsafe_allow_html=True)
 
  
 
@@ -3901,11 +3996,12 @@ with tab4:
 
 
 
-with tab5:
+# === DOCS TAB ===
+elif st.session_state.active_tab == 'Docs':
 
  
 
-    st.markdown("<h2 style='color:white; text-align:center; margin-bottom:30px;'>📘 Documentation & Guide</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#2D2D2D; text-align:center; margin-bottom:30px;'>📘 Documentation & Guide</h2>", unsafe_allow_html=True)
 
  
 
@@ -3984,3 +4080,14 @@ with tab5:
 # Sidebar removed - use weekly_refresh.py or setup_database.py to add new week data
 
 # show_data_refresh_section()
+
+# --- HSBC Footer ---
+st.markdown("""
+<div style='background: #2D2D2D; color: #999999; padding: 16px 24px; text-align: center; margin: 40px -1rem -1rem -1rem; font-size: 12px;'>
+    <div style='display: flex; justify-content: center; align-items: center; gap: 12px;'>
+        <span>Support</span>
+        <span>|</span>
+        <span>© HSBC Bank plc 2026</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
